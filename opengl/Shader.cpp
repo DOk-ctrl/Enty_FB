@@ -42,6 +42,12 @@ void Shader::setUniformValue(int value) {
   }
 }
 
+void Shader::setUniformValue(glm::mat4 value) {
+    if (mShaderProgram > 0 && mUniformLocation > -1) {
+        glUniformMatrix4fv(mUniformLocation, 1, GL_FALSE, glm::value_ptr(value));
+    }
+}
+
 void Shader::cleanup() {
   glDeleteProgram(mShaderProgram);
 }

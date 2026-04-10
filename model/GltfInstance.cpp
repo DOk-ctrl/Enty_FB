@@ -110,8 +110,12 @@ void GltfInstance::resetNodeData() {
 
 std::shared_ptr<OGLMesh> GltfInstance::getSkeleton() {
   mSkeletonMesh->vertices.clear();
-
+  Logger::log(1, "%s: Checking root node children count: %d\n", __FUNCTION__, (int)mRootNode->getChilds().size());
   /* start from Armature child */
+  if (mRootNode->getChilds().empty()) {
+      Logger::log(1, "%s: Warning - No children found, skipping skeleton generation\n", __FUNCTION__);
+      return mSkeletonMesh;
+  }
   getSkeletonPerNode(mRootNode->getChilds().at(0));
   return mSkeletonMesh;
 }
@@ -283,6 +287,11 @@ void GltfInstance::checkForUpdates() {
 }
 
 void GltfInstance::updateAnimation() {
+    if (mAnimClips.empty()) {
+        updateNodeMatrices(mRootNode);
+        return;
+    }
+
   if (mModelSettings.msPlayAnimation) {
     if (mModelSettings.msBlendingMode == blendMode::crossfade ||
         mModelSettings.msBlendingMode == blendMode::additive) {
@@ -325,6 +334,11 @@ void GltfInstance::solveIK() {
 
 void GltfInstance::playAnimation(int animNum, float speedDivider, float blendFactor,
     replayDirection direction) {
+    // Если индекс вне диапазона — ничего не делаем
+    if (animNum < 0 || animNum >= mAnimClips.size()) {
+        return;
+    }
+
   double currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
   if (direction == replayDirection::backward) {
     blendAnimationFrame(animNum, mAnimClips.at(animNum)->getClipEndTime() -

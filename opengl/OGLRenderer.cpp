@@ -110,8 +110,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   
   mGltfModels.resize(1);
   mGltfModels.at(0) = std::make_shared<GltfModel>();
-  std::string modelFilename = "assets/enty6.gltf";
-  std::string modelTexFilename = "textures/enty4k.png";
+  std::string modelFilename = "assets/white_floor.gltf";
+  std::string modelTexFilename = "textures/floor.png";
   if (!mGltfModels.at(0)->loadModel(mRenderData, modelFilename, modelTexFilename)) {
       Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
       return false;
@@ -232,7 +232,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   Logger::log(1, "%s: line mesh storage initialized\n", __FUNCTION__);
 
   mFrameTimer.start();
-
+  Logger::log(1, "%s: Starting to load instances...\n", __FUNCTION__);
   return true;
 }
 
@@ -433,7 +433,7 @@ void OGLRenderer::draw() {
         mesh->vertices.begin(), mesh->vertices.end());
     }
   }
-
+  
   /* get coordinate arrows for the IK target of current instance only */
   mCoordArrowsLineIndexCount = 0;
   {
@@ -514,7 +514,7 @@ void OGLRenderer::draw() {
     }
    numTriangles += static_cast<unsigned int>(instance->getModel()->getTriangleCount());
   }
-
+ 
  mRenderData.rdTriangleCount = numTriangles;
 
   mGltfShaderStorageBuffer.uploadSsboData(mModelJointMatrices, 1);
@@ -533,9 +533,19 @@ void OGLRenderer::draw() {
 
   // --- 1. СНАЧАЛА РИСУЕМ ПОЛ (СТАТИКУ) ---
   mStaticShader.use(); // Тот самый "ня статик" шейдер
+
+  mStaticShader.getUniformLocation("u_Model");
+
   for (const auto& instance : mStaticInstances) {
-      // Статичному шейдеру не нужны никакие matrixPos или SSBO с костями!
-      // Он просто берет MVP матрицы, которые ты уже загрузил в Uniform Buffer в начале draw()
+      // 1. Получаем матрицу положения модели в мире
+      glm::mat4 modelMatrix = instance->getRootNode()->getNodeMatrix();
+
+      // 2. Передаем эту матрицу в шейдер (в переменную u_Model)
+      // ВНИМАНИЕ: используй ту функцию, которая у тебя в классе Shader принимает mat4.
+      // Обычно это выглядит так:
+       mStaticShader.setUniformValue(modelMatrix);
+      // или
+      //glUniformMatrix4fv(glGetUniformLocation(mStaticShader.getProgram(), "u_Model"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
       instance->getModel()->draw();
   }
 

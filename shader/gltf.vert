@@ -11,8 +11,10 @@ layout (std140, binding = 0) uniform Matrices {
     mat4 projection;
 };
 
+uniform mat4 u_Model;
+
 void main() {
-  gl_Position = projection * view * vec4(aPos, 1.0);
+  gl_Position = projection * view * u_Model * vec4(aPos, 1.0);
   normal = aNormal;
   texCoord = aTexCoord;
 }

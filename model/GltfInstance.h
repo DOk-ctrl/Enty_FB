@@ -45,6 +45,8 @@ class GltfInstance {
     void setInverseKinematicsNodes(int effectorNodeNum, int ikChainRootNodeNum);
     void setNumIKIterations(int iterations);
 
+    std::shared_ptr<GltfNode> getRootNode() { return mRootNode; }
+
   private:
     void playAnimation(int animNum, float speedDivider, float blendFactor,
       replayDirection direction);

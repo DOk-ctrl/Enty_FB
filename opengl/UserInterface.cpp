@@ -131,7 +131,7 @@ void UserInterface::drawDeveloperUI(OGLRenderData& renderData, ModelSettings& se
 
         ImGui::Begin("Control", nullptr, imguiWindowFlags);
         //24.01
-        /*
+        
         static float newFps = 0.0f;
         // avoid inf values (division by zero) 
         if (renderData.rdFrameTime > 0.0) {
@@ -158,7 +158,7 @@ void UserInterface::drawDeveloperUI(OGLRenderData& renderData, ModelSettings& se
         static int matrixUploadOffset = 0;
         static int uiGenOffset = 0;
         static int uiDrawOffset = 0;
-
+        /*
         while (updateTime < ImGui::GetTime()) {
             mFPSValues.at(fpsOffset) = mFramesPerSecond;
             fpsOffset = ++fpsOffset % mNumFPSValues;

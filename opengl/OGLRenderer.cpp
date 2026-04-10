@@ -100,7 +100,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   Logger::log(1, "%s: user interface initialized\n", __FUNCTION__);
 
   /* add backface culling and depth test already here */
-  glEnable(GL_CULL_FACE);
+  glDisable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
   glLineWidth(3.0);
 
@@ -535,8 +535,8 @@ void OGLRenderer::draw() {
   mStaticShader.use(); // Тот самый "ня статик" шейдер
 
   mStaticShader.getUniformLocation("u_Model");
-
   for (const auto& instance : mStaticInstances) {
+      instance->getRootNode()->calculateNodeMatrix();
       // 1. Получаем матрицу положения модели в мире
       glm::mat4 modelMatrix = instance->getRootNode()->getNodeMatrix();
 
@@ -551,10 +551,11 @@ void OGLRenderer::draw() {
 
   unsigned int matrixPos = 0;
   int instanceCounter = 0; // Добавляем счетчик вручную
+  /*
   mGltfGPUShader.use();
   printf("Drawing %llu matrix instances\n", mGltfMatrixInstances.size()); // Проверка в консоль
   for (const auto &instance : mGltfMatrixInstances) {
-    /* set position inside the SSBO */
+    // set position inside the SSBO 
       if (matrixPos == 0) { // Чтобы не спамить, выведем только для первого
         //  printf("[DRAW DEBUG] Instance 0 Draw: matrixPos = %u, joints = %d\n",
         //      matrixPos, instance->getJointMatrixSize());
@@ -579,20 +580,20 @@ void OGLRenderer::draw() {
     dqPos += instance->getJointDualQuatsSize();
   }
 
-  /* draw the coordinate arrow WITH depth buffer */
+  // draw the coordinate arrow WITH depth buffer 
   if (mCoordArrowsLineIndexCount > 0) {
     mLineShader.use();
     mVertexBuffer.bindAndDraw(GL_LINES, mSkeletonLineIndexCount, mCoordArrowsLineIndexCount);
   }
 
-  /* draw the skeleton, disable depth test to overlay */
+  // draw the skeleton, disable depth test to overlay 
   if (mSkeletonLineIndexCount > 0) {
     glDisable(GL_DEPTH_TEST);
     mLineShader.use();
     mVertexBuffer.bindAndDraw(GL_LINES, 0, mSkeletonLineIndexCount);
     glEnable(GL_DEPTH_TEST);
   }
-
+  */
   mFramebuffer.unbind();
 
   /* blit color buffer to screen */

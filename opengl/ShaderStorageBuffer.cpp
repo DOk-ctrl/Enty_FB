@@ -1,7 +1,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "ShaderStorageBuffer.h"
 #include "Logger.h"
-// маленькая модель
+
 void ShaderStorageBuffer::init(size_t bufferSize) {
   mBufferSize = bufferSize;
 

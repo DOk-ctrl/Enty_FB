@@ -33,9 +33,15 @@ GltfInstance::GltfInstance(std::shared_ptr<GltfModel> model, glm::vec2 worldPos,
   mJointMatrices.resize(mInverseBindMatrices.size());
   mJointDualQuats.resize(mInverseBindMatrices.size());
   */
-  mJointMatrices.assign(256, glm::mat4(1.0f));
-  mJointDualQuats.assign(256, glm::mat2x4(1.0f));
-  
+  if (!mInverseBindMatrices.empty()) {
+      mJointMatrices.assign(256, glm::mat4(1.0f));
+      mJointDualQuats.assign(256, glm::mat2x4(1.0f));
+  }
+  else {
+      // Это статика (пол)! Очищаем массивы, чтобы размер был строго 0.
+      mJointMatrices.clear();
+      mJointDualQuats.clear();
+  }
 
   mAdditiveAnimationMask.resize(mNodeCount);
   mInvertedAdditiveAnimationMask.resize(mNodeCount);

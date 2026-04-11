@@ -9,40 +9,57 @@ void Texture::cleanup() {
 }
 
 bool Texture::loadTexture(std::string textureFilename, bool flipImage) {
-  mTextureName = textureFilename;
+    mTextureName = textureFilename;
 
-  stbi_set_flip_vertically_on_load(flipImage);
-  unsigned char *textureData = stbi_load(textureFilename.c_str(), &mTexWidth, &mTexHeight, &mNumberOfChannels, 0);
+    stbi_set_flip_vertically_on_load(flipImage);
+    unsigned char* textureData = stbi_load(textureFilename.c_str(), &mTexWidth, &mTexHeight, &mNumberOfChannels, 0);
 
-  if (!textureData) {
-    Logger::log(1, "%s error: could not load file '%s'\n", __FUNCTION__, mTextureName.c_str());
-    stbi_image_free(textureData);
-    return false;
-  }
+    if (!textureData) {
+        Logger::log(1, "%s error: could not load file '%s'\n", __FUNCTION__, mTextureName.c_str());
+        stbi_image_free(textureData);
+        return false;
+    }
 
-  glGenTextures(1, &mTexture);
-  glBindTexture(GL_TEXTURE_2D, mTexture);
+    glGenTextures(1, &mTexture);
+    glBindTexture(GL_TEXTURE_2D, mTexture);
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glGenTextures(1, &mTexture);
-  glBindTexture(GL_TEXTURE_2D, mTexture);
+    // ... (твои параметры фильтрации) ...
 
-  // ... (твои параметры фильтрации) ...
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    printf("[TEXTURE DEBUG] Attempting to upload: %s (%dx%d)\n", mTextureName.c_str(), mTexWidth, mTexHeight);
 
-  printf("[TEXTURE DEBUG] Attempting to upload: %s (%dx%d)\n", mTextureName.c_str(), mTexWidth, mTexHeight);
+    GLenum format;
+    GLenum internalFormat;
 
-  if (mNumberOfChannels == 3) {
-      // Используем внутренний формат RGBA8 для 24-битных картинок
-     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, mTexWidth, mTexHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
-  }
-  else {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, mTexWidth, mTexHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
-  }
+    if (mNumberOfChannels == 1) {
+        format = GL_RED;
+        internalFormat = GL_R8;
+
+        // --- МАГИЯ SWIZZLE ---
+        // Размножаем красный канал во все остальные, чтобы шейдер (.g) не читал нули
+        GLint swizzleMask[] = { GL_RED, GL_RED, GL_RED, GL_ONE };
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
+
+        printf("  [FORMAT] Loading as Grayscale (GL_RED)\n");
+    }
+    else if (mNumberOfChannels == 3) {
+        format = GL_RGB;
+        internalFormat = GL_RGB8;
+        printf("  [FORMAT] Loading as RGB\n");
+    }
+    else {
+        format = GL_RGBA;
+        internalFormat = GL_RGBA8;
+        printf("  [FORMAT] Loading as RGBA\n");
+    }
+
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, mTexWidth, mTexHeight, 0, format, GL_UNSIGNED_BYTE, textureData);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
   GLenum uploadErr = glGetError();
   if (uploadErr != GL_NO_ERROR) {
@@ -62,6 +79,8 @@ bool Texture::loadTexture(std::string textureFilename, bool flipImage) {
   else {
       printf("  glGenerateMipmap: OK\n");
   }
+
+  stbi_image_free(textureData);
 
   glBindTexture(GL_TEXTURE_2D, 0);
   /*
@@ -88,7 +107,7 @@ bool Texture::loadTexture(std::string textureFilename, bool flipImage) {
   
   glBindTexture(GL_TEXTURE_2D, 0);
   */
-  stbi_image_free(textureData);
+  
 
   Logger::log(1, "%s: texture '%s' loaded (%dx%d, %d channels)\n", __FUNCTION__, mTextureName.c_str(), mTexWidth, mTexHeight, mNumberOfChannels);
   return true;

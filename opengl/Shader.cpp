@@ -48,6 +48,13 @@ void Shader::setUniformValue(glm::mat4 value) {
     }
 }
 
+void Shader::setUniformValue(glm::vec3 value) {
+    if (mShaderProgram > 0) {
+        if (mUniformLocation > -1) {
+            glUniform3fv(mUniformLocation, 1, glm::value_ptr(value));
+        }
+    }
+}
 void Shader::cleanup() {
   glDeleteProgram(mShaderProgram);
 }

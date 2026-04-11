@@ -13,7 +13,7 @@ class Shader {
     void cleanup();
 
     void setUniformValue(glm::mat4 value);
-
+    void setUniformValue(glm::vec3 value);
   private:
     GLuint mShaderProgram = 0;
     GLint mUniformLocation = -1;

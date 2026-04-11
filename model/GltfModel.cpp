@@ -11,10 +11,25 @@
 #include "Logger.h"
 
 bool GltfModel::loadModel(OGLRenderData &renderData,
-    std::string modelFilename, std::string textureFilename) {
+    std::string modelFilename, std::string textureFilename, std::string normalFilename, std::string metRoughFilename) {
+    // Загрузка Base Color
   if (!mTex.loadTexture(textureFilename, false)) {
     Logger::log(1, "%s: texture loading failed\n", __FUNCTION__);
     return false;
+  }
+
+  // Загрузка Normal map(если передана)
+  if (!normalFilename.empty()) {
+      if (mNormalTex.loadTexture(normalFilename, false)) {
+          mHasNormalMap = true;
+          Logger::log(1, "%s: Normal map successfully loaded\n", __FUNCTION__,  normalFilename.c_str());
+      }
+  }
+  if (!metRoughFilename.empty()) {
+      if (mMetRoughTex.loadTexture(metRoughFilename, false)) {
+          mHasMetRoughMap = true;
+          Logger::log(1, "%s: Metallic/Roughness map successfully loaded\n", __FUNCTION__, metRoughFilename.c_str());
+      }
   }
   Logger::log(1, "%s: glTF model texture '%s' successfully loaded\n", __FUNCTION__,
     modelFilename.c_str());
@@ -403,8 +418,22 @@ int GltfModel::getTriangleCount() {
 }
 // 17 числа победная загрузка с костями
 void GltfModel::draw() {
+    // слот 0: для Base Color
+    glActiveTexture(GL_TEXTURE0);
     mTex.bind();
+
+    //слот 1: Normal Map
+    if (mHasNormalMap) {
+        glActiveTexture(GL_TEXTURE1);
+        mNormalTex.bind();
+    }
     glBindVertexArray(mVAO);
+
+    // слот 2: Rough Map
+    if (mHasMetRoughMap) {
+        glActiveTexture(GL_TEXTURE2);
+        mMetRoughTex.bind();
+    }
 
     // Привязываем наш "Гига-VBO" (где лежит весь файл)
     glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO[0]);
@@ -461,6 +490,17 @@ void GltfModel::draw() {
     }
 
     glBindVertexArray(0);
+
+    // отвязка текстур
+    if (mHasMetRoughMap) {
+        glActiveTexture(GL_TEXTURE2);
+        mMetRoughTex.unbind();
+    }
+    if (mHasNormalMap) {
+        glActiveTexture(GL_TEXTURE1);
+        mNormalTex.unbind();
+    }
+    glActiveTexture(GL_TEXTURE0);
     mTex.unbind();
 }
 

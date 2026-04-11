@@ -110,13 +110,21 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   
   mGltfModels.resize(2);
   mGltfModels.at(0) = std::make_shared<GltfModel>();
-  std::string modelFilename = "assets/white_floor.gltf";
-  std::string modelTexFilename = "textures/floor.png";
+  std::string modelFilename = "assets/Stonehenge3.gltf";
+  std::string modelTexFilename = "textures/Stonehenge4kBase.png";
+  std::string normalTex = "textures/Stonehenge4kNormal.png";
+  std::string roughTex = "textures/Stonehenge4kRough.png";
+  /* 11.04.26 нужно добавить сшиватель для roughness and metallic а то там только одно перемнная на двоих ну и шейдер доделать
+  if (!mGltfModels.at(0)->loadModel(mRenderData, modelFilename, modelTexFilename, normalTex, roughTex)) {
+      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
+      return false;
+  }
+  */
   if (!mGltfModels.at(0)->loadModel(mRenderData, modelFilename, modelTexFilename)) {
       Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
       return false;
   }
-  
+
   
   mGltfModels.at(1) = std::make_shared<GltfModel>();
   std::string modelFilename2 = "assets/enty6.gltf";
@@ -539,18 +547,37 @@ void OGLRenderer::draw() {
   // --- 1. СНАЧАЛА РИСУЕМ ПОЛ (СТАТИКУ) ---
   mStaticShader.use(); // Тот самый "ня статик" шейдер
 
-  mStaticShader.getUniformLocation("u_Model");
+  // Направление: свет падает сверху вниз под углом
+  glm::vec3 sunDirection = glm::vec3(-0.3f, -1.0f, -0.5f);
+
+  // Передаем в шейдер
+  if (mStaticShader.getUniformLocation("u_LightDir")) {
+      mStaticShader.setUniformValue(sunDirection);
+  }
+
+  mStaticShader.getUniformLocation("u_AlbedoMap");
+  mStaticShader.setUniformValue(0);
+  mStaticShader.getUniformLocation("u_NormalMap");
+  mStaticShader.setUniformValue(1);
+  mStaticShader.getUniformLocation("u_HasNormalMap");
+
+  mStaticShader.getUniformLocation("u_MetRoughMap");
+  mStaticShader.setUniformValue(2);
+  
   for (const auto& instance : mStaticInstances) {
       instance->getRootNode()->calculateNodeMatrix();
       // 1. Получаем матрицу положения модели в мире
       glm::mat4 modelMatrix = instance->getRootNode()->getNodeMatrix();
 
-      // 2. Передаем эту матрицу в шейдер (в переменную u_Model)
-      // ВНИМАНИЕ: используй ту функцию, которая у тебя в классе Shader принимает mat4.
-      // Обычно это выглядит так:
+      mStaticShader.getUniformLocation("u_HasNormalMap");
+      mStaticShader.setUniformValue(instance->getModel()->mHasNormalMap ? 1 : 0);
+
+      mStaticShader.getUniformLocation("u_HasMetRoughMap");
+      mStaticShader.setUniformValue(instance->getModel()->mHasMetRoughMap ? 1 : 0);
+
+      mStaticShader.getUniformLocation("u_Model");
        mStaticShader.setUniformValue(modelMatrix);
-      // или
-      //glUniformMatrix4fv(glGetUniformLocation(mStaticShader.getProgram(), "u_Model"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
+      
       instance->getModel()->draw();
   }
 
@@ -558,7 +585,7 @@ void OGLRenderer::draw() {
   int instanceCounter = 0; // Добавляем счетчик вручную
   
   mGltfGPUShader.use();
-  printf("Drawing %llu matrix instances\n", mGltfMatrixInstances.size()); // Проверка в консоль
+  //printf("Drawing %llu matrix instances\n", mGltfMatrixInstances.size()); 
   for (const auto &instance : mGltfMatrixInstances) {
     // set position inside the SSBO 
       if (matrixPos == 0) { // Чтобы не спамить, выведем только для первого

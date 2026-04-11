@@ -22,7 +22,7 @@ struct GltfNodeData {
 class GltfModel {
   public:
     bool loadModel(OGLRenderData &renderData, std::string modelFilename,
-      std::string textureFilename);
+      std::string textureFilename, std::string normalFilename = "", std::string metRoughFilename = "");
     void draw();
     void cleanup();
 
@@ -41,6 +41,8 @@ class GltfModel {
 
     void resetNodeData(std::shared_ptr<GltfNode> treeNode);
 
+    bool mHasNormalMap = false;
+    bool mHasMetRoughMap = false;
   private:
     void createVertexBuffers();
     void createIndexBuffer();
@@ -77,7 +79,10 @@ class GltfModel {
     size_t indexByteOffset = 0;
 
     std::map<std::string, GLint> attributes =
-      {{"POSITION", 0}, {"NORMAL", 1}, {"TEXCOORD_0", 2}, {"JOINTS_0", 3}, {"WEIGHTS_0", 4}};
+    { {"POSITION", 0}, {"NORMAL", 1}, {"TEXCOORD_0", 2}, {"JOINTS_0", 3}, {"WEIGHTS_0", 4}, {"TANGENT", 5} };
 
-    Texture mTex{};
+    Texture mTex{}; // base color
+    Texture mNormalTex{};
+    Texture mMetRoughTex{};
+    
 };

@@ -108,7 +108,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
  // test 12.01.26 - 1 model only 1 instance
   //mGltfModels.resize(3);
   
-  mGltfModels.resize(1);
+  mGltfModels.resize(2);
   mGltfModels.at(0) = std::make_shared<GltfModel>();
   std::string modelFilename = "assets/white_floor.gltf";
   std::string modelTexFilename = "textures/floor.png";
@@ -117,16 +117,15 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
       return false;
   }
   
-  /*
-  mGltfModels.resize(1);
-  mGltfModels.at(0) = std::make_shared<GltfModel>();
-  std::string modelFilename = "assets/enty6.gltf";
-  std::string modelTexFilename = "textures/enty4k.png";
-  if (!mGltfModels.at(0)->loadModel(mRenderData, modelFilename, modelTexFilename)) {
-    Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
+  
+  mGltfModels.at(1) = std::make_shared<GltfModel>();
+  std::string modelFilename2 = "assets/enty6.gltf";
+  std::string modelTexFilename2 = "textures/enty4k.png";
+  if (!mGltfModels.at(1)->loadModel(mRenderData, modelFilename2, modelTexFilename2)) {
+    Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename2.c_str());
     return false;
   }
-  */
+  
   //mGltfModels.at(0)->uploadVertexBuffers();
   //mGltfModels.at(0)->uploadIndexBuffer();
   /*
@@ -179,6 +178,12 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(0), glm::vec2(static_cast<float>(xPos),
       static_cast<float>(zPos)), true));
   numTriangles += static_cast<unsigned int>(mGltfModels.at(0)->getTriangleCount());
+
+  int xPos2 = 0;
+  int zPos2 = 3;
+  mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(1), glm::vec2(static_cast<float>(xPos2),
+      static_cast<float>(zPos2)), true));
+  numTriangles += static_cast<unsigned int>(mGltfModels.at(1)->getTriangleCount());
 
   mRenderData.rdTriangleCount = numTriangles;
 
@@ -551,7 +556,7 @@ void OGLRenderer::draw() {
 
   unsigned int matrixPos = 0;
   int instanceCounter = 0; // Добавляем счетчик вручную
-  /*
+  
   mGltfGPUShader.use();
   printf("Drawing %llu matrix instances\n", mGltfMatrixInstances.size()); // Проверка в консоль
   for (const auto &instance : mGltfMatrixInstances) {
@@ -593,7 +598,7 @@ void OGLRenderer::draw() {
     mVertexBuffer.bindAndDraw(GL_LINES, 0, mSkeletonLineIndexCount);
     glEnable(GL_DEPTH_TEST);
   }
-  */
+  
   mFramebuffer.unbind();
 
   /* blit color buffer to screen */

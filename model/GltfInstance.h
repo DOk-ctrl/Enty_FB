@@ -17,7 +17,7 @@
 
 class GltfInstance {
   public:
-    GltfInstance(std::shared_ptr<GltfModel> model, glm::vec2 worldPos, bool randomize = false);
+    GltfInstance(std::shared_ptr<GltfModel> model, glm::vec3 worldPos, bool randomize = false);
     ~GltfInstance();
 
     void resetNodeData();
@@ -38,7 +38,7 @@ class GltfInstance {
     ModelSettings getInstanceSettings();
     void checkForUpdates();
 
-    glm::vec2 getWorldPosition();
+    glm::vec3 getWorldPosition();
     glm::quat getWorldRotation();
 
     void solveIK();

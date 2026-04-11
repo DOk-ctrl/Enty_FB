@@ -182,14 +182,16 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   */
   // 1 model coordinates
   int xPos = 0;
+  int yPos = 0;
   int zPos = 0;
-  mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(0), glm::vec2(static_cast<float>(xPos),
+  mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(0), glm::vec3(static_cast<float>(xPos), static_cast<float>(yPos),
       static_cast<float>(zPos)), true));
   numTriangles += static_cast<unsigned int>(mGltfModels.at(0)->getTriangleCount());
 
   int xPos2 = 0;
-  int zPos2 = 3;
-  mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(1), glm::vec2(static_cast<float>(xPos2),
+  int yPos2 = 1;
+  int zPos2 = 0;
+  mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(1), glm::vec3(static_cast<float>(xPos2), static_cast<float>(yPos2),
       static_cast<float>(zPos2)), true));
   numTriangles += static_cast<unsigned int>(mGltfModels.at(1)->getTriangleCount());
 
@@ -430,7 +432,7 @@ void OGLRenderer::draw() {
 
   /* save value to avoid changes during later call */
   int selectedInstance = mRenderData.rdCurrentSelectedInstance;
-  glm::vec2 modelWorldPos = mGltfInstances.at(selectedInstance)->getWorldPosition();
+  glm::vec3 modelWorldPos = mGltfInstances.at(selectedInstance)->getWorldPosition();
   glm::quat modelWorldRot = mGltfInstances.at(selectedInstance)->getWorldRotation();
 
   mLineMesh->vertices.clear();
@@ -475,7 +477,7 @@ void OGLRenderer::draw() {
     [=](auto &n){
       n.color /= 2.0f;
       n.position = modelWorldRot * n.position;
-      n.position += glm::vec3(modelWorldPos.x, 0.0f, modelWorldPos.y);
+      n.position += modelWorldPos;
   });
 
   mLineMesh->vertices.insert(mLineMesh->vertices.end(),

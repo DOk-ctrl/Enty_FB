@@ -436,18 +436,19 @@ void UserInterface::drawDeveloperUI(OGLRenderData& renderData, ModelSettings& se
                 renderData.rdCurrentSelectedInstance++;
             }
             ImGui::PopButtonRepeat();
-
+            */
             ImGui::Text("World Pos (X/Z)  :");
             ImGui::SameLine();
-            ImGui::SliderFloat2("##WORLDPOS", glm::value_ptr(settings.msWorldPosition),
+            ImGui::SliderFloat3("##WORLDPOS", glm::value_ptr(settings.msWorldPosition),
                 -50.0f, 50.0f, "%.1f", flags);
 
             ImGui::Text("World Rotation   :");
             ImGui::SameLine();
             ImGui::SliderFloat("##WORLDROT", &settings.msWorldRotation.y,
                 -180.0f, 180.0f, "%.0f", flags);
+        
+        /*
         }
-
         if (ImGui::CollapsingHeader("glTF Model")) {
             ImGui::Checkbox("Draw Model", &settings.msDrawModel);
             ImGui::Checkbox("Draw Skeleton", &settings.msDrawSkeleton);

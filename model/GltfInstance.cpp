@@ -14,7 +14,7 @@ GltfInstance::~GltfInstance() {
     mGltfModel->getModelFilename().c_str());
 }
 
-GltfInstance::GltfInstance(std::shared_ptr<GltfModel> model, glm::vec2 worldPos, bool randomize) {
+GltfInstance::GltfInstance(std::shared_ptr<GltfModel> model, glm::vec3 worldPos, bool randomize) {
   if (!model) {
     Logger::log(1, "%s error: invalid glTF model\n", __FUNCTION__);
     return;
@@ -53,8 +53,8 @@ GltfInstance::GltfInstance(std::shared_ptr<GltfModel> model, glm::vec2 worldPos,
   GltfNodeData nodeData;
   nodeData = mGltfModel->getGltfNodes();
   mRootNode = nodeData.rootNode;
-  mRootNode->setWorldPosition(glm::vec3(mModelSettings.msWorldPosition.x, 0.0f,
-    mModelSettings.msWorldPosition.y));
+  mRootNode->setWorldPosition(glm::vec3(mModelSettings.msWorldPosition.x, mModelSettings.msWorldPosition.y,
+    mModelSettings.msWorldPosition.z));
 
   mNodeList = nodeData.nodeList;
 
@@ -229,7 +229,7 @@ std::vector<glm::mat2x4> GltfInstance::getJointDualQuats() {
 void GltfInstance::checkForUpdates() {
   static blendMode lastBlendMode = mModelSettings.msBlendingMode;
   static int skelSplitNode = mModelSettings.msSkelSplitNode;
-  static glm::vec2 worldPos = mModelSettings.msWorldPosition;
+  static glm::vec3 worldPos = mModelSettings.msWorldPosition;
   static glm::vec3 worldRot = mModelSettings.msWorldRotation;
   static glm::vec3 ikTargetPos = mModelSettings.msIkTargetPos;
   static ikMode lastIkMode = mModelSettings.msIkMode;
@@ -252,11 +252,12 @@ void GltfInstance::checkForUpdates() {
   }
 
   if (worldPos != mModelSettings.msWorldPosition) {
-    mRootNode->setWorldPosition(glm::vec3(mModelSettings.msWorldPosition.x, 0.0f,
-      mModelSettings.msWorldPosition.y));
+    // Теперь передаем полноценный vec3
+    mRootNode->setWorldPosition(mModelSettings.msWorldPosition);
     worldPos = mModelSettings.msWorldPosition;
+    // Здесь тоже используем worldPos целиком
     mModelSettings.msIkTargetWorldPos = getWorldRotation() *
-      mModelSettings.msIkTargetPos + glm::vec3(worldPos.x, 0.0f, worldPos.y);
+      mModelSettings.msIkTargetPos + worldPos;
   }
 
   if (worldRot != mModelSettings.msWorldRotation) {
@@ -426,7 +427,7 @@ ModelSettings GltfInstance::getInstanceSettings() {
   return mModelSettings;
 }
 
-glm::vec2 GltfInstance::getWorldPosition() {
+glm::vec3 GltfInstance::getWorldPosition() {
   return mModelSettings.msWorldPosition;
 }
 

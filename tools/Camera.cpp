@@ -32,3 +32,38 @@ glm::mat4 Camera::getViewMatrix(OGLRenderData &renderData) {
   return glm::lookAt(renderData.rdCameraWorldPosition,
     renderData.rdCameraWorldPosition + mViewDirection, mUpDirection);
 }
+
+glm::mat4 Camera::getThirdPersonViewMatrix(OGLRenderData& renderData, glm::vec3 targetPosition) {
+    float azimRad = glm::radians(renderData.rdViewAzimuth);
+    float elevRad = glm::radians(renderData.rdViewElevation);
+
+    float sinAzim = glm::sin(azimRad);
+    float cosAzim = glm::cos(azimRad);
+    float sinElev = glm::sin(elevRad);
+    float cosElev = glm::cos(elevRad);
+
+    // Вектор направления взгляда камеры
+    mViewDirection = glm::normalize(glm::vec3(sinAzim * cosElev, sinElev, -cosAzim * cosElev));
+    mRightDirection = glm::normalize(glm::cross(mViewDirection, mWorldUpVector));
+    mUpDirection = glm::normalize(glm::cross(mRightDirection, mViewDirection));
+
+    // 1. Точка фокуса (целимся в район шеи/головы персонажа)
+    glm::vec3 headPos = targetPosition + glm::vec3(0.0f, 1.4f, 0.0f);
+
+    // 2. Смещение камеры (Offset). 
+    // Вправо на 0.6м, вверх на 0.2м, назад на 2.5м. (Как в RE2)
+    glm::vec3 offset = (mRightDirection * 0.6f) + (mUpDirection * 0.2f) - (mViewDirection * 2.5f);
+
+    glm::vec3 desiredPosition = headPos + offset;
+
+    // 3. Плавное следование камеры (Lerp)
+    float smoothSpeed = 15.0f * renderData.rdTickDiff;
+    if (smoothSpeed > 1.0f) smoothSpeed = 1.0f; // Защита от рывков при лагах
+
+    renderData.rdCameraWorldPosition = glm::mix(renderData.rdCameraWorldPosition, desiredPosition, smoothSpeed);
+
+    // Камера смотрит немного вперед от персонажа
+    glm::vec3 lookAtTarget = renderData.rdCameraWorldPosition + mViewDirection;
+
+    return glm::lookAt(renderData.rdCameraWorldPosition, lookAtTarget, mUpDirection);
+}

@@ -1,4 +1,5 @@
 #define GLM_ENABLE_EXPERIMENTAL
+#define _USE_MATH_DEFINES
 #include <algorithm>
 
 #include <imgui_impl_glfw.h>
@@ -488,55 +489,120 @@ void OGLRenderer::draw() {
   auto& enty = mGltfInstances.at(1);
   if (enty->getRigidBody()) {
       btRigidBody* body = enty->getRigidBody();
+      body->setAngularFactor(btVector3(0, 1, 0));
 
-      float moveSpeed = 5.0f; // Скорость бега (метров в секунду)
-      float turnSpeed = 3.0f; // Скорость поворота
-
-      // 1. ПОВОРОТ (A / D)
-      if (mRenderData.rdMoveRight != 0) {
-          // Задаем угловую скорость (вращение вокруг оси Y)
-          body->setAngularVelocity(btVector3(0, -mRenderData.rdMoveRight * turnSpeed, 0));
-          body->activate(true); // "Будим" физику, если она уснула
-      }
-      else {
-          // Мгновенно останавливаем вращение, если отпустили кнопку
-          body->setAngularVelocity(btVector3(0, 0, 0));
-      }
-
-      // 2. ДВИЖЕНИЕ ВПЕРЕД/НАЗАД (W / S) И АНИМАЦИЯ
+      float maxSpeed = 5.0f;
+      float blendSpeed = 5.0f; // Скорость перехода (чем выше, тем быстрее переключение)
       ModelSettings settings = enty->getInstanceSettings();
 
-      if (mRenderData.rdMoveForward != 0) {
-          // Берем текущий поворот модели
-          glm::quat rot = enty->getWorldRotation();
+      float azimRad = glm::radians(mRenderData.rdViewAzimuth);
 
-          // Вычисляем локальный вектор "Вперед". 
-          // ВНИМАНИЕ: Если при нажатии W она бежит спиной назад, поменяй 1.0f на -1.0f
-          glm::vec3 forward = rot * glm::vec3(0.0f, 0.0f, 1.0f);
+      glm::vec3 camForward = glm::normalize(glm::vec3(glm::sin(azimRad), 0.0f, -glm::cos(azimRad)));
 
-          glm::vec3 velocity = forward * (float)mRenderData.rdMoveForward * moveSpeed;
+      glm::vec3 camRight = glm::normalize(glm::cross(camForward, glm::vec3(0, 1, 0)));
 
-          // ВАЖНО: Мы задаем X и Z скорость, но сохраняем текущую Y-скорость, 
-          // чтобы гравитация продолжала тянуть её вниз!
-          btVector3 currentVel = body->getLinearVelocity();
-          body->setLinearVelocity(btVector3(velocity.x, currentVel.y(), velocity.z));
 
-          // Включаем анимацию ходьбы/бега
-          settings.msAnimClip = 2; // <--- ЗАМЕНИ НА ИНДЕКС АНИМАЦИИ ХОДЬБЫ
+
+      // 2. Вектор желаемого движения на основе WASD
+
+      glm::vec3 moveDir(0.0f);
+
+      if (mRenderData.rdMoveForward != 0) moveDir += camForward * (float)mRenderData.rdMoveForward;
+
+      if (mRenderData.rdMoveRight != 0)   moveDir += camRight * (float)mRenderData.rdMoveRight;
+
+      btVector3 currentVel = body->getLinearVelocity();
+
+      if (glm::length(moveDir) > 0.1f) {
+          moveDir = glm::normalize(moveDir);
+
+          // --- ФИЗИКА ДВИЖЕНИЯ ---
+          float accel = 10.0f * deltaTime;
+          btVector3 targetVel(moveDir.x * maxSpeed, currentVel.y(), moveDir.z * maxSpeed);
+          btVector3 finalVel = currentVel.lerp(targetVel, accel);
+          body->setLinearVelocity(finalVel);
+
+          // --- ПЛАВНЫЙ ПОВОРОТ (через физику, без микро-прыжков) ---
+
+          float targetAngle = atan2(moveDir.x, moveDir.z); // Куда хотим смотреть
+
+
+
+          btTransform trans;
+
+          body->getMotionState()->getWorldTransform(trans);
+
+          // Узнаем, куда физика смотрит сейчас
+
+          btVector3 currentForward = quatRotate(trans.getRotation(), btVector3(0, 0, 1));
+
+          float currentAngle = atan2(currentForward.x(), currentForward.z());
+
+
+
+          // Находим кратчайший путь для поворота (чтобы не крутился через спину)
+
+          float angleDiff = targetAngle - currentAngle;
+
+          while (angleDiff > M_PI) angleDiff -= 2.0f * M_PI;
+
+          while (angleDiff < -M_PI) angleDiff += 2.0f * M_PI;
+
+
+
+          // Крутим капсулу с помощью угловой скорости (Bullet это обожает)
+
+          body->setAngularVelocity(btVector3(0, angleDiff * 12.0f, 0));
+
+          // --- ЛОГИКА БЛЕНДИНГА (ПЕРЕХОД В БЕГ) ---
+          if (settings.msAnimClip != 2) {
+              // Мы хотим бежать (клип 2), но текущий клип еще не 2
+              settings.msBlendingMode = blendMode::crossfade;
+              settings.msCrossBlendDestAnimClip = 2; // Цель перехода
+
+              // Наращиваем фактор смешивания от 0.0 до 1.0
+              settings.msAnimCrossBlendFactor += blendSpeed * deltaTime;
+
+              if (settings.msAnimCrossBlendFactor >= 1.0f) {
+                  // Переход закончен: теперь клип 2 стал основным
+                  settings.msBlendingMode = blendMode::fadeinout;
+                  settings.msAnimClip = 2;
+                  settings.msAnimCrossBlendFactor = 0.0f;
+                  // Возвращаем обычный режим
+              }
+          }
+
+          // --- СКОРОСТЬ АНИМАЦИИ ---
+          
           settings.msPlayAnimation = true;
+          
 
           body->activate(true);
       }
       else {
-          // Тормозим (сохраняя гравитацию по Y)
-          btVector3 currentVel = body->getLinearVelocity();
-          body->setLinearVelocity(btVector3(0.0f, currentVel.y(), 0.0f));
+          // --- ТОРМОЖЕНИЕ ---
+          float decel = 15.0f * deltaTime;
+          btVector3 targetVel(0.0f, currentVel.y(), 0.0f);
+          btVector3 finalVel = currentVel.lerp(targetVel, decel);
+          body->setLinearVelocity(finalVel);
+          body->setAngularVelocity(btVector3(0, 0, 0));
 
-          // Включаем анимацию простоя (Idle)
-          settings.msAnimClip = 0; // <--- ЗАМЕНИ НА ИНДЕКС АНИМАЦИИ IDLE
+          // --- ЛОГИКА БЛЕНДИНГА (ВОЗВРАТ В IDLE) ---
+          if (settings.msAnimClip != 0) {
+              settings.msBlendingMode = blendMode::crossfade;
+              settings.msCrossBlendDestAnimClip = 0; // Цель перехода — Idle
+
+              settings.msAnimCrossBlendFactor += blendSpeed * deltaTime;
+
+              if (settings.msAnimCrossBlendFactor >= 1.0f) {
+                  settings.msAnimClip = 0;
+                  settings.msAnimCrossBlendFactor = 0.0f;
+                  settings.msBlendingMode = blendMode::fadeinout;
+              }
+          }
+          settings.msAnimSpeed = 1.0f;
       }
 
-      // Применяем настройки обратно
       enty->setInstanceSettings(settings);
   }
 
@@ -553,7 +619,9 @@ void OGLRenderer::draw() {
     static_cast<float>(mRenderData.rdWidth) / static_cast<float>(mRenderData.rdHeight),
     0.01f, 500.0f);
 
-  mViewMatrix = mCamera.getViewMatrix(mRenderData);
+  glm::vec3 playerPos = mGltfInstances.at(1)->getWorldPosition();
+  playerPos.y += 0.8f;
+  mViewMatrix = mCamera.getThirdPersonViewMatrix(mRenderData, playerPos);
 
   /* animate and update inverse kinematics */
   mRenderData.rdIKTime = 0.0f;

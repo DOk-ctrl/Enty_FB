@@ -266,10 +266,125 @@ void GltfModel::resetNodeData(std::shared_ptr<GltfNode> treeNode) {
     resetNodeData(childNode);
   }
 }
+// Вспомогательная функция для рекурсивного обхода узлов
+void GltfModel::processNodePhysics(const tinygltf::Model* model, int nodeIdx, const glm::mat4& parentMatrix, btTriangleMesh* meshInterface) {
+    const auto& node = model->nodes[nodeIdx];
 
-btBvhTriangleMeshShape* GltfModel::getPhysicsShape()
-{
-    return nullptr;
+    // 1. ВЫЧИСЛЯЕМ ЛОКАЛЬНУЮ МАТРИЦУ УЗЛА (с приведением типов)
+    glm::mat4 localMatrix(1.0f);
+
+    if (node.matrix.size() == 16) {
+        // Переносим double в массив float
+        float matData[16];
+        for (int i = 0; i < 16; ++i) matData[i] = static_cast<float>(node.matrix[i]);
+        localMatrix = glm::make_mat4(matData);
+    }
+    else {
+        // Обработка Translation
+        if (node.translation.size() == 3) {
+            localMatrix = glm::translate(localMatrix, glm::vec3(
+                static_cast<float>(node.translation[0]),
+                static_cast<float>(node.translation[1]),
+                static_cast<float>(node.translation[2])
+            ));
+        }
+        // Обработка Rotation (Quaternion)
+        if (node.rotation.size() == 4) {
+            glm::quat q(
+                static_cast<float>(node.rotation[3]), // w
+                static_cast<float>(node.rotation[0]), // x
+                static_cast<float>(node.rotation[1]), // y
+                static_cast<float>(node.rotation[2])  // z
+            );
+            localMatrix *= glm::mat4_cast(q);
+        }
+        // Обработка Scale
+        if (node.scale.size() == 3) {
+            localMatrix = glm::scale(localMatrix, glm::vec3(
+                static_cast<float>(node.scale[0]),
+                static_cast<float>(node.scale[1]),
+                static_cast<float>(node.scale[2])
+            ));
+        }
+    }
+
+    // Комбинируем с родительской матрицей
+    glm::mat4 nodeMatrix = parentMatrix * localMatrix;
+
+    // 2. ОБРАБОТКА МЕША (если он есть в узле)
+    if (node.mesh >= 0) {
+        const auto& gltfMesh = model->meshes[node.mesh];
+        for (const auto& primitive : gltfMesh.primitives) {
+            if (primitive.attributes.find("POSITION") == primitive.attributes.end()) continue;
+            if (primitive.indices < 0) continue;
+
+            // Доступ к позициям
+            const tinygltf::Accessor& posAccessor = model->accessors[primitive.attributes.at("POSITION")];
+            const tinygltf::BufferView& posView = model->bufferViews[posAccessor.bufferView];
+            const tinygltf::Buffer& posBuffer = model->buffers[posView.buffer];
+            const uint8_t* posData = &posBuffer.data[posView.byteOffset + posAccessor.byteOffset];
+            int posByteStride = posAccessor.ByteStride(posView);
+            if (posByteStride == 0) posByteStride = sizeof(float) * 3;
+
+            // Доступ к индексам
+            const tinygltf::Accessor& indexAccessor = model->accessors[primitive.indices];
+            const tinygltf::BufferView& indexView = model->bufferViews[indexAccessor.bufferView];
+            const tinygltf::Buffer& indexBuffer = model->buffers[indexView.buffer];
+            const uint8_t* indexData = &indexBuffer.data[indexView.byteOffset + indexAccessor.byteOffset];
+            int indexCount = indexAccessor.count;
+
+            // Цикл по треугольникам
+            for (int i = 0; i < indexCount; i += 3) {
+                int i0 = 0, i1 = 0, i2 = 0;
+
+                if (indexAccessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT) {
+                    const uint16_t* indices = reinterpret_cast<const uint16_t*>(indexData);
+                    i0 = indices[i]; i1 = indices[i + 1]; i2 = indices[i + 2];
+                }
+                else if (indexAccessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT) {
+                    const uint32_t* indices = reinterpret_cast<const uint32_t*>(indexData);
+                    i0 = indices[i]; i1 = indices[i + 1]; i2 = indices[i + 2];
+                }
+                else if (indexAccessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE) {
+                    const uint8_t* indices = indexData;
+                    i0 = indices[i]; i1 = indices[i + 1]; i2 = indices[i + 2];
+                }
+
+                const float* p0 = reinterpret_cast<const float*>(posData + i0 * posByteStride);
+                const float* p1 = reinterpret_cast<const float*>(posData + i1 * posByteStride);
+                const float* p2 = reinterpret_cast<const float*>(posData + i2 * posByteStride);
+
+                // Трансформируем вершины в мировые координаты меша
+                glm::vec4 v0 = nodeMatrix * glm::vec4(p0[0], p0[1], p0[2], 1.0f);
+                glm::vec4 v1 = nodeMatrix * glm::vec4(p1[0], p1[1], p1[2], 1.0f);
+                glm::vec4 v2 = nodeMatrix * glm::vec4(p2[0], p2[1], p2[2], 1.0f);
+
+                meshInterface->addTriangle(
+                    btVector3(v0.x, v0.y, v0.z),
+                    btVector3(v1.x, v1.y, v1.z),
+                    btVector3(v2.x, v2.y, v2.z)
+                );
+            }
+        }
+    }
+
+    // 3. РЕКУРСИЯ
+    for (int childIdx : node.children) {
+        processNodePhysics(model, childIdx, nodeMatrix, meshInterface);
+    }
+}
+
+btBvhTriangleMeshShape* GltfModel::getPhysicsShape() {
+    btTriangleMesh* mesh = new btTriangleMesh();
+
+    // Находим корневые узлы сцены (обычно scene 0)
+    const tinygltf::Scene& scene = mModel->scenes[mModel->defaultScene > -1 ? mModel->defaultScene : 0];
+
+    for (int nodeIdx : scene.nodes) {
+        processNodePhysics(mModel.get(), nodeIdx, glm::mat4(1.0f), mesh);
+    }
+
+    return new btBvhTriangleMeshShape(mesh, true);
 }
 
 void GltfModel::createVertexBuffers() {

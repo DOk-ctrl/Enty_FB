@@ -42,6 +42,8 @@ class GltfModel {
 
     void resetNodeData(std::shared_ptr<GltfNode> treeNode);
 
+    void processNodePhysics(const tinygltf::Model* model, int nodeIdx, const glm::mat4& parentMatrix, btTriangleMesh* meshInterface);
+
     bool mHasNormalMap = false;
     bool mHasMetRoughMap = false;
 

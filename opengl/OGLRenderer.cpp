@@ -391,15 +391,17 @@ void OGLRenderer::addPhysicsToEnty(std::shared_ptr<GltfInstance> entyInstance, b
 }
 
 void OGLRenderer::addPhysicsToStonehenge(std::shared_ptr<GltfInstance> stonehengeInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 pos) {
-    // Создаем гигантскую коробку для пола (размер 100x1x100 метров)
-    btCollisionShape* groundShape = new btBoxShape(btVector3(50.0f, 0.5f, 50.0f));
+    // Получаем ИДЕАЛЬНО точный физический шейп из glTF
+    btCollisionShape* groundShape = stonehengeInstance->getModel()->getPhysicsShape();
 
     btTransform groundTransform;
     groundTransform.setIdentity();
-    // Опускаем пол чуть ниже нуля, чтобы модели стояли на y=0
-    groundTransform.setOrigin(btVector3(pos.x, pos.y - 0.5f, pos.z));
 
-    // Для статичных объектов (Земля, Дома) масса ВСЕГДА = 0.
+    // ВНИМАНИЕ: Я убрал смещение pos.y - 0.5f, потому что теперь коллизия 
+    // идеально совпадает с визуальной сеткой.
+    groundTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
+
+    // Для статичных объектов масса ВСЕГДА = 0.
     btScalar mass(0.0f);
     btVector3 localInertia(0, 0, 0);
 
@@ -407,11 +409,11 @@ void OGLRenderer::addPhysicsToStonehenge(std::shared_ptr<GltfInstance> stoneheng
     btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, groundShape, localInertia);
     btRigidBody* body = new btRigidBody(rbInfo);
 
-    // Делаем пол шероховатым, чтобы Энти не скользила как по льду
+    // Делаем камни шероховатыми
     body->setFriction(0.8f);
 
     dynamicsWorld->addRigidBody(body);
-    stonehengeInstance->setRigidBody(body); // Привязываем (хоть пол и не двигается)
+    stonehengeInstance->setRigidBody(body);
 }
 
 void OGLRenderer::handleMovementKeys() {

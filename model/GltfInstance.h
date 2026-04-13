@@ -14,7 +14,7 @@
 
 #include "OGLRenderData.h"
 #include "ModelSettings.h"
-
+#include "btBulletDynamicsCommon.h"
 class GltfInstance {
   public:
     GltfInstance(std::shared_ptr<GltfModel> model, glm::vec3 worldPos, bool randomize = false);
@@ -47,6 +47,11 @@ class GltfInstance {
 
     std::shared_ptr<GltfNode> getRootNode() { return mRootNode; }
 
+    void setRigidBody(btRigidBody* body) { mRigidBody = body; }
+    btRigidBody* getRigidBody() { return mRigidBody; }
+
+    // Синхронизация данных
+    void syncPhysics();
   private:
     void playAnimation(int animNum, float speedDivider, float blendFactor,
       replayDirection direction);
@@ -89,4 +94,6 @@ class GltfInstance {
     IKSolver mIKSolver{};
     void solveIKByCCD(glm::vec3 target);
     void solveIKByFABRIK(glm::vec3 target);
+
+    btRigidBody* mRigidBody = nullptr; // Физическое тело для этого инстанса
 };

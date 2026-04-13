@@ -338,7 +338,32 @@ void GltfInstance::solveIK() {
       break;
   }
 }
+void GltfInstance::syncPhysics() {
+    // Если у инстанса нет физики или оно статичное (масса = 0) - ничего не делаем
+    if (!mRigidBody || !mRigidBody->getMotionState() || mRigidBody->isStaticObject()) {
+        return;
+    }
 
+    // Забираем матрицу трансформации из Bullet
+    btTransform trans;
+    mRigidBody->getMotionState()->getWorldTransform(trans);
+
+    // 1. Обновляем позицию (Bullet возвращает центр капсулы)
+    btVector3 pos = trans.getOrigin();
+
+    // Смещаем визуальную модель ВНИЗ на половину её роста (0.9 метра)
+    // чтобы ноги визуальной модели стояли ровно на полу, а не проваливались.
+    mModelSettings.msWorldPosition = glm::vec3(pos.x(), pos.y() - 0.9f, pos.z());
+
+    // 2. Обновляем поворот
+    btQuaternion rot = trans.getRotation();
+    glm::quat q(rot.w(), rot.x(), rot.y(), rot.z());
+    mModelSettings.msWorldRotation = glm::degrees(glm::eulerAngles(q));
+
+    // 3. САМОЕ ВАЖНОЕ: Передаем новые координаты в графе сцены!
+    mRootNode->setWorldPosition(mModelSettings.msWorldPosition);
+    mRootNode->setWorldRotation(mModelSettings.msWorldRotation);
+}
 void GltfInstance::playAnimation(int animNum, float speedDivider, float blendFactor,
     replayDirection direction) {
     // Если индекс вне диапазона — ничего не делаем

@@ -43,6 +43,8 @@ class GltfModel {
 
     bool mHasNormalMap = false;
     bool mHasMetRoughMap = false;
+
+
   private:
     void createVertexBuffers();
     void createIndexBuffer();

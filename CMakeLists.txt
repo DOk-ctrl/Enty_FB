@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 
 set(CMAKE_CXX_STANDARD 17)
+project(Main)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)
@@ -25,7 +26,7 @@ if(WIN32)
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 endif()
 
-project(Main)
+
 
 # optimize for speed on Clang or GCC
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -50,7 +51,8 @@ endif()
 
 add_executable(Main ${SOURCES} "opengl/Localization.cpp" "opengl/Localization.h")
 
-target_include_directories(Main PUBLIC include src window tools opengl model imgui tinygltf ${bulletphysics_SOURCE_DIR}/src)
+target_include_directories(Main 
+PUBLIC include src window tools opengl model imgui tinygltf ${bulletphysics_SOURCE_DIR}/src ${bulletphysics_BINARY_DIR}/src)
 
 find_package(glfw3 3.3 REQUIRED)
 set(OpenGL_GL_PREFERENCE GLVND)
@@ -115,7 +117,7 @@ if(UNIX)
   set(GLFW3_LIBRARY glfw)
 endif()
 
-include_directories(${GLFW3_INCLUDE_DIR} ${GLM_INCLUDE_DIR})
+include_directories(${GLFW3_INCLUDE_DIR} ${GLM_INCLUDE_DIR} ${bulletphysics_SOURCE_DIR}/src ${bulletphysics_BINARY_DIR}/src)
 
 if(MSVC)
   target_link_libraries(Main ${GLFW3_LIBRARY} OpenGL::GL BulletDynamics BulletCollision LinearMath)

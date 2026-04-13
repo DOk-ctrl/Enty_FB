@@ -13,6 +13,7 @@
 #include "GltfAnimationClip.h"
 
 #include "OGLRenderData.h"
+#include "btBulletDynamicsCommon.h"
 
 struct GltfNodeData {
     std::shared_ptr<GltfNode> rootNode;
@@ -44,6 +45,7 @@ class GltfModel {
     bool mHasNormalMap = false;
     bool mHasMetRoughMap = false;
 
+    btBvhTriangleMeshShape* getPhysicsShape();
 
   private:
     void createVertexBuffers();

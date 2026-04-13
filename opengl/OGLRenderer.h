@@ -22,6 +22,7 @@
 #include "GltfInstance.h"
 
 #include "OGLRenderData.h"
+#include "btBulletDynamicsCommon.h"
 
 class OGLRenderer {
   public:
@@ -35,9 +36,20 @@ class OGLRenderer {
     void handleMouseButtonEvents(int button, int action, int mods);
     void handleMousePositionEvents(double xPos, double yPos);
 
+    void addPhysicsToEnty(std::shared_ptr<GltfInstance> entyInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 spawnPos);
+    void addPhysicsToStonehenge(std::shared_ptr<GltfInstance> stonehengeInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 pos);
+
     void cleanup();
 
   private:
+
+    // --- оепелеммше BULLET PHYSICS ---
+    btDefaultCollisionConfiguration* mCollisionConfiguration = nullptr;
+    btCollisionDispatcher* mDispatcher = nullptr;
+    btBroadphaseInterface* mOverlappingPairCache = nullptr;
+    btSequentialImpulseConstraintSolver* mSolver = nullptr;
+    btDiscreteDynamicsWorld* mDynamicsWorld = nullptr;
+
     OGLRenderData mRenderData{};
     bool mShowMenu = false;
     Timer mFrameTimer{};

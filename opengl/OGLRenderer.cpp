@@ -31,6 +31,15 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
     return false;
   }
 
+  mCollisionConfiguration = new btDefaultCollisionConfiguration();
+  mDispatcher = new btCollisionDispatcher(mCollisionConfiguration);
+  mOverlappingPairCache = new btDbvtBroadphase(); // Для быстрого отсечения столкновений
+  mSolver = new btSequentialImpulseConstraintSolver();
+  mDynamicsWorld = new btDiscreteDynamicsWorld(mDispatcher, mOverlappingPairCache, mSolver, mCollisionConfiguration);
+
+  mDynamicsWorld->setGravity(btVector3(0, -9.81f, 0));
+  Logger::log(1, "Bullet Physics успешно инициализирован!\n");
+
   if (!GLAD_GL_VERSION_4_6) {
     Logger::log(1, "%s error: failed to get at least OpenGL 4.6\n", __FUNCTION__);
     return false;
@@ -134,6 +143,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
     return false;
   }
   
+ 
   //mGltfModels.at(0)->uploadVertexBuffers();
   //mGltfModels.at(0)->uploadIndexBuffer();
   /*
@@ -189,11 +199,14 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   numTriangles += static_cast<unsigned int>(mGltfModels.at(0)->getTriangleCount());
 
   int xPos2 = 0;
-  int yPos2 = 1;
+  int yPos2 = 3;
   int zPos2 = 0;
   mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(1), glm::vec3(static_cast<float>(xPos2), static_cast<float>(yPos2),
       static_cast<float>(zPos2)), true));
   numTriangles += static_cast<unsigned int>(mGltfModels.at(1)->getTriangleCount());
+
+  addPhysicsToStonehenge(mGltfInstances.at(0), mDynamicsWorld, glm::vec3(0, 0, 0));
+  addPhysicsToEnty(mGltfInstances.at(1), mDynamicsWorld, glm::vec3(0, 0, 0)); // Она заспавнится на высоте 10м и упадет на пол
 
   mRenderData.rdTriangleCount = numTriangles;
 
@@ -353,6 +366,54 @@ void OGLRenderer::handleMousePositionEvents(double xPos, double yPos) {
   mMouseYPos = static_cast<int>(yPos);
 }
 
+void OGLRenderer::addPhysicsToEnty(std::shared_ptr<GltfInstance> entyInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 spawnPos) {
+    // РЕАЛЬНЫЕ РАЗМЕРЫ: Радиус 0.3м, Высота цилиндра 1.2м. 
+    // Итого: 1.8 + 0.3 + 0.3 = 2.4 метра общей высоты!
+    btCollisionShape* colShape = new btCapsuleShape(0.3f, 1.8f);
+
+    btTransform startTransform;
+    startTransform.setIdentity();
+    // Спавним на 10 метров вверх
+    startTransform.setOrigin(btVector3(spawnPos.x, spawnPos.y + 5.0f, spawnPos.z));
+
+    btScalar mass(56.0f);
+    btVector3 localInertia(0, 0, 0);
+    colShape->calculateLocalInertia(mass, localInertia);
+
+    btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
+    btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, colShape, localInertia);
+    btRigidBody* body = new btRigidBody(rbInfo);
+
+    body->setAngularFactor(btVector3(0, 1, 0));
+
+    dynamicsWorld->addRigidBody(body);
+    entyInstance->setRigidBody(body);
+}
+
+void OGLRenderer::addPhysicsToStonehenge(std::shared_ptr<GltfInstance> stonehengeInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 pos) {
+    // Создаем гигантскую коробку для пола (размер 100x1x100 метров)
+    btCollisionShape* groundShape = new btBoxShape(btVector3(50.0f, 0.5f, 50.0f));
+
+    btTransform groundTransform;
+    groundTransform.setIdentity();
+    // Опускаем пол чуть ниже нуля, чтобы модели стояли на y=0
+    groundTransform.setOrigin(btVector3(pos.x, pos.y - 0.5f, pos.z));
+
+    // Для статичных объектов (Земля, Дома) масса ВСЕГДА = 0.
+    btScalar mass(0.0f);
+    btVector3 localInertia(0, 0, 0);
+
+    btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
+    btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, groundShape, localInertia);
+    btRigidBody* body = new btRigidBody(rbInfo);
+
+    // Делаем пол шероховатым, чтобы Энти не скользила как по льду
+    body->setFriction(0.8f);
+
+    dynamicsWorld->addRigidBody(body);
+    stonehengeInstance->setRigidBody(body); // Привязываем (хоть пол и не двигается)
+}
+
 void OGLRenderer::handleMovementKeys() {
   mRenderData.rdMoveForward = 0;
   if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_W) == GLFW_PRESS) {
@@ -395,13 +456,87 @@ void OGLRenderer::draw() {
   }
 
   /* get time difference for movement */
+  /* get time difference for movement */
   double tickTime = glfwGetTime();
   mRenderData.rdTickDiff = tickTime - mLastTickTime;
+
+  // ИСПОЛЬЗУЕМ rdTickDiff (он гарантированно в секундах)
+  float deltaTime = static_cast<float>(mRenderData.rdTickDiff);
+
+  // Защита от провалов под текстуры при долгих загрузках кадров
+  if (deltaTime > 0.1f) {
+      deltaTime = 0.1f;
+  }
+
+  // ШАГ 1: СИМУЛЯЦИЯ ФИЗИКИ
+  if (mDynamicsWorld) {
+      mDynamicsWorld->stepSimulation(deltaTime, 10);
+  }
+
+  // ШАГ 2: СИНХРОНИЗАЦИЯ ФИЗИКИ С ГРАФИКОЙ
+  for (auto& instance : mGltfInstances) {
+      instance->syncPhysics();
+  }
 
   mRenderData.rdFrameTime = mFrameTimer.stop();
   mFrameTimer.start();
 
   handleMovementKeys();
+
+  auto& enty = mGltfInstances.at(1);
+  if (enty->getRigidBody()) {
+      btRigidBody* body = enty->getRigidBody();
+
+      float moveSpeed = 5.0f; // Скорость бега (метров в секунду)
+      float turnSpeed = 3.0f; // Скорость поворота
+
+      // 1. ПОВОРОТ (A / D)
+      if (mRenderData.rdMoveRight != 0) {
+          // Задаем угловую скорость (вращение вокруг оси Y)
+          body->setAngularVelocity(btVector3(0, -mRenderData.rdMoveRight * turnSpeed, 0));
+          body->activate(true); // "Будим" физику, если она уснула
+      }
+      else {
+          // Мгновенно останавливаем вращение, если отпустили кнопку
+          body->setAngularVelocity(btVector3(0, 0, 0));
+      }
+
+      // 2. ДВИЖЕНИЕ ВПЕРЕД/НАЗАД (W / S) И АНИМАЦИЯ
+      ModelSettings settings = enty->getInstanceSettings();
+
+      if (mRenderData.rdMoveForward != 0) {
+          // Берем текущий поворот модели
+          glm::quat rot = enty->getWorldRotation();
+
+          // Вычисляем локальный вектор "Вперед". 
+          // ВНИМАНИЕ: Если при нажатии W она бежит спиной назад, поменяй 1.0f на -1.0f
+          glm::vec3 forward = rot * glm::vec3(0.0f, 0.0f, 1.0f);
+
+          glm::vec3 velocity = forward * (float)mRenderData.rdMoveForward * moveSpeed;
+
+          // ВАЖНО: Мы задаем X и Z скорость, но сохраняем текущую Y-скорость, 
+          // чтобы гравитация продолжала тянуть её вниз!
+          btVector3 currentVel = body->getLinearVelocity();
+          body->setLinearVelocity(btVector3(velocity.x, currentVel.y(), velocity.z));
+
+          // Включаем анимацию ходьбы/бега
+          settings.msAnimClip = 2; // <--- ЗАМЕНИ НА ИНДЕКС АНИМАЦИИ ХОДЬБЫ
+          settings.msPlayAnimation = true;
+
+          body->activate(true);
+      }
+      else {
+          // Тормозим (сохраняя гравитацию по Y)
+          btVector3 currentVel = body->getLinearVelocity();
+          body->setLinearVelocity(btVector3(0.0f, currentVel.y(), 0.0f));
+
+          // Включаем анимацию простоя (Idle)
+          settings.msAnimClip = 0; // <--- ЗАМЕНИ НА ИНДЕКС АНИМАЦИИ IDLE
+      }
+
+      // Применяем настройки обратно
+      enty->setInstanceSettings(settings);
+  }
 
   /* draw to framebuffer */
   mFramebuffer.bind();
@@ -650,6 +785,21 @@ void OGLRenderer::draw() {
 }
 
 void OGLRenderer::cleanup() {
+
+    if (mDynamicsWorld) {
+        // Удаляем все RigidBody из мира (опционально, но хороший тон)
+        for (int i = mDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--) {
+            btCollisionObject* obj = mDynamicsWorld->getCollisionObjectArray()[i];
+            mDynamicsWorld->removeCollisionObject(obj);
+            delete obj;
+        }
+        delete mDynamicsWorld;
+        delete mSolver;
+        delete mOverlappingPairCache;
+        delete mDispatcher;
+        delete mCollisionConfiguration;
+    }
+
   for (int i = 0; i < mGltfModels.size(); ++i) {
     mGltfModels.at(i)->cleanup();
     mGltfModels.at(i).reset();

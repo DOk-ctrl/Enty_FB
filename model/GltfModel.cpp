@@ -267,6 +267,11 @@ void GltfModel::resetNodeData(std::shared_ptr<GltfNode> treeNode) {
   }
 }
 
+btBvhTriangleMeshShape* GltfModel::getPhysicsShape()
+{
+    return nullptr;
+}
+
 void GltfModel::createVertexBuffers() {
     // 1. Создаем и привязываем VAO
     if (mVAO == 0) glGenVertexArrays(1, &mVAO);

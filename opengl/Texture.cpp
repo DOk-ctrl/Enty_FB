@@ -1,6 +1,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <stb_image.h>
-
+#include<vector>
+#include "Tools.h"
 #include "Texture.h"
 #include "Logger.h"
 
@@ -12,8 +13,27 @@ bool Texture::loadTexture(std::string textureFilename, bool flipImage) {
     mTextureName = textureFilename;
 
     stbi_set_flip_vertically_on_load(flipImage);
-    unsigned char* textureData = stbi_load(textureFilename.c_str(), &mTexWidth, &mTexHeight, &mNumberOfChannels, 0);
+    //unsigned char* textureData = stbi_load(textureFilename.c_str(), &mTexWidth, &mTexHeight, &mNumberOfChannels, 0);
 
+    // 1. Читаем зашифрованную текстуру в память
+    std::vector<char> fileData = Tools::loadFileToMemory(textureFilename);
+    if (fileData.empty()) {
+        Logger::log(1, "%s error: could not read texture to memory '%s'\n", __FUNCTION__, textureFilename.c_str());
+        return false;
+    }
+
+    // 2. Расшифровываем
+    Tools::processData(fileData);
+
+    // 3. Отдаем расшифрованный массив в stb_image
+    // stbi_load_from_memory принимает массив байтов
+    unsigned char* textureData = stbi_load_from_memory(
+        reinterpret_cast<const stbi_uc*>(fileData.data()),
+        static_cast<int>(fileData.size()),
+        &mTexWidth, &mTexHeight, &mNumberOfChannels, 0
+    );
+
+  
     if (!textureData) {
         Logger::log(1, "%s error: could not load file '%s'\n", __FUNCTION__, mTextureName.c_str());
         stbi_image_free(textureData);

@@ -49,7 +49,7 @@ if(WIN32)
 endif()
 # ----------------------------
 
-add_executable(Main ${SOURCES} "opengl/Localization.cpp" "opengl/Localization.h")
+add_executable(Main ${SOURCES} "opengl/Localization.cpp" "opengl/Localization.h" )
 
 target_include_directories(Main 
 PUBLIC include src window tools opengl model imgui tinygltf ${bulletphysics_SOURCE_DIR}/src ${bulletphysics_BINARY_DIR}/src)
@@ -125,3 +125,4 @@ else()
   # Clang and GCC may need libstd++ and libmath
   target_link_libraries(Main ${GLFW3_LIBRARY} OpenGL::GL stdc++ m BulletDynamics  BulletCollision LinearMath)
 endif()
+

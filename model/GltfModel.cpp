@@ -9,7 +9,7 @@
 
 #include "GltfModel.h"
 #include "Logger.h"
-
+#include "Tools.h"
 bool GltfModel::loadModel(OGLRenderData &renderData,
     std::string modelFilename, std::string textureFilename, std::string normalFilename, std::string metRoughFilename) {
     // Загрузка Base Color
@@ -41,9 +41,25 @@ bool GltfModel::loadModel(OGLRenderData &renderData,
   std::string loaderWarnings;
   bool result = false;
 
-  result = gltfLoader.LoadASCIIFromFile(mModel.get(), &loaderErrors, &loaderWarnings,
-    modelFilename);
+  //result = gltfLoader.LoadASCIIFromFile(mModel.get(), &loaderErrors, &loaderWarnings,  modelFilename);
+  // 
+  // 1. Читаем зашифрованный файл в память
+  std::vector<char> fileData = Tools::loadFileToMemory(modelFilename);
+  if (fileData.empty()) {
+      Logger::log(1, "%s error: could not read file to memory '%s'\n", __FUNCTION__, modelFilename.c_str());
+      return false;
+  }
 
+  // 2. Расшифровываем (XOR)
+  Tools::processData(fileData);
+
+  // 3. Скажем tinygltf загрузить модель из расшифрованной памяти
+  // ВАЖНО: Указываем base_dir (папку assets), чтобы tinygltf мог найти .bin файлы, если они не встроены.
+  std::string base_dir = modelFilename.substr(0, modelFilename.find_last_of('/') + 1);
+
+  // Используем LoadASCIIFromString (tinygltf использует его для памяти)
+  result = gltfLoader.LoadASCIIFromString(mModel.get(), &loaderErrors, &loaderWarnings,
+      fileData.data(), fileData.size(), base_dir);
   if (!loaderWarnings.empty()) {
     Logger::log(1, "%s: warnings while loading glTF model:\n%s\n", __FUNCTION__,
       loaderWarnings.c_str());
@@ -59,6 +75,14 @@ bool GltfModel::loadModel(OGLRenderData &renderData,
       modelFilename.c_str());
     return false;
   }
+
+  // --- ВСТАВЬ ЭТОТ БЛОК СЮДА ---
+  // Расшифровываем бинарные буферы (.bin), которые tinygltf только что загрузил
+  for (auto& buffer : mModel->buffers) {
+      Tools::processData(buffer.data);
+  }
+  Logger::log(1, "%s: glTF binary buffers successfully decrypted\n", __FUNCTION__);
+  // -----------------------------
 
   mModelFilename = modelFilename;
     

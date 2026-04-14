@@ -20,13 +20,17 @@ bool Window::init(unsigned int width, unsigned int height, std::string title) {
   GLFWimage images[1];
   int channels;
 
-  images[0].pixels = stbi_load("assets/logo.png", &images[0].width, &images[0].height, &channels, 4);
+  images[0].pixels = stbi_load(R"(C:\Dev\02_opengl_multiple_models\window\logo.png)", &images[0].width, &images[0].height, &channels, 4);
 
   if (images[0].pixels) {
       glfwSetWindowIcon(mWindow, 1, images);
       stbi_image_free(images[0].pixels);
+      Logger::log(0, "Icon loaded successfully!\n");
   }
-  //
+  else {
+      // Выведет причину ошибки от stb_image
+      Logger::log(1, "STB Error: %s\n", stbi_failure_reason());
+  }
 
   glfwMakeContextCurrent(mWindow);
 

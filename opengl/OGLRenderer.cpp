@@ -491,7 +491,9 @@ void OGLRenderer::draw() {
       btRigidBody* body = enty->getRigidBody();
       body->setAngularFactor(btVector3(0, 1, 0));
 
-      float maxSpeed = 5.0f;
+      bool isSprinting = (std::abs(mRenderData.rdMoveForward) > 1 || std::abs(mRenderData.rdMoveRight) > 1);
+      float maxSpeed = isSprinting ? 15.0f : 5.0f; // Ускоряемся, если Shift нажат
+
       float blendSpeed = 5.0f; // Скорость перехода (чем выше, тем быстрее переключение)
       ModelSettings settings = enty->getInstanceSettings();
 
@@ -554,21 +556,17 @@ void OGLRenderer::draw() {
 
           body->setAngularVelocity(btVector3(0, angleDiff * 12.0f, 0));
 
+          int targetAnim = isSprinting ? 2 : 2;
           // --- ЛОГИКА БЛЕНДИНГА (ПЕРЕХОД В БЕГ) ---
-          if (settings.msAnimClip != 2) {
-              // Мы хотим бежать (клип 2), но текущий клип еще не 2
+          if (settings.msAnimClip != targetAnim) {
               settings.msBlendingMode = blendMode::crossfade;
-              settings.msCrossBlendDestAnimClip = 2; // Цель перехода
-
-              // Наращиваем фактор смешивания от 0.0 до 1.0
+              settings.msCrossBlendDestAnimClip = targetAnim;
               settings.msAnimCrossBlendFactor += blendSpeed * deltaTime;
 
               if (settings.msAnimCrossBlendFactor >= 1.0f) {
-                  // Переход закончен: теперь клип 2 стал основным
                   settings.msBlendingMode = blendMode::fadeinout;
-                  settings.msAnimClip = 2;
+                  settings.msAnimClip = targetAnim;
                   settings.msAnimCrossBlendFactor = 0.0f;
-                  // Возвращаем обычный режим
               }
           }
 

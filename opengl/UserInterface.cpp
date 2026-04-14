@@ -128,10 +128,19 @@ void UserInterface::drawDeveloperUI(OGLRenderData& renderData, ModelSettings& se
         //imguiWindowFlags |= ImGuiWindowFlags_NoMove;
 
         ImGui::SetNextWindowBgAlpha(0.8f);
-
-        ImGui::Begin("Control", nullptr, imguiWindowFlags);
+        const char* title = u8"Информация";
+        const char* text = u8"Вы можете переключить на UI персонажа кнопкой F1(нажмите пробел чтобы убавить здоровье)";
+        const char* text1 = u8"Вы можете нажать кнопку Esc, чтобы вызвать контекстное меню";
+        const char* text2 = u8"Нажмите ПКМ(Правая кнопка мыши), чтобы управлять камерой";
+        const char* text3 = u8"WASD - управление";
+        ImGui::Begin(title, nullptr, imguiWindowFlags);
         //24.01
+        ImGui::Text(text);
         
+        ImGui::Text(text1);
+        ImGui::Text(text2);
+        ImGui::Text(text3);
+        /*
         static float newFps = 0.0f;
         // avoid inf values (division by zero) 
         if (renderData.rdFrameTime > 0.0) {
@@ -158,6 +167,7 @@ void UserInterface::drawDeveloperUI(OGLRenderData& renderData, ModelSettings& se
         static int matrixUploadOffset = 0;
         static int uiGenOffset = 0;
         static int uiDrawOffset = 0;
+        */
         /*
         while (updateTime < ImGui::GetTime()) {
             mFPSValues.at(fpsOffset) = mFramesPerSecond;
@@ -436,7 +446,7 @@ void UserInterface::drawDeveloperUI(OGLRenderData& renderData, ModelSettings& se
                 renderData.rdCurrentSelectedInstance++;
             }
             ImGui::PopButtonRepeat();
-            */
+            
             ImGui::Text("World Pos (X/Z)  :");
             ImGui::SameLine();
             ImGui::SliderFloat3("##WORLDPOS", glm::value_ptr(settings.msWorldPosition),
@@ -446,6 +456,7 @@ void UserInterface::drawDeveloperUI(OGLRenderData& renderData, ModelSettings& se
             ImGui::SameLine();
             ImGui::SliderFloat("##WORLDROT", &settings.msWorldRotation.y,
                 -180.0f, 180.0f, "%.0f", flags);
+                */
         
         /*
         }

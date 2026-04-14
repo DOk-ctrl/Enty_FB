@@ -126,3 +126,54 @@ else()
   target_link_libraries(Main ${GLFW3_LIBRARY} OpenGL::GL stdc++ m BulletDynamics  BulletCollision LinearMath)
 endif()
 
+if(MSVC)
+    # 1. √оворим линкеру, что нам нужна подсистема WINDOWS (убирает консоль)
+    set_target_properties(Main PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
+    
+    # 2. ”казываем точку входа, чтобы не мен€ть int main() на WinMain
+    set_property(TARGET Main APPEND_STRING PROPERTY LINK_FLAGS " /ENTRY:mainCRTStartup")
+endif()
+
+# =========================================================================
+# Ќј—“–ќ… ј ”—“јЌќ¬ў» ј (CPACK) Ч ∆≈Ћ≈«ќЅ≈“ќЌЌјя ¬≈–—»я
+# =========================================================================
+
+# 1. ќсновные файлы
+install(TARGETS Main DESTINATION .)
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION assets)
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/textures/" DESTINATION textures)
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/shader/" DESTINATION shader)
+
+# 2. ћетаданные
+set(CPACK_PACKAGE_NAME "Tentacle Shippuden")
+set(CPACK_PACKAGE_VENDOR "Dev")
+set(CPACK_PACKAGE_VERSION "1.0.1")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Enty Furry Beast")
+
+# 3. Ќастройка NSIS
+set(CPACK_GENERATOR "NSIS")
+set(CPACK_NSIS_PACKAGE_NAME "Tentacle Shippuden")
+
+# ярлык в меню ѕ”—  (¬ј∆Ќќ: создает папку в программах)
+set(CPACK_NSIS_MENU_LINKS "Main.exe" "Tentacle Shippuden")
+
+# 1. —оздание €рлыка
+# \n Ч это переход на новую строку, чтобы NSIS выполнил две разные команды.
+# SetOutPath устанавливает поле "–абоча€ папка" в свойствах €рлыка.
+set(CPACK_NSIS_CREATE_ICONS_EXTRA "
+  SetOutPath \\\"$INSTDIR\\\"
+  CreateShortCut \\\"$DESKTOP\\\\Tentacle Shippuden.lnk\\\" \\\"$INSTDIR\\\\Main.exe\\\" \\\"\\\" \\\"$INSTDIR\\\\Main.exe\\\" 0
+")
+
+# 2. ”даление €рлыка
+set(CPACK_NSIS_DELETE_ICONS_EXTRA "
+  Delete \\\"$DESKTOP\\\\Tentacle Shippuden.lnk\\\"
+")
+# 4. ¬изуал инсталл€тора
+set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/Logo.ico")
+set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/Logo.ico")
+
+# »конка в панели управлени€ "”становка и удаление программ"
+set(CPACK_NSIS_INSTALLED_ICON_NAME "Main.exe")
+
+include(CPack)

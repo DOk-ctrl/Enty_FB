@@ -13,8 +13,9 @@ bool Texture::loadTexture(std::string textureFilename, bool flipImage) {
     mTextureName = textureFilename;
 
     stbi_set_flip_vertically_on_load(flipImage);
-    //unsigned char* textureData = stbi_load(textureFilename.c_str(), &mTexWidth, &mTexHeight, &mNumberOfChannels, 0);
-
+    // загрузка без шифрования
+    unsigned char* textureData = stbi_load(textureFilename.c_str(), &mTexWidth, &mTexHeight, &mNumberOfChannels, 0);
+    /*
     // 1. Читаем зашифрованную текстуру в память
     std::vector<char> fileData = Tools::loadFileToMemory(textureFilename);
     if (fileData.empty()) {
@@ -32,7 +33,7 @@ bool Texture::loadTexture(std::string textureFilename, bool flipImage) {
         static_cast<int>(fileData.size()),
         &mTexWidth, &mTexHeight, &mNumberOfChannels, 0
     );
-
+    */
   
     if (!textureData) {
         Logger::log(1, "%s error: could not load file '%s'\n", __FUNCTION__, mTextureName.c_str());

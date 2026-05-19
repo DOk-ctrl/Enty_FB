@@ -41,8 +41,9 @@ bool GltfModel::loadModel(OGLRenderData &renderData,
   std::string loaderWarnings;
   bool result = false;
 
-  //result = gltfLoader.LoadASCIIFromFile(mModel.get(), &loaderErrors, &loaderWarnings,  modelFilename);
+  result = gltfLoader.LoadASCIIFromFile(mModel.get(), &loaderErrors, &loaderWarnings,  modelFilename);
   // 
+  /*
   // 1. Читаем зашифрованный файл в память
   std::vector<char> fileData = Tools::loadFileToMemory(modelFilename);
   if (fileData.empty()) {
@@ -60,6 +61,7 @@ bool GltfModel::loadModel(OGLRenderData &renderData,
   // Используем LoadASCIIFromString (tinygltf использует его для памяти)
   result = gltfLoader.LoadASCIIFromString(mModel.get(), &loaderErrors, &loaderWarnings,
       fileData.data(), fileData.size(), base_dir);
+  */
   if (!loaderWarnings.empty()) {
     Logger::log(1, "%s: warnings while loading glTF model:\n%s\n", __FUNCTION__,
       loaderWarnings.c_str());
@@ -75,7 +77,7 @@ bool GltfModel::loadModel(OGLRenderData &renderData,
       modelFilename.c_str());
     return false;
   }
-
+  /*
   // --- ВСТАВЬ ЭТОТ БЛОК СЮДА ---
   // Расшифровываем бинарные буферы (.bin), которые tinygltf только что загрузил
   for (auto& buffer : mModel->buffers) {
@@ -83,7 +85,7 @@ bool GltfModel::loadModel(OGLRenderData &renderData,
   }
   Logger::log(1, "%s: glTF binary buffers successfully decrypted\n", __FUNCTION__);
   // -----------------------------
-
+  */
   mModelFilename = modelFilename;
     
   glGenVertexArrays(1, &mVAO);

@@ -108,7 +108,7 @@ void UserInterface::init(OGLRenderData &renderData) {
   style();
   /* init plot vectors */
   //24.01
-  /* 
+  
   mFPSValues.resize(mNumFPSValues);
   mFrameTimeValues.resize(mNumFrameTimeValues);
   mModelUploadValues.resize(mNumModelUploadValues);
@@ -117,7 +117,7 @@ void UserInterface::init(OGLRenderData &renderData) {
   mMatrixUploadValues.resize(mNumMatrixUploadValues);
   mUiGenValues.resize(mNumUiGenValues);
   mUiDrawValues.resize(mNumUiDrawValues);
-  */
+  
 }
 // 15.01.26
 void UserInterface::drawDeveloperUI(OGLRenderData& renderData, ModelSettings& settings) {
@@ -140,7 +140,7 @@ void UserInterface::drawDeveloperUI(OGLRenderData& renderData, ModelSettings& se
         ImGui::Text(text1);
         ImGui::Text(text2);
         ImGui::Text(text3);
-        /*
+        
         static float newFps = 0.0f;
         // avoid inf values (division by zero) 
         if (renderData.rdFrameTime > 0.0) {
@@ -167,8 +167,8 @@ void UserInterface::drawDeveloperUI(OGLRenderData& renderData, ModelSettings& se
         static int matrixUploadOffset = 0;
         static int uiGenOffset = 0;
         static int uiDrawOffset = 0;
-        */
-        /*
+        
+        
         while (updateTime < ImGui::GetTime()) {
             mFPSValues.at(fpsOffset) = mFramesPerSecond;
             fpsOffset = ++fpsOffset % mNumFPSValues;
@@ -450,15 +450,15 @@ void UserInterface::drawDeveloperUI(OGLRenderData& renderData, ModelSettings& se
             ImGui::Text("World Pos (X/Z)  :");
             ImGui::SameLine();
             ImGui::SliderFloat3("##WORLDPOS", glm::value_ptr(settings.msWorldPosition),
-                -50.0f, 50.0f, "%.1f", flags);
+                -550.0f, 550.0f, "%.1f", flags);
 
             ImGui::Text("World Rotation   :");
             ImGui::SameLine();
             ImGui::SliderFloat("##WORLDROT", &settings.msWorldRotation.y,
                 -180.0f, 180.0f, "%.0f", flags);
-                */
+                
         
-        /*
+        
         }
         if (ImGui::CollapsingHeader("glTF Model")) {
             ImGui::Checkbox("Draw Model", &settings.msDrawModel);
@@ -669,7 +669,7 @@ void UserInterface::drawDeveloperUI(OGLRenderData& renderData, ModelSettings& se
                 }
             }
         }
-        */
+        
         ImGui::End();
     }
 

@@ -14,7 +14,7 @@ GltfInstance::~GltfInstance() {
     mGltfModel->getModelFilename().c_str());
 }
 
-GltfInstance::GltfInstance(std::shared_ptr<GltfModel> model, glm::vec3 worldPos, bool randomize) {
+GltfInstance::GltfInstance(std::shared_ptr<GltfModel> model, glm::vec3 worldPos, glm::vec3 worldRot) {
   if (!model) {
     Logger::log(1, "%s error: invalid glTF model\n", __FUNCTION__);
     return;
@@ -25,6 +25,9 @@ GltfInstance::GltfInstance(std::shared_ptr<GltfModel> model, glm::vec3 worldPos,
 
   mGltfModel = model;
   mModelSettings.msWorldPosition = worldPos;
+
+  mModelSettings.msWorldRotation = worldRot;
+
   mNodeCount = mGltfModel->getNodeCount();
 
   mInverseBindMatrices = mGltfModel->getInverseBindMatrices();
@@ -79,7 +82,7 @@ GltfInstance::GltfInstance(std::shared_ptr<GltfModel> model, glm::vec3 worldPos,
   }
   unsigned int animClipSize = mAnimClips.size();
 
-  /* randomize some settings */
+  /* randomize some settings 
   if (randomize && animClipSize > 0) {
     int animClip = std::rand() % animClipSize;
     float animClipSpeed = (std::rand() % 100) / 100.0f + 0.5f;
@@ -90,7 +93,7 @@ GltfInstance::GltfInstance(std::shared_ptr<GltfModel> model, glm::vec3 worldPos,
     mModelSettings.msWorldRotation = glm::vec3(0.0f, initRotation, 0.0f);
     mRootNode->setWorldRotation(mModelSettings.msWorldRotation);
   }
-
+  */
   /* update initial clips etc */
   checkForUpdates();
 
@@ -446,6 +449,16 @@ void GltfInstance::setSkeletonSplitNode(int nodeNum) {
 
 void GltfInstance::setInstanceSettings(ModelSettings settings) {
   mModelSettings = settings;
+  // 2. Если дерево узлов уже создано, применяем трансформации
+    if (mRootNode) {
+        // Применяем позицию и поворот к корневому узлу
+        mRootNode->setWorldPosition(mModelSettings.msWorldPosition);
+        mRootNode->setWorldRotation(mModelSettings.msWorldRotation);
+        
+        // 3. САМОЕ ВАЖНОЕ: Пересчитываем локальные и глобальные матрицы!
+        // Без этой строчки объект не повернется в кадре
+        updateNodeMatrices(mRootNode); 
+    }
 }
 
 ModelSettings GltfInstance::getInstanceSettings() {

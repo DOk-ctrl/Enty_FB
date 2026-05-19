@@ -17,7 +17,7 @@
 #include "btBulletDynamicsCommon.h"
 class GltfInstance {
   public:
-    GltfInstance(std::shared_ptr<GltfModel> model, glm::vec3 worldPos, bool randomize = false);
+    GltfInstance(std::shared_ptr<GltfModel> model, glm::vec3 worldPos, glm::vec3 worldRot);
     ~GltfInstance();
 
     void resetNodeData();

@@ -118,12 +118,11 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
  // test 12.01.26 - 1 model only 1 instance
   //mGltfModels.resize(3);
   
-  mGltfModels.resize(2);
+  mGltfModels.resize(5);
   mGltfModels.at(0) = std::make_shared<GltfModel>();
-  std::string modelFilename = "assets/Stonehenge3.gltf";
-  std::string modelTexFilename = "textures/Stonehenge4kBase.png";
-  std::string normalTex = "textures/Stonehenge4kNormal.png";
-  std::string roughTex = "textures/Stonehenge4kRough.png";
+  std::string modelFilename = "assets/StonehengeMay.gltf";
+  std::string modelTexFilename = "textures/StoneMay.png";
+
   /* 11.04.26 нужно добавить сшиватель для roughness and metallic а то там только одно перемнная на двоих ну и шейдер доделать
   if (!mGltfModels.at(0)->loadModel(mRenderData, modelFilename, modelTexFilename, normalTex, roughTex)) {
       Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
@@ -137,13 +136,36 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
 
   
   mGltfModels.at(1) = std::make_shared<GltfModel>();
-  std::string modelFilename2 = "assets/enty6.gltf";
-  std::string modelTexFilename2 = "textures/enty4k.png";
+  std::string modelFilename2 = "assets/enty6Clear.gltf";
+  std::string modelTexFilename2 = "textures/enty4kClear.png";
   if (!mGltfModels.at(1)->loadModel(mRenderData, modelFilename2, modelTexFilename2)) {
     Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename2.c_str());
     return false;
   }
   
+  mGltfModels.at(2) = std::make_shared<GltfModel>();
+  std::string modelFilename3 = "assets/Temple of Artemis.gltf";
+  std::string modelTexFilename3 = "textures/Temple.png";
+  if (!mGltfModels.at(2)->loadModel(mRenderData, modelFilename3, modelTexFilename3)) {
+      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename3.c_str());
+      return false;
+  }
+
+  mGltfModels.at(3) = std::make_shared<GltfModel>();
+  std::string modelFilename4 = "assets/vorota ishtarMay.gltf";
+  std::string modelTexFilename4 = "textures/vorota.png";
+  if (!mGltfModels.at(3)->loadModel(mRenderData, modelFilename4, modelTexFilename4)) {
+      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename4.c_str());
+      return false;
+  }
+
+  mGltfModels.at(4) = std::make_shared<GltfModel>();
+  std::string modelFilename5 = "assets/floor vorot ishtar.gltf";
+  std::string modelTexFilename5 = "textures/floorVrat.png";
+  if (!mGltfModels.at(4)->loadModel(mRenderData, modelFilename5, modelTexFilename5)) {
+      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename5.c_str());
+      return false;
+  }
  
   //mGltfModels.at(0)->uploadVertexBuffers();
   //mGltfModels.at(0)->uploadIndexBuffer();
@@ -192,23 +214,49 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   }
   */
   // 1 model coordinates
-  int xPos = 0;
+  glm::vec3 defaultRot = glm::vec3(0.0);
+
+  int xPos = 77;
   int yPos = 0;
-  int zPos = 0;
+  int zPos = 585;
   mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(0), glm::vec3(static_cast<float>(xPos), static_cast<float>(yPos),
-      static_cast<float>(zPos)), true));
+      static_cast<float>(zPos)), defaultRot));
   numTriangles += static_cast<unsigned int>(mGltfModels.at(0)->getTriangleCount());
 
   int xPos2 = 0;
   int yPos2 = 3;
   int zPos2 = 0;
   mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(1), glm::vec3(static_cast<float>(xPos2), static_cast<float>(yPos2),
-      static_cast<float>(zPos2)), true));
+      static_cast<float>(zPos2)), defaultRot));
   numTriangles += static_cast<unsigned int>(mGltfModels.at(1)->getTriangleCount());
 
-  addPhysicsToStonehenge(mGltfInstances.at(0), mDynamicsWorld, glm::vec3(0, 0, 0));
-  addPhysicsToEnty(mGltfInstances.at(1), mDynamicsWorld, glm::vec3(0, 0, 0)); // Она заспавнится на высоте 10м и упадет на пол
+  int xPos3 = 50;
+  int yPos3 = 0;
+  int zPos3 = 420;
+  glm::vec3 CustomRot = glm::vec3(0.0f, 90.0f, 0.0f);
+  mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(2), glm::vec3(static_cast<float>(xPos3), static_cast<float>(yPos3),
+      static_cast<float>(zPos3)), CustomRot));
+  numTriangles += static_cast<unsigned int>(mGltfModels.at(2)->getTriangleCount());
+  
+  int xPos4 = 0;
+  int yPos4 = 0;
+  int zPos4 = 160;
+  
+  mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(3), glm::vec3(static_cast<float>(xPos4), static_cast<float>(yPos4),
+      static_cast<float>(zPos4)), defaultRot));
+  numTriangles += static_cast<unsigned int>(mGltfModels.at(3)->getTriangleCount());
 
+  int xPos5 = 0;
+  int yPos5 = 0;
+  int zPos5 = 180;
+  mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(4), glm::vec3(static_cast<float>(xPos5), static_cast<float>(yPos5),
+      static_cast<float>(zPos5)), defaultRot));
+  numTriangles += static_cast<unsigned int>(mGltfModels.at(4)->getTriangleCount());
+
+  addPhysicsToStonehenge(mGltfInstances.at(0), mDynamicsWorld, glm::vec3(77, 0, 585),defaultRot);
+  addPhysicsToEnty(mGltfInstances.at(1), mDynamicsWorld, glm::vec3(0, 0, 0)); // Она заспавнится на высоте 10м и упадет на пол
+  addPhysicsToStonehenge(mGltfInstances.at(4), mDynamicsWorld, glm::vec3(0, 0, 180),defaultRot);
+  addPhysicsToStonehenge(mGltfInstances.at(2), mDynamicsWorld, glm::vec3(50, 0, 420),CustomRot);
   mRenderData.rdTriangleCount = numTriangles;
 
   mRenderData.rdNumberOfInstances = mGltfInstances.size();
@@ -391,7 +439,7 @@ void OGLRenderer::addPhysicsToEnty(std::shared_ptr<GltfInstance> entyInstance, b
     entyInstance->setRigidBody(body);
 }
 
-void OGLRenderer::addPhysicsToStonehenge(std::shared_ptr<GltfInstance> stonehengeInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 pos) {
+void OGLRenderer::addPhysicsToStonehenge(std::shared_ptr<GltfInstance> stonehengeInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 pos, glm::vec3 rot) {
     // Получаем ИДЕАЛЬНО точный физический шейп из glTF
     btCollisionShape* groundShape = stonehengeInstance->getModel()->getPhysicsShape();
 
@@ -401,6 +449,17 @@ void OGLRenderer::addPhysicsToStonehenge(std::shared_ptr<GltfInstance> stoneheng
     // ВНИМАНИЕ: Я убрал смещение pos.y - 0.5f, потому что теперь коллизия 
     // идеально совпадает с визуальной сеткой.
     groundTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
+
+    // 3. МАТЕМАТИКА ПОВОРОТА ДЛЯ BULLET
+    // Создаем кватернион Bullet и переводим твои градусы из Медиатора в радианы.
+    // Порядок углов в Bullet: Yaw (Y), Pitch (X), Roll (Z)
+    btQuaternion btRot;
+    btRot.setEuler(
+        glm::radians(rot.y), // Вращение вокруг Y
+        glm::radians(rot.x), // Вращение вокруг X
+        glm::radians(rot.z)  // Вращение вокруг Z
+    );
+    groundTransform.setRotation(btRot);
 
     // Для статичных объектов масса ВСЕГДА = 0.
     btScalar mass(0.0f);
@@ -492,7 +551,7 @@ void OGLRenderer::draw() {
       body->setAngularFactor(btVector3(0, 1, 0));
 
       bool isSprinting = (std::abs(mRenderData.rdMoveForward) > 1 || std::abs(mRenderData.rdMoveRight) > 1);
-      float maxSpeed = isSprinting ? 15.0f : 5.0f; // Ускоряемся, если Shift нажат
+      float maxSpeed = isSprinting ? 125.0f : 5.0f; // Ускоряемся, если Shift нажат
 
       float blendSpeed = 5.0f; // Скорость перехода (чем выше, тем быстрее переключение)
       ModelSettings settings = enty->getInstanceSettings();

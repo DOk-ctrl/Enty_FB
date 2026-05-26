@@ -118,7 +118,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
  // test 12.01.26 - 1 model only 1 instance
   //mGltfModels.resize(3);
   
-  mGltfModels.resize(5);
+  mGltfModels.resize(8);
   mGltfModels.at(0) = std::make_shared<GltfModel>();
   std::string modelFilename = "assets/StonehengeMay.gltf";
   std::string modelTexFilename = "textures/StoneMay.png";
@@ -134,7 +134,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
       return false;
   }
 
-  
+  /*
   mGltfModels.at(1) = std::make_shared<GltfModel>();
   std::string modelFilename2 = "assets/enty6Clear.gltf";
   std::string modelTexFilename2 = "textures/enty4kClear.png";
@@ -142,7 +142,16 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
     Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename2.c_str());
     return false;
   }
-  
+  */
+
+  mGltfModels.at(1) = std::make_shared<GltfModel>();
+  std::string modelFilename2 = "assets/Conway.gltf";
+  std::string modelTexFilename2 = "textures/Conway.png";
+  if (!mGltfModels.at(1)->loadModel(mRenderData, modelFilename2, modelTexFilename2)) {
+      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename2.c_str());
+      return false;
+  }
+
   mGltfModels.at(2) = std::make_shared<GltfModel>();
   std::string modelFilename3 = "assets/Temple of Artemis.gltf";
   std::string modelTexFilename3 = "textures/Temple.png";
@@ -167,6 +176,29 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
       return false;
   }
  
+  mGltfModels.at(5) = std::make_shared<GltfModel>();
+  std::string modelFilename6 = "assets/kanalMay.gltf";
+  std::string modelTexFilename6 = "textures/Stock.png";
+  if (!mGltfModels.at(5)->loadModel(mRenderData, modelFilename6, modelTexFilename6)) {
+      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename6.c_str());
+      return false;
+  }
+
+  mGltfModels.at(6) = std::make_shared<GltfModel>();
+  std::string modelFilename7 = "assets/gates 1.0.gltf";
+  std::string modelTexFilename7 = "textures/gates.png";
+  if (!mGltfModels.at(6)->loadModel(mRenderData, modelFilename7, modelTexFilename7)) {
+      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename7.c_str());
+      return false;
+  }
+
+  mGltfModels.at(7) = std::make_shared<GltfModel>();
+  std::string modelFilename8 = "assets/Arena.gltf";
+  std::string modelTexFilename8 = "textures/Arena.png";
+  if (!mGltfModels.at(7)->loadModel(mRenderData, modelFilename8, modelTexFilename8)) {
+      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename8.c_str());
+      return false;
+  }
   //mGltfModels.at(0)->uploadVertexBuffers();
   //mGltfModels.at(0)->uploadIndexBuffer();
   /*
@@ -218,7 +250,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
 
   int xPos = 77;
   int yPos = 0;
-  int zPos = 585;
+  int zPos = 580;
   mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(0), glm::vec3(static_cast<float>(xPos), static_cast<float>(yPos),
       static_cast<float>(zPos)), defaultRot));
   numTriangles += static_cast<unsigned int>(mGltfModels.at(0)->getTriangleCount());
@@ -231,8 +263,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   numTriangles += static_cast<unsigned int>(mGltfModels.at(1)->getTriangleCount());
 
   int xPos3 = 50;
-  int yPos3 = 0;
-  int zPos3 = 420;
+  int yPos3 = 0.5;
+  int zPos3 = 415;
   glm::vec3 CustomRot = glm::vec3(0.0f, 90.0f, 0.0f);
   mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(2), glm::vec3(static_cast<float>(xPos3), static_cast<float>(yPos3),
       static_cast<float>(zPos3)), CustomRot));
@@ -253,10 +285,36 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
       static_cast<float>(zPos5)), defaultRot));
   numTriangles += static_cast<unsigned int>(mGltfModels.at(4)->getTriangleCount());
 
-  addPhysicsToStonehenge(mGltfInstances.at(0), mDynamicsWorld, glm::vec3(77, 0, 585),defaultRot);
+  int xPos6 = -166;
+  int yPos6 = 1;
+  int zPos6 = 261;
+  glm::vec3 CustomRot2 = glm::vec3(0.0f, -88.0f, 0.0f);
+  mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(5), glm::vec3(static_cast<float>(xPos6), static_cast<float>(yPos6),
+      static_cast<float>(zPos6)), CustomRot2));
+  numTriangles += static_cast<unsigned int>(mGltfModels.at(5)->getTriangleCount());
+
+  int xPos7 = 53;
+  int yPos7 = 0;
+  int zPos7 = 522;
+  mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(6), glm::vec3(static_cast<float>(xPos7), static_cast<float>(yPos7),
+      static_cast<float>(zPos7)), defaultRot));
+  numTriangles += static_cast<unsigned int>(mGltfModels.at(6)->getTriangleCount());
+
+  int xPos8 = 392;
+  int yPos8 = -1;
+  int zPos8 = 322;
+  glm::vec3 CustomRot3 = glm::vec3(0.0f, 90.0f, 0.0f);
+  mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(7), glm::vec3(static_cast<float>(xPos8), static_cast<float>(yPos8),
+      static_cast<float>(zPos8)), CustomRot3));
+  numTriangles += static_cast<unsigned int>(mGltfModels.at(7)->getTriangleCount());
+
+  addPhysicsToStonehenge(mGltfInstances.at(0), mDynamicsWorld, glm::vec3(77, 0, 580),defaultRot);
   addPhysicsToEnty(mGltfInstances.at(1), mDynamicsWorld, glm::vec3(0, 0, 0)); // ќна заспавнитс€ на высоте 10м и упадет на пол
   addPhysicsToStonehenge(mGltfInstances.at(4), mDynamicsWorld, glm::vec3(0, 0, 180),defaultRot);
-  addPhysicsToStonehenge(mGltfInstances.at(2), mDynamicsWorld, glm::vec3(50, 0, 420),CustomRot);
+  addPhysicsToStonehenge(mGltfInstances.at(2), mDynamicsWorld, glm::vec3(50, 0.5, 415),CustomRot);
+  addPhysicsToStonehenge(mGltfInstances.at(5), mDynamicsWorld, glm::vec3(-166, 1, 261), CustomRot2);
+  addPhysicsToStonehenge(mGltfInstances.at(7), mDynamicsWorld, glm::vec3(392, -1, 322), CustomRot3);
+
   mRenderData.rdTriangleCount = numTriangles;
 
   mRenderData.rdNumberOfInstances = mGltfInstances.size();

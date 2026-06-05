@@ -387,6 +387,8 @@ void GltfInstance::playAnimation(int animNum, float speedDivider, float blendFac
 
 void GltfInstance::playAnimation(int sourceAnimNumber, int destAnimNumber,
     float speedDivider, float blendFactor, replayDirection direction) {
+    if (sourceAnimNumber < 0 || sourceAnimNumber >= (int)mAnimClips.size()) return;
+    if (destAnimNumber < 0 || destAnimNumber >= (int)mAnimClips.size()) return;
   double currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 
   if (direction == replayDirection::backward) {

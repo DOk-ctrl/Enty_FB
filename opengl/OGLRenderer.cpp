@@ -1,4 +1,4 @@
-#define GLM_ENABLE_EXPERIMENTAL
+п»ї#define GLM_ENABLE_EXPERIMENTAL
 #define _USE_MATH_DEFINES
 #include <algorithm>
 
@@ -13,6 +13,7 @@
 #include "ModelSettings.h"
 #include "Logger.h"
 #include "UserInterface.h"
+#include <iostream>
 
 OGLRenderer::OGLRenderer(GLFWwindow *window) {
   mRenderData.rdWindow = window;
@@ -34,20 +35,21 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
 
   mCollisionConfiguration = new btDefaultCollisionConfiguration();
   mDispatcher = new btCollisionDispatcher(mCollisionConfiguration);
-  mOverlappingPairCache = new btDbvtBroadphase(); // Для быстрого отсечения столкновений
+  mOverlappingPairCache = new btDbvtBroadphase(); // Р”Р»СЏ Р±С‹СЃС‚СЂРѕРіРѕ РѕС‚СЃРµС‡РµРЅРёСЏ СЃС‚РѕР»РєРЅРѕРІРµРЅРёР№
   mSolver = new btSequentialImpulseConstraintSolver();
   mDynamicsWorld = new btDiscreteDynamicsWorld(mDispatcher, mOverlappingPairCache, mSolver, mCollisionConfiguration);
 
   mDynamicsWorld->setGravity(btVector3(0, -9.81f, 0));
-  Logger::log(1, "Bullet Physics успешно инициализирован!\n");
+  Logger::log(1, "Bullet Physics СѓСЃРїРµС€РЅРѕ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°РЅ!\n");
 
   if (!GLAD_GL_VERSION_4_6) {
     Logger::log(1, "%s error: failed to get at least OpenGL 4.6\n", __FUNCTION__);
     return false;
   }
+  /*
   if (glDebugMessageCallback) {
       glEnable(GL_DEBUG_OUTPUT);
-      glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // Ошибки будут прилетать сразу в момент вызова
+      glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // РћС€РёР±РєРё Р±СѓРґСѓС‚ РїСЂРёР»РµС‚Р°С‚СЊ СЃСЂР°Р·Сѓ РІ РјРѕРјРµРЅС‚ РІС‹Р·РѕРІР°
       glDebugMessageCallback([](GLenum source, GLenum type, GLuint id, GLenum severity,
           GLsizei length, const GLchar* message, const void* userParam) {
               fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
@@ -55,7 +57,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
                   type, severity, message);
           }, nullptr);
   }
-
+  */
   GLint majorVersion, minorVersion;
   glGetIntegerv(GL_MAJOR_VERSION, &majorVersion);
   glGetIntegerv(GL_MINOR_VERSION, &minorVersion);
@@ -123,7 +125,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   std::string modelFilename = "assets/StonehengeMay.gltf";
   std::string modelTexFilename = "textures/StoneMay.png";
 
-  /* 11.04.26 нужно добавить сшиватель для roughness and metallic а то там только одно перемнная на двоих ну и шейдер доделать
+  /* 11.04.26 РЅСѓР¶РЅРѕ РґРѕР±Р°РІРёС‚СЊ СЃС€РёРІР°С‚РµР»СЊ РґР»СЏ roughness and metallic Р° С‚Рѕ С‚Р°Рј С‚РѕР»СЊРєРѕ РѕРґРЅРѕ РїРµСЂРµРјРЅРЅР°СЏ РЅР° РґРІРѕРёС… РЅСѓ Рё С€РµР№РґРµСЂ РґРѕРґРµР»Р°С‚СЊ
   if (!mGltfModels.at(0)->loadModel(mRenderData, modelFilename, modelTexFilename, normalTex, roughTex)) {
       Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
       return false;
@@ -145,8 +147,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   */
 
   mGltfModels.at(1) = std::make_shared<GltfModel>();
-  std::string modelFilename2 = "assets/Conway.gltf";
-  std::string modelTexFilename2 = "textures/Conway.png";
+  std::string modelFilename2 = "assets/EntyMay.gltf";
+  std::string modelTexFilename2 = "textures/EntyMay.png";
   if (!mGltfModels.at(1)->loadModel(mRenderData, modelFilename2, modelTexFilename2)) {
       Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename2.c_str());
       return false;
@@ -263,8 +265,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   numTriangles += static_cast<unsigned int>(mGltfModels.at(1)->getTriangleCount());
 
   int xPos3 = 50;
-  int yPos3 = 0.5;
-  int zPos3 = 415;
+  double yPos3 = 0.1;
+  int zPos3 = 419;
   glm::vec3 CustomRot = glm::vec3(0.0f, 90.0f, 0.0f);
   mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(2), glm::vec3(static_cast<float>(xPos3), static_cast<float>(yPos3),
       static_cast<float>(zPos3)), CustomRot));
@@ -309,9 +311,15 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   numTriangles += static_cast<unsigned int>(mGltfModels.at(7)->getTriangleCount());
 
   addPhysicsToStonehenge(mGltfInstances.at(0), mDynamicsWorld, glm::vec3(77, 0, 580),defaultRot);
-  addPhysicsToEnty(mGltfInstances.at(1), mDynamicsWorld, glm::vec3(0, 0, 0)); // Она заспавнится на высоте 10м и упадет на пол
+  addPhysicsToEnty(mGltfInstances.at(1), mDynamicsWorld, glm::vec3(0, 0, 0)); // РћРЅР° Р·Р°СЃРїР°РІРЅРёС‚СЃСЏ РЅР° РІС‹СЃРѕС‚Рµ 10Рј Рё СѓРїР°РґРµС‚ РЅР° РїРѕР»
+  {
+      ModelSettings entySettings = mGltfInstances.at(1)->getInstanceSettings();
+      entySettings.msAnimClip = EntyAnim::Idle; 
+      entySettings.msPlayAnimation = true;      
+      mGltfInstances.at(1)->setInstanceSettings(entySettings);
+  }
   addPhysicsToStonehenge(mGltfInstances.at(4), mDynamicsWorld, glm::vec3(0, 0, 180),defaultRot);
-  addPhysicsToStonehenge(mGltfInstances.at(2), mDynamicsWorld, glm::vec3(50, 0.5, 415),CustomRot);
+  addPhysicsToStonehenge(mGltfInstances.at(2), mDynamicsWorld, glm::vec3(50, 0.1, 419),CustomRot);
   addPhysicsToStonehenge(mGltfInstances.at(5), mDynamicsWorld, glm::vec3(-166, 1, 261), CustomRot2);
   addPhysicsToStonehenge(mGltfInstances.at(7), mDynamicsWorld, glm::vec3(392, -1, 322), CustomRot3);
 
@@ -333,13 +341,13 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
     modelJointDualQuatBufferSize += instance->getJointDualQuatsSize() *
       sizeof(glm::mat2x4);
   }
-  // проверка от 10.01.26
+  // РїСЂРѕРІРµСЂРєР° РѕС‚ 10.01.26
   printf("\n--- [SSBO DEBUG] ---\n");
   printf("Total Joint Matrices: %d\n", jointMatrixSize);
   printf("Required Matrix Buffer Size: %llu bytes\n", (unsigned long long)modelJointMatrixBufferSize);
   printf("Required DualQuat Buffer Size: %llu bytes\n", (unsigned long long)modelJointDualQuatBufferSize);
 
-  // Проверим лимит видеокарты
+  // РџСЂРѕРІРµСЂРёРј Р»РёРјРёС‚ РІРёРґРµРѕРєР°СЂС‚С‹
   GLint maxSize;
   glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &maxSize);
   printf("Your GPU Max SSBO Size: %d bytes\n", maxSize);
@@ -355,7 +363,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   if (modelJointMatrixBufferSize == 0) modelJointMatrixBufferSize = sizeof(glm::mat4);
   if (modelJointDualQuatBufferSize == 0) modelJointDualQuatBufferSize = sizeof(glm::mat2x4);
 
-  // конец проверки
+  // РєРѕРЅРµС† РїСЂРѕРІРµСЂРєРё
   mGltfShaderStorageBuffer.init(modelJointMatrixBufferSize);
   Logger::log(1, "%s: glTF joint matrix shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointMatrixBufferSize);
   
@@ -398,8 +406,8 @@ void OGLRenderer::handleKeyEvents(int key, int scancode, int action, int mods) {
             glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
         else {
-            // Если у тебя камера управляется правой кнопкой (mMouseLock), 
-            // решай сам — скрывать курсор обратно или нет. Пока оставим так:
+            // Р•СЃР»Рё Сѓ С‚РµР±СЏ РєР°РјРµСЂР° СѓРїСЂР°РІР»СЏРµС‚СЃСЏ РїСЂР°РІРѕР№ РєРЅРѕРїРєРѕР№ (mMouseLock), 
+            // СЂРµС€Р°Р№ СЃР°Рј вЂ” СЃРєСЂС‹РІР°С‚СЊ РєСѓСЂСЃРѕСЂ РѕР±СЂР°С‚РЅРѕ РёР»Рё РЅРµС‚. РџРѕРєР° РѕСЃС‚Р°РІРёРј С‚Р°Рє:
             glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
     }
@@ -474,16 +482,16 @@ void OGLRenderer::handleMousePositionEvents(double xPos, double yPos) {
 }
 
 void OGLRenderer::addPhysicsToEnty(std::shared_ptr<GltfInstance> entyInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 spawnPos) {
-    // РЕАЛЬНЫЕ РАЗМЕРЫ: Радиус 0.3м, Высота цилиндра 1.2м. 
-    // Итого: 1.8 + 0.3 + 0.3 = 2.4 метра общей высоты!
+    // Р Р•РђР›Р¬РќР«Р• Р РђР—РњР•Р Р«: Р Р°РґРёСѓСЃ 0.3Рј, Р’С‹СЃРѕС‚Р° С†РёР»РёРЅРґСЂР° 1.2Рј. 
+    // РС‚РѕРіРѕ: 1.8 + 0.3 + 0.3 = 2.4 РјРµС‚СЂР° РѕР±С‰РµР№ РІС‹СЃРѕС‚С‹!
     btCollisionShape* colShape = new btCapsuleShape(0.3f, 1.8f);
 
     btTransform startTransform;
     startTransform.setIdentity();
-    // Спавним на 10 метров вверх
+    // РЎРїР°РІРЅРёРј РЅР° 10 РјРµС‚СЂРѕРІ РІРІРµСЂС…
     startTransform.setOrigin(btVector3(spawnPos.x, spawnPos.y + 5.0f, spawnPos.z));
 
-    btScalar mass(56.0f);
+    btScalar mass(70.0f);
     btVector3 localInertia(0, 0, 0);
     colShape->calculateLocalInertia(mass, localInertia);
 
@@ -498,28 +506,28 @@ void OGLRenderer::addPhysicsToEnty(std::shared_ptr<GltfInstance> entyInstance, b
 }
 
 void OGLRenderer::addPhysicsToStonehenge(std::shared_ptr<GltfInstance> stonehengeInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 pos, glm::vec3 rot) {
-    // Получаем ИДЕАЛЬНО точный физический шейп из glTF
+    // РџРѕР»СѓС‡Р°РµРј РР”Р•РђР›Р¬РќРћ С‚РѕС‡РЅС‹Р№ С„РёР·РёС‡РµСЃРєРёР№ С€РµР№Рї РёР· glTF
     btCollisionShape* groundShape = stonehengeInstance->getModel()->getPhysicsShape();
 
     btTransform groundTransform;
     groundTransform.setIdentity();
 
-    // ВНИМАНИЕ: Я убрал смещение pos.y - 0.5f, потому что теперь коллизия 
-    // идеально совпадает с визуальной сеткой.
+    // Р’РќРРњРђРќРР•: РЇ СѓР±СЂР°Р» СЃРјРµС‰РµРЅРёРµ pos.y - 0.5f, РїРѕС‚РѕРјСѓ С‡С‚Рѕ С‚РµРїРµСЂСЊ РєРѕР»Р»РёР·РёСЏ 
+    // РёРґРµР°Р»СЊРЅРѕ СЃРѕРІРїР°РґР°РµС‚ СЃ РІРёР·СѓР°Р»СЊРЅРѕР№ СЃРµС‚РєРѕР№.
     groundTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
 
-    // 3. МАТЕМАТИКА ПОВОРОТА ДЛЯ BULLET
-    // Создаем кватернион Bullet и переводим твои градусы из Медиатора в радианы.
-    // Порядок углов в Bullet: Yaw (Y), Pitch (X), Roll (Z)
+    // 3. РњРђРўР•РњРђРўРРљРђ РџРћР’РћР РћРўРђ Р”Р›РЇ BULLET
+    // РЎРѕР·РґР°РµРј РєРІР°С‚РµСЂРЅРёРѕРЅ Bullet Рё РїРµСЂРµРІРѕРґРёРј С‚РІРѕРё РіСЂР°РґСѓСЃС‹ РёР· РњРµРґРёР°С‚РѕСЂР° РІ СЂР°РґРёР°РЅС‹.
+    // РџРѕСЂСЏРґРѕРє СѓРіР»РѕРІ РІ Bullet: Yaw (Y), Pitch (X), Roll (Z)
     btQuaternion btRot;
     btRot.setEuler(
-        glm::radians(rot.y), // Вращение вокруг Y
-        glm::radians(rot.x), // Вращение вокруг X
-        glm::radians(rot.z)  // Вращение вокруг Z
+        glm::radians(rot.y), // Р’СЂР°С‰РµРЅРёРµ РІРѕРєСЂСѓРі Y
+        glm::radians(rot.x), // Р’СЂР°С‰РµРЅРёРµ РІРѕРєСЂСѓРі X
+        glm::radians(rot.z)  // Р’СЂР°С‰РµРЅРёРµ РІРѕРєСЂСѓРі Z
     );
     groundTransform.setRotation(btRot);
 
-    // Для статичных объектов масса ВСЕГДА = 0.
+    // Р”Р»СЏ СЃС‚Р°С‚РёС‡РЅС‹С… РѕР±СЉРµРєС‚РѕРІ РјР°СЃСЃР° Р’РЎР•Р“Р”Рђ = 0.
     btScalar mass(0.0f);
     btVector3 localInertia(0, 0, 0);
 
@@ -527,7 +535,7 @@ void OGLRenderer::addPhysicsToStonehenge(std::shared_ptr<GltfInstance> stoneheng
     btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, groundShape, localInertia);
     btRigidBody* body = new btRigidBody(rbInfo);
 
-    // Делаем камни шероховатыми
+    // Р”РµР»Р°РµРј РєР°РјРЅРё С€РµСЂРѕС…РѕРІР°С‚С‹РјРё
     body->setFriction(0.8f);
 
     dynamicsWorld->addRigidBody(body);
@@ -580,20 +588,20 @@ void OGLRenderer::draw() {
   double tickTime = glfwGetTime();
   mRenderData.rdTickDiff = tickTime - mLastTickTime;
 
-  // ИСПОЛЬЗУЕМ rdTickDiff (он гарантированно в секундах)
+  // РРЎРџРћР›Р¬Р—РЈР•Рњ rdTickDiff (РѕРЅ РіР°СЂР°РЅС‚РёСЂРѕРІР°РЅРЅРѕ РІ СЃРµРєСѓРЅРґР°С…)
   float deltaTime = static_cast<float>(mRenderData.rdTickDiff);
 
-  // Защита от провалов под текстуры при долгих загрузках кадров
+  // Р—Р°С‰РёС‚Р° РѕС‚ РїСЂРѕРІР°Р»РѕРІ РїРѕРґ С‚РµРєСЃС‚СѓСЂС‹ РїСЂРё РґРѕР»РіРёС… Р·Р°РіСЂСѓР·РєР°С… РєР°РґСЂРѕРІ
   if (deltaTime > 0.1f) {
       deltaTime = 0.1f;
   }
 
-  // ШАГ 1: СИМУЛЯЦИЯ ФИЗИКИ
+  // РЁРђР“ 1: РЎРРњРЈР›РЇР¦РРЇ Р¤РР—РРљР
   if (mDynamicsWorld) {
       mDynamicsWorld->stepSimulation(deltaTime, 10);
   }
 
-  // ШАГ 2: СИНХРОНИЗАЦИЯ ФИЗИКИ С ГРАФИКОЙ
+  // РЁРђР“ 2: РЎРРќРҐР РћРќРР—РђР¦РРЇ Р¤РР—РРљР РЎ Р“Р РђР¤РРљРћР™
   for (auto& instance : mGltfInstances) {
       instance->syncPhysics();
   }
@@ -603,124 +611,8 @@ void OGLRenderer::draw() {
 
   handleMovementKeys();
 
-  auto& enty = mGltfInstances.at(1);
-  if (enty->getRigidBody()) {
-      btRigidBody* body = enty->getRigidBody();
-      body->setAngularFactor(btVector3(0, 1, 0));
-
-      bool isSprinting = (std::abs(mRenderData.rdMoveForward) > 1 || std::abs(mRenderData.rdMoveRight) > 1);
-      float maxSpeed = isSprinting ? 125.0f : 5.0f; // Ускоряемся, если Shift нажат
-
-      float blendSpeed = 5.0f; // Скорость перехода (чем выше, тем быстрее переключение)
-      ModelSettings settings = enty->getInstanceSettings();
-
-      float azimRad = glm::radians(mRenderData.rdViewAzimuth);
-
-      glm::vec3 camForward = glm::normalize(glm::vec3(glm::sin(azimRad), 0.0f, -glm::cos(azimRad)));
-
-      glm::vec3 camRight = glm::normalize(glm::cross(camForward, glm::vec3(0, 1, 0)));
-
-
-
-      // 2. Вектор желаемого движения на основе WASD
-
-      glm::vec3 moveDir(0.0f);
-
-      if (mRenderData.rdMoveForward != 0) moveDir += camForward * (float)mRenderData.rdMoveForward;
-
-      if (mRenderData.rdMoveRight != 0)   moveDir += camRight * (float)mRenderData.rdMoveRight;
-
-      btVector3 currentVel = body->getLinearVelocity();
-
-      if (glm::length(moveDir) > 0.1f) {
-          moveDir = glm::normalize(moveDir);
-
-          // --- ФИЗИКА ДВИЖЕНИЯ ---
-          float accel = 10.0f * deltaTime;
-          btVector3 targetVel(moveDir.x * maxSpeed, currentVel.y(), moveDir.z * maxSpeed);
-          btVector3 finalVel = currentVel.lerp(targetVel, accel);
-          body->setLinearVelocity(finalVel);
-
-          // --- ПЛАВНЫЙ ПОВОРОТ (через физику, без микро-прыжков) ---
-
-          float targetAngle = atan2(moveDir.x, moveDir.z); // Куда хотим смотреть
-
-
-
-          btTransform trans;
-
-          body->getMotionState()->getWorldTransform(trans);
-
-          // Узнаем, куда физика смотрит сейчас
-
-          btVector3 currentForward = quatRotate(trans.getRotation(), btVector3(0, 0, 1));
-
-          float currentAngle = atan2(currentForward.x(), currentForward.z());
-
-
-
-          // Находим кратчайший путь для поворота (чтобы не крутился через спину)
-
-          float angleDiff = targetAngle - currentAngle;
-
-          while (angleDiff > M_PI) angleDiff -= 2.0f * M_PI;
-
-          while (angleDiff < -M_PI) angleDiff += 2.0f * M_PI;
-
-
-
-          // Крутим капсулу с помощью угловой скорости (Bullet это обожает)
-
-          body->setAngularVelocity(btVector3(0, angleDiff * 12.0f, 0));
-
-          int targetAnim = isSprinting ? 2 : 2;
-          // --- ЛОГИКА БЛЕНДИНГА (ПЕРЕХОД В БЕГ) ---
-          if (settings.msAnimClip != targetAnim) {
-              settings.msBlendingMode = blendMode::crossfade;
-              settings.msCrossBlendDestAnimClip = targetAnim;
-              settings.msAnimCrossBlendFactor += blendSpeed * deltaTime;
-
-              if (settings.msAnimCrossBlendFactor >= 1.0f) {
-                  settings.msBlendingMode = blendMode::fadeinout;
-                  settings.msAnimClip = targetAnim;
-                  settings.msAnimCrossBlendFactor = 0.0f;
-              }
-          }
-
-          // --- СКОРОСТЬ АНИМАЦИИ ---
-          
-          settings.msPlayAnimation = true;
-          
-
-          body->activate(true);
-      }
-      else {
-          // --- ТОРМОЖЕНИЕ ---
-          float decel = 15.0f * deltaTime;
-          btVector3 targetVel(0.0f, currentVel.y(), 0.0f);
-          btVector3 finalVel = currentVel.lerp(targetVel, decel);
-          body->setLinearVelocity(finalVel);
-          body->setAngularVelocity(btVector3(0, 0, 0));
-
-          // --- ЛОГИКА БЛЕНДИНГА (ВОЗВРАТ В IDLE) ---
-          if (settings.msAnimClip != 0) {
-              settings.msBlendingMode = blendMode::crossfade;
-              settings.msCrossBlendDestAnimClip = 0; // Цель перехода — Idle
-
-              settings.msAnimCrossBlendFactor += blendSpeed * deltaTime;
-
-              if (settings.msAnimCrossBlendFactor >= 1.0f) {
-                  settings.msAnimClip = 0;
-                  settings.msAnimCrossBlendFactor = 0.0f;
-                  settings.msBlendingMode = blendMode::fadeinout;
-              }
-          }
-          settings.msAnimSpeed = 1.0f;
-      }
-
-      enty->setInstanceSettings(settings);
-  }
-
+  updatePlayerCharacter(deltaTime);
+ 
   /* draw to framebuffer */
   mFramebuffer.bind();
 
@@ -825,14 +717,14 @@ void OGLRenderer::draw() {
       continue;
     }
 
-    // --- ВОТ ИЗМЕНЕНИЕ: Сначала проверяем, есть ли вообще кости ---
+    // --- Р’РћРў РР—РњР•РќР•РќРР•: РЎРЅР°С‡Р°Р»Р° РїСЂРѕРІРµСЂСЏРµРј, РµСЃС‚СЊ Р»Рё РІРѕРѕР±С‰Рµ РєРѕСЃС‚Рё ---
     if (instance->getJointMatrixSize() == 0) {
-      mStaticInstances.emplace_back(instance); // Объект без костей (наш пол)
+      mStaticInstances.emplace_back(instance); // РћР±СЉРµРєС‚ Р±РµР· РєРѕСЃС‚РµР№ (РЅР°С€ РїРѕР»)
       numTriangles += static_cast<unsigned int>(instance->getModel()->getTriangleCount());
       continue;
     } 
     else if (settings.msVertexSkinningMode == skinningMode::dualQuat) {
-      // Твой старый код для DQ...
+      // РўРІРѕР№ СЃС‚Р°СЂС‹Р№ РєРѕРґ РґР»СЏ DQ...
       std::vector<glm::mat2x4> quats = instance->getJointDualQuats();
       mModelJointDualQuats.insert(mModelJointDualQuats.end(), quats.begin(), quats.end());
       size_t padding = 256 - quats.size();
@@ -840,7 +732,7 @@ void OGLRenderer::draw() {
       mGltfDQInstances.emplace_back(instance);
     } 
     else {
-      // Твой старый код для матриц...
+      // РўРІРѕР№ СЃС‚Р°СЂС‹Р№ РєРѕРґ РґР»СЏ РјР°С‚СЂРёС†...
       std::vector<glm::mat4> mats = instance->getJointMatrices();
       mModelJointMatrices.insert(mModelJointMatrices.end(), mats.begin(), mats.end());
       size_t padding = 256 - mats.size();
@@ -866,13 +758,13 @@ void OGLRenderer::draw() {
 
   /* draw the glTF models */
 
-  // --- 1. СНАЧАЛА РИСУЕМ ПОЛ (СТАТИКУ) ---
-  mStaticShader.use(); // Тот самый "ня статик" шейдер
+  // --- 1. РЎРќРђР§РђР›Рђ Р РРЎРЈР•Рњ РџРћР› (РЎРўРђРўРРљРЈ) ---
+  mStaticShader.use(); // РўРѕС‚ СЃР°РјС‹Р№ "РЅСЏ СЃС‚Р°С‚РёРє" С€РµР№РґРµСЂ
 
-  // Направление: свет падает сверху вниз под углом
+  // РќР°РїСЂР°РІР»РµРЅРёРµ: СЃРІРµС‚ РїР°РґР°РµС‚ СЃРІРµСЂС…Сѓ РІРЅРёР· РїРѕРґ СѓРіР»РѕРј
   glm::vec3 sunDirection = glm::vec3(-0.3f, -1.0f, -0.5f);
 
-  // Передаем в шейдер
+  // РџРµСЂРµРґР°РµРј РІ С€РµР№РґРµСЂ
   if (mStaticShader.getUniformLocation("u_LightDir")) {
       mStaticShader.setUniformValue(sunDirection);
   }
@@ -888,7 +780,7 @@ void OGLRenderer::draw() {
   
   for (const auto& instance : mStaticInstances) {
       instance->getRootNode()->calculateNodeMatrix();
-      // 1. Получаем матрицу положения модели в мире
+      // 1. РџРѕР»СѓС‡Р°РµРј РјР°С‚СЂРёС†Сѓ РїРѕР»РѕР¶РµРЅРёСЏ РјРѕРґРµР»Рё РІ РјРёСЂРµ
       glm::mat4 modelMatrix = instance->getRootNode()->getNodeMatrix();
 
       mStaticShader.getUniformLocation("u_HasNormalMap");
@@ -904,24 +796,24 @@ void OGLRenderer::draw() {
   }
 
   unsigned int matrixPos = 0;
-  int instanceCounter = 0; // Добавляем счетчик вручную
+  int instanceCounter = 0; // Р”РѕР±Р°РІР»СЏРµРј СЃС‡РµС‚С‡РёРє РІСЂСѓС‡РЅСѓСЋ
   
   mGltfGPUShader.use();
   //printf("Drawing %llu matrix instances\n", mGltfMatrixInstances.size()); 
   for (const auto &instance : mGltfMatrixInstances) {
     // set position inside the SSBO 
-      if (matrixPos == 0) { // Чтобы не спамить, выведем только для первого
+      if (matrixPos == 0) { // Р§С‚РѕР±С‹ РЅРµ СЃРїР°РјРёС‚СЊ, РІС‹РІРµРґРµРј С‚РѕР»СЊРєРѕ РґР»СЏ РїРµСЂРІРѕРіРѕ
         //  printf("[DRAW DEBUG] Instance 0 Draw: matrixPos = %u, joints = %d\n",
         //      matrixPos, instance->getJointMatrixSize());
       }
       //Logger::log(1, "[DRAW DEBUG] Instance: %d, Offset: %d\n", instanceCounter, matrixPos);
-      mGltfGPUShader.setUniformValue((int)matrixPos); // Передаем индекс стартовой матрицы
+      mGltfGPUShader.setUniformValue((int)matrixPos); // РџРµСЂРµРґР°РµРј РёРЅРґРµРєСЃ СЃС‚Р°СЂС‚РѕРІРѕР№ РјР°С‚СЂРёС†С‹
       instance->getModel()->draw();
 
-      // ВАЖНО: это число должно быть равно размеру вектора, 
-      // который вернул этот же instance в цикле выше!
+      // Р’РђР–РќРћ: СЌС‚Рѕ С‡РёСЃР»Рѕ РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ СЂР°РІРЅРѕ СЂР°Р·РјРµСЂСѓ РІРµРєС‚РѕСЂР°, 
+      // РєРѕС‚РѕСЂС‹Р№ РІРµСЂРЅСѓР» СЌС‚РѕС‚ Р¶Рµ instance РІ С†РёРєР»Рµ РІС‹С€Рµ!
       //matrixPos += instance->getJointMatrixSize();
-      matrixPos += static_cast<unsigned int>(256); // Теперь здесь всегда 256!
+      matrixPos += static_cast<unsigned int>(256); // РўРµРїРµСЂСЊ Р·РґРµСЃСЊ РІСЃРµРіРґР° 256!
       instanceCounter++; 
   }
 
@@ -968,11 +860,212 @@ void OGLRenderer::draw() {
 
   mLastTickTime = tickTime;
 }
+void OGLRenderer::updatePlayerCharacter(float deltaTime) {
+    auto& enty = mGltfInstances.at(1);
+    if (!enty->getRigidBody()) return;
 
+    btRigidBody* body = enty->getRigidBody();
+    body->activate(true);
+    body->setAngularFactor(btVector3(0, 1, 0));
+
+    // --- 0. РўРђР™РњР•Р Р« РЈРђР›РћРќР•РќРРЇ (DASH) ---
+    // static СЃРѕС…СЂР°РЅСЏРµС‚ Р·РЅР°С‡РµРЅРёСЏ РјРµР¶РґСѓ РєР°РґСЂР°РјРё
+    static float dashDurationTimer = 0.0f; // РЎРєРѕР»СЊРєРѕ РµС‰Рµ Р»РµС‚РµС‚СЊ РЅР°Р·Р°Рґ
+    static float dashCooldownTimer = 0.0f; // РЎРєРѕР»СЊРєРѕ РµС‰Рµ Р¶РґР°С‚СЊ РґРѕ СЃР»РµРґСѓСЋС‰РµРіРѕ РґСЌС€Р°
+
+    // РћР±РЅРѕРІР»СЏРµРј С‚Р°Р№РјРµСЂС‹ РєР°Р¶РґС‹Р№ РєР°РґСЂ
+    if (dashDurationTimer > 0.0f) dashDurationTimer -= deltaTime;
+    if (dashCooldownTimer > 0.0f) dashCooldownTimer -= deltaTime;
+
+
+    // --- 1. Р§РРўРђР•Рњ РљРќРћРџРљР Р”Р›РЇ РђРќРРњРђР¦РР™ ---
+    bool keyC = glfwGetKey(mRenderData.rdWindow, GLFW_KEY_C) == GLFW_PRESS;
+    bool keyG = glfwGetKey(mRenderData.rdWindow, GLFW_KEY_G) == GLFW_PRESS;
+    bool keyE = glfwGetKey(mRenderData.rdWindow, GLFW_KEY_E) == GLFW_PRESS;
+    bool keyZ = glfwGetKey(mRenderData.rdWindow, GLFW_KEY_Z) == GLFW_PRESS;
+    bool keyH = glfwGetKey(mRenderData.rdWindow, GLFW_KEY_H) == GLFW_PRESS;
+    bool keySpace = glfwGetKey(mRenderData.rdWindow, GLFW_KEY_SPACE) == GLFW_PRESS;
+    bool mouseLMB = glfwGetMouseButton(mRenderData.rdWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+
+    bool isSprinting = (std::abs(mRenderData.rdMoveForward) > 1 || std::abs(mRenderData.rdMoveRight) > 1);
+    float maxSpeed = isSprinting ? 15.0f : 5.0f;
+
+    ModelSettings settings = enty->getInstanceSettings();
+    bool settingsChanged = false;
+    float azimRad = glm::radians(mRenderData.rdViewAzimuth);
+
+    glm::vec3 camForward = glm::normalize(glm::vec3(glm::sin(azimRad), 0.0f, -glm::cos(azimRad)));
+    glm::vec3 camRight = glm::normalize(glm::cross(camForward, glm::vec3(0, 1, 0)));
+
+    glm::vec3 moveDir(0.0f);
+    if (mRenderData.rdMoveForward != 0) moveDir += camForward * (float)mRenderData.rdMoveForward;
+    if (mRenderData.rdMoveRight != 0)   moveDir += camRight * (float)mRenderData.rdMoveRight;
+
+    btVector3 currentVel = body->getLinearVelocity();
+
+
+    // --- 2. РџР РђР’РР›Р¬РќРђРЇ РџР РћР’Р•Р РљРђ Р—Р•РњР›Р Р§Р•Р Р•Р— RAYCAST ---
+    bool isOnGround = false;
+    btTransform currentTransform;
+    body->getMotionState()->getWorldTransform(currentTransform);
+    btVector3 rayStart = currentTransform.getOrigin();
+
+    btVector3 rayEnd = rayStart + btVector3(0.0f, -1.3f, 0.0f);
+    btCollisionWorld::ClosestRayResultCallback rayCallback(rayStart, rayEnd);
+    mDynamicsWorld->rayTest(rayStart, rayEnd, rayCallback);
+
+    if (rayCallback.hasHit() && rayCallback.m_collisionObject != body) {
+        isOnGround = true;
+    }
+
+
+    // --- 3. Р›РћР“РРљРђ Р—РђРџРЈРЎРљРђ Р”Р­РЁРђ ---
+    // Р•СЃР»Рё РЅР°Р¶Р°Р»Рё Р•, СЃС‚РѕРёРј РЅР° Р·РµРјР»Рµ, СЃРµР№С‡Р°СЃ РЅРµ РІ РґСЌС€Рµ Рё РєСѓР»РґР°СѓРЅ РїСЂРѕС€РµР»
+    if (keyE && isOnGround && dashDurationTimer <= 0.0f && dashCooldownTimer <= 0.0f) {
+        dashDurationTimer = 0.3f; // Р”Р»РёС‚РµР»СЊРЅРѕСЃС‚СЊ СЃР°РјРѕРіРѕ СЂС‹РІРєР° (0.3 СЃРµРєСѓРЅРґС‹ РїРѕР»РµС‚Р°)
+        dashCooldownTimer = 1.5f; // РћС‚РєР°С‚ СЂС‹РІРєР° (СЃРјРѕР¶РµС€СЊ РїРѕРІС‚РѕСЂРёС‚СЊ С‚РѕР»СЊРєРѕ С‡РµСЂРµР· 1.5 СЃРµРє)
+    }
+
+
+    // --- 4. Р”Р•Р Р•Р’Рћ РџР РРћР РРўР•РўРћР’ РђРќРРњРђР¦РР™ ---
+    int currentTargetAnim = EntyAnim::Idle;
+
+    // РџР РРћР РРўР•Рў 0: Р•СЃР»Рё С‚Р°Р№РјРµСЂ РґСЌС€Р° С‚РёРєР°РµС‚, РјС‹ Р–Р•РЎРўРљРћ С„РѕСЂСЃРёСЂСѓРµРј РґСЌС€!
+    if (dashDurationTimer > 0.0f) {
+        currentTargetAnim = EntyAnim::DashBack;       // 4
+    }
+    // РћСЃС‚Р°Р»СЊРЅС‹Рµ РїСЂРёРѕСЂРёС‚РµС‚С‹ СЂР°Р±РѕС‚Р°СЋС‚, С‚РѕР»СЊРєРѕ РµСЃР»Рё РјС‹ РЅРµ РІ РґСЌС€Рµ
+    else if (keySpace && mouseLMB) {
+        currentTargetAnim = EntyAnim::FlyKick;        // 7
+    }
+    else if (mouseLMB) {
+        currentTargetAnim = EntyAnim::Boxing;         // 3
+    }
+    else if (keyZ) {
+        currentTargetAnim = EntyAnim::DoubleJumpKick; // 6
+    }
+    else if (keyC) {
+        currentTargetAnim = EntyAnim::KICK;           // 0
+    }
+    else if (!isOnGround) {
+        currentTargetAnim = EntyAnim::Jump;           // 10
+    }
+    else if (keyG) {
+        currentTargetAnim = EntyAnim::Dance1;         // 2
+    }
+    else if (keyH) {
+        currentTargetAnim = EntyAnim::DanceWin;       // 18
+    }
+    else if (glm::length(moveDir) > 0.1f) {
+        currentTargetAnim = isSprinting ? EntyAnim::Run : EntyAnim::Walk; // 12 РёР»Рё 17
+    }
+    else {
+        currentTargetAnim = EntyAnim::Idle;           // 9
+    }
+
+
+    // --- 5. РЎРџР•Р¦РРђР›Р¬РќР«Р• РЎРћРЎРўРћРЇРќРРЇ (Р‘Р›РћРљРР РћР’РљРђ Р Р”Р­РЁ) ---
+    bool isMovementBlocked = (
+        currentTargetAnim == EntyAnim::KICK ||
+        currentTargetAnim == EntyAnim::Boxing ||
+        currentTargetAnim == EntyAnim::Dance1 ||
+        currentTargetAnim == EntyAnim::DanceWin
+        );
+
+    bool isDashing = (currentTargetAnim == EntyAnim::DashBack);
+
+    if (isMovementBlocked || isDashing) {
+        moveDir = glm::vec3(0.0f);
+    }
+
+
+    // --- 6. Р¤РР—РРљРђ Р”Р’РР–Р•РќРРЇ ---
+    if (isDashing) {
+        btTransform trans;
+        body->getMotionState()->getWorldTransform(trans);
+
+        btVector3 backwardDir = quatRotate(trans.getRotation(), btVector3(0, 0, -1));
+
+        // Р С‹РІРѕРє С‚РµРїРµСЂСЊ РјРѕР¶РЅРѕ СЃРґРµР»Р°С‚СЊ РѕС‡РµРЅСЊ Р±С‹СЃС‚СЂС‹Рј, РїРѕС‚РѕРјСѓ С‡С‚Рѕ РѕРЅ РґР»РёС‚СЃСЏ РІСЃРµРіРѕ 0.3 СЃРµРєСѓРЅРґС‹
+        float dashSpeed = 25.0f;
+        float dashAccel = 30.0f * deltaTime;
+
+        btVector3 targetVel(backwardDir.x() * dashSpeed, currentVel.y(), backwardDir.z() * dashSpeed);
+        btVector3 finalVel = currentVel.lerp(targetVel, dashAccel);
+        body->setLinearVelocity(finalVel);
+
+        body->setAngularVelocity(btVector3(0, 0, 0));
+    }
+    else if (glm::length(moveDir) > 0.1f && !isMovementBlocked) {
+        moveDir = glm::normalize(moveDir);
+        float accel = 10.0f * deltaTime;
+
+        btVector3 targetVel(moveDir.x * maxSpeed, currentVel.y(), moveDir.z * maxSpeed);
+        btVector3 finalVel = currentVel.lerp(targetVel, accel);
+        body->setLinearVelocity(finalVel);
+
+        float targetAngle = atan2(moveDir.x, moveDir.z);
+        btTransform trans;
+        body->getMotionState()->getWorldTransform(trans);
+
+        btVector3 currentForward = quatRotate(trans.getRotation(), btVector3(0, 0, 1));
+        float currentAngle = atan2(currentForward.x(), currentForward.z());
+        float angleDiff = targetAngle - currentAngle;
+
+        while (angleDiff > M_PI) angleDiff -= 2.0f * M_PI;
+        while (angleDiff < -M_PI) angleDiff += 2.0f * M_PI;
+
+        body->setAngularVelocity(btVector3(0, angleDiff * 12.0f, 0));
+    }
+    else {
+        float decel = 15.0f * deltaTime;
+        btVector3 targetVel(0.0f, currentVel.y(), 0.0f);
+        btVector3 finalVel = currentVel.lerp(targetVel, decel);
+        body->setLinearVelocity(finalVel);
+        body->setAngularVelocity(btVector3(0, 0, 0));
+    }
+
+
+    // --- 7. Р¤РР—РР§Р•РЎРљРР™ РђРљРў РџР Р«Р–РљРђ ---
+    if (keySpace && !mWasSpacePressed && isOnGround && !isMovementBlocked && !isDashing) {
+        float jumpForce = 340.0f;
+        body->applyCentralImpulse(btVector3(0.0f, jumpForce, 0.0f));
+        isOnGround = false;
+    }
+    mWasSpacePressed = keySpace;
+
+
+    // --- 8. РњР“РќРћР’Р•РќРќРћР• РџР•Р Р•РљР›Р®Р§Р•РќРР• РђРќРРњРђР¦РР ---
+    if (currentTargetAnim != settings.msCrossBlendDestAnimClip) {
+        settings.msCrossBlendDestAnimClip = currentTargetAnim;
+        settings.msAnimClip = currentTargetAnim;
+
+        settings.msAnimCrossBlendFactor = 1.0f;
+        settings.msBlendingMode = blendMode::crossfade;
+
+        settings.msAnimTimePosition = 0.0f;
+
+        settingsChanged = true;
+    }
+
+    // --- 9. РћРўРџР РђР’РљРђ Р”РђРќРќР«РҐ Р’ Р”Р’РР–РћРљ ---
+    if (settingsChanged) {
+        settings.msPlayAnimation = true;
+        if (currentTargetAnim == EntyAnim::DashBack) {
+            settings.msAnimSpeed = 2.4f; // РџРѕРґРіРѕРЅРё СЌС‚Рѕ С‡РёСЃР»Рѕ, С‡С‚РѕР±С‹ Р°РЅРёРјР°С†РёСЏ СѓСЃРїРµР»Р° РґРѕРёРіСЂР°С‚СЊ РґРѕ РєРѕРЅС†Р°
+        }
+        else {
+            settings.msAnimSpeed = 1.0f; // Р”Р»СЏ РІСЃРµС… РѕСЃС‚Р°Р»СЊРЅС‹С… Р°РЅРёРјР°С†РёР№ СЃРєРѕСЂРѕСЃС‚СЊ СЃС‚Р°РЅРґР°СЂС‚РЅР°СЏ
+        }
+
+        enty->setInstanceSettings(settings);
+        enty->checkForUpdates();
+    }
+}
 void OGLRenderer::cleanup() {
 
     if (mDynamicsWorld) {
-        // Удаляем все RigidBody из мира (опционально, но хороший тон)
+        // РЈРґР°Р»СЏРµРј РІСЃРµ RigidBody РёР· РјРёСЂР° (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ, РЅРѕ С…РѕСЂРѕС€РёР№ С‚РѕРЅ)
         for (int i = mDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--) {
             btCollisionObject* obj = mDynamicsWorld->getCollisionObjectArray()[i];
             mDynamicsWorld->removeCollisionObject(obj);

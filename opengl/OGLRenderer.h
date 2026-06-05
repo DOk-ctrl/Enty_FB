@@ -24,6 +24,28 @@
 #include "OGLRenderData.h"
 #include "btBulletDynamicsCommon.h"
 
+enum  EntyAnim : int {
+    KICK = 0, //
+    Action = 1, // стоит не в Т-позе
+    Dance1 = 2,
+    Boxing = 3,
+    DashBack = 4,
+    Death = 5,
+    DoubleJumpKick = 6,
+    FlyKick = 7,
+    HitReaction = 8,
+    Idle = 9,
+    Jump = 10,
+    PickUp = 11,
+    Run = 12,
+    StartWalk = 13,
+    StopWalk = 14,
+    StopRun = 15,
+    Tpose = 16,
+    Walk = 17,
+    DanceWin = 18
+};
+
 class OGLRenderer {
   public:
     OGLRenderer(GLFWwindow *window);
@@ -38,8 +60,10 @@ class OGLRenderer {
 
     void addPhysicsToEnty(std::shared_ptr<GltfInstance> entyInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 spawnPos);
     void addPhysicsToStonehenge(std::shared_ptr<GltfInstance> stonehengeInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 pos, glm::vec3 rot);
+    void updatePlayerCharacter(float deltaTime);
 
     void cleanup();
+
 
   private:
 
@@ -101,5 +125,8 @@ class OGLRenderer {
     /* create identity matrix by default */
     glm::mat4 mViewMatrix = glm::mat4(1.0f);
     glm::mat4 mProjectionMatrix = glm::mat4(1.0f);
-
+    
+    bool mWasSpacePressed = false;
 };
+
+

@@ -128,10 +128,10 @@ endif()
 
 if(MSVC)
     # 1. Говорим линкеру, что нам нужна подсистема WINDOWS (убирает консоль)
-    set_target_properties(Main PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
+    # set_target_properties(Main PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
     
     # 2. Указываем точку входа, чтобы не менять int main() на WinMain
-    set_property(TARGET Main APPEND_STRING PROPERTY LINK_FLAGS " /ENTRY:mainCRTStartup")
+    # set_property(TARGET Main APPEND_STRING PROPERTY LINK_FLAGS " /ENTRY:mainCRTStartup")
 endif()
 
 # =========================================================================

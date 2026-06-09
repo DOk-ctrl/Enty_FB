@@ -49,7 +49,7 @@ if(WIN32)
 endif()
 # ----------------------------
 
-add_executable(Main ${SOURCES} "opengl/Localization.cpp" "opengl/Localization.h" )
+add_executable(Main ${SOURCES} "opengl/Localization.cpp" "opengl/Localization.h"  "model/Enemy.h" "model/Enemy.cpp" "model/AIStates.h" "model/AIStates.cpp")
 
 target_include_directories(Main 
 PUBLIC include src window tools opengl model imgui tinygltf ${bulletphysics_SOURCE_DIR}/src ${bulletphysics_BINARY_DIR}/src)

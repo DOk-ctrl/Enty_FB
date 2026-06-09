@@ -120,7 +120,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
  // test 12.01.26 - 1 model only 1 instance
   //mGltfModels.resize(3);
   
-  mGltfModels.resize(8);
+  mGltfModels.resize(9);
   mGltfModels.at(0) = std::make_shared<GltfModel>();
   std::string modelFilename = "assets/StonehengeMay.gltf";
   std::string modelTexFilename = "textures/StoneMay.png";
@@ -199,6 +199,13 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   std::string modelTexFilename8 = "textures/Arena.png";
   if (!mGltfModels.at(7)->loadModel(mRenderData, modelFilename8, modelTexFilename8)) {
       Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename8.c_str());
+      return false;
+  }
+  mGltfModels.at(8) = std::make_shared<GltfModel>();
+  std::string modelFilename9 = "assets/Symbiote.gltf";
+  std::string modelTexFilename9 = "textures/Symbiote.png";
+  if (!mGltfModels.at(8)->loadModel(mRenderData, modelFilename9, modelTexFilename9)) {
+      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename9.c_str());
       return false;
   }
   //mGltfModels.at(0)->uploadVertexBuffers();
@@ -310,6 +317,13 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
       static_cast<float>(zPos8)), CustomRot3));
   numTriangles += static_cast<unsigned int>(mGltfModels.at(7)->getTriangleCount());
 
+  int xPos9 = 5;
+  int yPos9 = 3;
+  int zPos9 = 0;
+  mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(8), glm::vec3(static_cast<float>(xPos9), static_cast<float>(yPos9),
+      static_cast<float>(zPos9)), defaultRot));
+  numTriangles += static_cast<unsigned int>(mGltfModels.at(8)->getTriangleCount());
+
   addPhysicsToStonehenge(mGltfInstances.at(0), mDynamicsWorld, glm::vec3(77, 0, 580),defaultRot);
   addPhysicsToEnty(mGltfInstances.at(1), mDynamicsWorld, glm::vec3(0, 0, 0)); // Она заспавнится на высоте 10м и упадет на пол
   {
@@ -322,6 +336,11 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   addPhysicsToStonehenge(mGltfInstances.at(2), mDynamicsWorld, glm::vec3(50, 0.1, 419),CustomRot);
   addPhysicsToStonehenge(mGltfInstances.at(5), mDynamicsWorld, glm::vec3(-166, 1, 261), CustomRot2);
   addPhysicsToStonehenge(mGltfInstances.at(7), mDynamicsWorld, glm::vec3(392, -1, 322), CustomRot3);
+
+  addPhysicsToEnemy(mGltfInstances.at(8), mDynamicsWorld, glm::vec3(5, 3, 0)); 
+
+  auto enemyAgent = std::make_unique<Enemy>(mGltfInstances.at(8), mGltfInstances.at(8)->getRigidBody());
+  mEnemies.push_back(std::move(enemyAgent));
 
   mRenderData.rdTriangleCount = numTriangles;
 
@@ -504,7 +523,29 @@ void OGLRenderer::addPhysicsToEnty(std::shared_ptr<GltfInstance> entyInstance, b
     dynamicsWorld->addRigidBody(body);
     entyInstance->setRigidBody(body);
 }
+void OGLRenderer::addPhysicsToEnemy(std::shared_ptr<GltfInstance> entyInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 spawnPos) {
+    // РЕАЛЬНЫЕ РАЗМЕРЫ: Радиус 0.3м, Высота цилиндра 1.2м. 
+    // Итого: 1.8 + 0.3 + 0.3 = 2.4 метра общей высоты!
+    btCollisionShape* colShape = new btCapsuleShape(0.3f, 1.8f);
 
+    btTransform startTransform;
+    startTransform.setIdentity();
+    // Спавним на 10 метров вверх
+    startTransform.setOrigin(btVector3(spawnPos.x, spawnPos.y + 5.0f, spawnPos.z));
+
+    btScalar mass(700.0f);
+    btVector3 localInertia(0, 0, 0);
+    colShape->calculateLocalInertia(mass, localInertia);
+
+    btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
+    btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, colShape, localInertia);
+    btRigidBody* body = new btRigidBody(rbInfo);
+
+    body->setAngularFactor(btVector3(0, 1, 0));
+
+    dynamicsWorld->addRigidBody(body);
+    entyInstance->setRigidBody(body);
+}
 void OGLRenderer::addPhysicsToStonehenge(std::shared_ptr<GltfInstance> stonehengeInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 pos, glm::vec3 rot) {
     // Получаем ИДЕАЛЬНО точный физический шейп из glTF
     btCollisionShape* groundShape = stonehengeInstance->getModel()->getPhysicsShape();
@@ -612,7 +653,15 @@ void OGLRenderer::draw() {
   handleMovementKeys();
 
   updatePlayerCharacter(deltaTime);
- 
+
+  btTransform entyTrans;
+  mGltfInstances.at(1)->getRigidBody()->getMotionState()->getWorldTransform(entyTrans);
+  glm::vec3 entyPos(entyTrans.getOrigin().x(), entyTrans.getOrigin().y(), entyTrans.getOrigin().z());
+
+  // Говорим всем врагам обновиться и передаем им координаты цели
+  for (auto& enemy : mEnemies) {
+      enemy->update(deltaTime, entyPos);
+  }
   /* draw to framebuffer */
   mFramebuffer.bind();
 
@@ -868,14 +917,22 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
     body->activate(true);
     body->setAngularFactor(btVector3(0, 1, 0));
 
-    // --- 0. ТАЙМЕРЫ УАЛОНЕНИЯ (DASH) ---
-    // static сохраняет значения между кадрами
-    static float dashDurationTimer = 0.0f; // Сколько еще лететь назад
-    static float dashCooldownTimer = 0.0f; // Сколько еще ждать до следующего дэша
+    // --- 0. ТАЙМЕРЫ СПЕЦ-ДЕЙСТВИЙ ---
+    static float dashDurationTimer = 0.0f;
+    static float dashCooldownTimer = 0.0f;
 
-    // Обновляем таймеры каждый кадр
+    // НОВОЕ: Таймеры жесткой фиксации для атак (Action Lock)
+    static float attackDurationTimer = 0.0f; // Сколько еще будет длиться удар
+    static int currentAttackAnim = EntyAnim::Idle; // Какой именно удар мы сейчас бьем
+    static float attackTimeAccumulator = 0.0f; // Наше ручное время анимации с нуля
+
     if (dashDurationTimer > 0.0f) dashDurationTimer -= deltaTime;
     if (dashCooldownTimer > 0.0f) dashCooldownTimer -= deltaTime;
+
+    if (attackDurationTimer > 0.0f) {
+        attackDurationTimer -= deltaTime;
+        attackTimeAccumulator += deltaTime; // Мотаем время анимации вперед!
+    }
 
 
     // --- 1. ЧИТАЕМ КНОПКИ ДЛЯ АНИМАЦИЙ ---
@@ -904,7 +961,7 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
     btVector3 currentVel = body->getLinearVelocity();
 
 
-    // --- 2. ПРАВИЛЬНАЯ ПРОВЕРКА ЗЕМЛИ ЧЕРЕЗ RAYCAST ---
+    // --- 2. ПРАВИЛЬНАЯ ПРОВЕРКА ЗЕМЛИ ---
     bool isOnGround = false;
     btTransform currentTransform;
     body->getMotionState()->getWorldTransform(currentTransform);
@@ -919,55 +976,68 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
     }
 
 
-    // --- 3. ЛОГИКА ЗАПУСКА ДЭША ---
-    // Если нажали Е, стоим на земле, сейчас не в дэше и кулдаун прошел
-    if (keyE && isOnGround && dashDurationTimer <= 0.0f && dashCooldownTimer <= 0.0f) {
-        dashDurationTimer = 0.3f; // Длительность самого рывка (0.3 секунды полета)
-        dashCooldownTimer = 1.5f; // Откат рывка (сможешь повторить только через 1.5 сек)
+    // --- 3. ЛОГИКА ЗАПУСКА ДЭША И АТАК ---
+    if (keyE && isOnGround && dashDurationTimer <= 0.0f && dashCooldownTimer <= 0.0f && attackDurationTimer <= 0.0f) {
+        dashDurationTimer = 0.3f;
+        dashCooldownTimer = 1.5f;
+    }
+
+    // НОВОЕ: Захватываем атаку, только если сейчас не бьем и не дэшим
+    if (isOnGround && attackDurationTimer <= 0.0f && dashDurationTimer <= 0.0f) {
+        if (keySpace && mouseLMB) {
+            currentAttackAnim = EntyAnim::FlyKick;
+            attackDurationTimer = enty->getAnimationEndTime(currentAttackAnim);
+            attackTimeAccumulator = 0.0f; // Сбрасываем таймер в 0!
+        }
+        else if (mouseLMB) {
+            currentAttackAnim = EntyAnim::Boxing;
+            attackDurationTimer = enty->getAnimationEndTime(currentAttackAnim);
+            attackTimeAccumulator = 0.0f;
+        }
+        else if (keyZ) {
+            currentAttackAnim = EntyAnim::DoubleJumpKick;
+            attackDurationTimer = enty->getAnimationEndTime(currentAttackAnim);
+            attackTimeAccumulator = 0.0f;
+        }
+        else if (keyC) {
+            currentAttackAnim = EntyAnim::KICK;
+            attackDurationTimer = enty->getAnimationEndTime(currentAttackAnim);
+            attackTimeAccumulator = 0.0f;
+        }
     }
 
 
     // --- 4. ДЕРЕВО ПРИОРИТЕТОВ АНИМАЦИЙ ---
     int currentTargetAnim = EntyAnim::Idle;
 
-    // ПРИОРИТЕТ 0: Если таймер дэша тикает, мы ЖЕСТКО форсируем дэш!
     if (dashDurationTimer > 0.0f) {
-        currentTargetAnim = EntyAnim::DashBack;       // 4
+        currentTargetAnim = EntyAnim::DashBack;
     }
-    // Остальные приоритеты работают, только если мы не в дэше
-    else if (keySpace && mouseLMB) {
-        currentTargetAnim = EntyAnim::FlyKick;        // 7
+    // НОВОЕ: Если таймер атаки тикает, мы ЖЕСТКО держим эту анимацию
+    else if (attackDurationTimer > 0.0f) {
+        currentTargetAnim = currentAttackAnim;
     }
-    else if (mouseLMB) {
-        currentTargetAnim = EntyAnim::Boxing;         // 3
-    }
-    else if (keyZ) {
-        currentTargetAnim = EntyAnim::DoubleJumpKick; // 6
-    }
-    else if (keyC) {
-        currentTargetAnim = EntyAnim::KICK;           // 0
-    }
+    // Дальше идут обычные прерываемые анимации
     else if (!isOnGround) {
-        currentTargetAnim = EntyAnim::Jump;           // 10
+        currentTargetAnim = EntyAnim::Jump;
     }
     else if (keyG) {
-        currentTargetAnim = EntyAnim::Dance1;         // 2
+        currentTargetAnim = EntyAnim::Dance1;
     }
     else if (keyH) {
-        currentTargetAnim = EntyAnim::DanceWin;       // 18
+        currentTargetAnim = EntyAnim::DanceWin;
     }
     else if (glm::length(moveDir) > 0.1f) {
-        currentTargetAnim = isSprinting ? EntyAnim::Run : EntyAnim::Walk; // 12 или 17
+        currentTargetAnim = isSprinting ? EntyAnim::Run : EntyAnim::Walk;
     }
     else {
-        currentTargetAnim = EntyAnim::Idle;           // 9
+        currentTargetAnim = EntyAnim::Idle;
     }
 
 
     // --- 5. СПЕЦИАЛЬНЫЕ СОСТОЯНИЯ (БЛОКИРОВКА И ДЭШ) ---
     bool isMovementBlocked = (
-        currentTargetAnim == EntyAnim::KICK ||
-        currentTargetAnim == EntyAnim::Boxing ||
+        attackDurationTimer > 0.0f || // Блокируем ходьбу во время удара
         currentTargetAnim == EntyAnim::Dance1 ||
         currentTargetAnim == EntyAnim::DanceWin
         );
@@ -986,7 +1056,6 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
 
         btVector3 backwardDir = quatRotate(trans.getRotation(), btVector3(0, 0, -1));
 
-        // Рывок теперь можно сделать очень быстрым, потому что он длится всего 0.3 секунды
         float dashSpeed = 25.0f;
         float dashAccel = 30.0f * deltaTime;
 
@@ -996,6 +1065,40 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
 
         body->setAngularVelocity(btVector3(0, 0, 0));
     }
+    // НОВОЕ: Физический рывок вперед для конкретных атак
+    else if (attackDurationTimer > 0.0f && (currentAttackAnim == EntyAnim::FlyKick || currentAttackAnim == EntyAnim::DoubleJumpKick)) {
+        btTransform trans;
+        body->getMotionState()->getWorldTransform(trans);
+
+        // Вектор "Вперед" для нашей модели
+        btVector3 forwardDir = quatRotate(trans.getRotation(), btVector3(0, 0, 1));
+
+        float attackMoveSpeed = 0.0f; // По умолчанию стоим на месте (замах или выход из удара)
+
+        // 1. Настройки для FLY KICK (удар в полете)
+        if (currentAttackAnim == EntyAnim::FlyKick) {
+            // Энти летит вперед только с 0.2 по 0.6 секунды анимации. 
+            // (Замени эти цифры на те моменты, когда в Блендере она реально летит)
+            if (attackTimeAccumulator > 0.0f && attackTimeAccumulator < 1.2f) {
+                attackMoveSpeed = 20.0f; // Очень быстрый рывок вперед
+            }
+        }
+        // 2. Настройки для DOUBLE JUMP KICK (двойной удар)
+        else if (currentAttackAnim == EntyAnim::DoubleJumpKick) {
+            // Допустим, она делает первый шаг на 0.1с, а второй рывок на 0.5с
+            if (attackTimeAccumulator > 0.8f && attackTimeAccumulator < 2.4f) {
+                attackMoveSpeed = 5.0f;
+            }
+      
+        }
+
+        float accel = 25.0f * deltaTime;
+        btVector3 targetVel(forwardDir.x() * attackMoveSpeed, currentVel.y(), forwardDir.z() * attackMoveSpeed);
+        btVector3 finalVel = currentVel.lerp(targetVel, accel);
+        body->setLinearVelocity(finalVel);
+        body->setAngularVelocity(btVector3(0, 0, 0));
+    }
+    // Обычная ходьба и бег
     else if (glm::length(moveDir) > 0.1f && !isMovementBlocked) {
         moveDir = glm::normalize(moveDir);
         float accel = 10.0f * deltaTime;
@@ -1017,6 +1120,7 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
 
         body->setAngularVelocity(btVector3(0, angleDiff * 12.0f, 0));
     }
+    // Обычное торможение (включая торможение при обычных атаках типа Boxing)
     else {
         float decel = 15.0f * deltaTime;
         btVector3 targetVel(0.0f, currentVel.y(), 0.0f);
@@ -1044,18 +1148,28 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
         settings.msBlendingMode = blendMode::crossfade;
 
         settings.msAnimTimePosition = 0.0f;
-
         settingsChanged = true;
     }
 
     // --- 9. ОТПРАВКА ДАННЫХ В ДВИЖОК ---
-    if (settingsChanged) {
-        settings.msPlayAnimation = true;
+    bool forceManualUpdate = false;
+
+    // НОВОЕ: Перехватываем управление временем движка
+    if (attackDurationTimer > 0.0f) {
+        settings.msPlayAnimation = false; // Вырубаем глобальные часы
+        settings.msAnimTimePosition = attackTimeAccumulator; // Кормим время вручную!
+        forceManualUpdate = true; // Заставляем движок обновлять кости каждый кадр
+    }
+    else {
+        settings.msPlayAnimation = true; // Для бега, дэша и айдла возвращаем автовоспроизведение
+    }
+
+    if (settingsChanged || forceManualUpdate) {
         if (currentTargetAnim == EntyAnim::DashBack) {
-            settings.msAnimSpeed = 2.4f; // Подгони это число, чтобы анимация успела доиграть до конца
+            settings.msAnimSpeed = 2.4f;
         }
         else {
-            settings.msAnimSpeed = 1.0f; // Для всех остальных анимаций скорость стандартная
+            settings.msAnimSpeed = 1.0f;
         }
 
         enty->setInstanceSettings(settings);

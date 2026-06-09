@@ -49,7 +49,7 @@ class GltfInstance {
 
     void setRigidBody(btRigidBody* body) { mRigidBody = body; }
     btRigidBody* getRigidBody() { return mRigidBody; }
-
+    float getAnimationEndTime(int animNum);
     // Синхронизация данных
     void syncPhysics();
   private:
@@ -62,7 +62,7 @@ class GltfInstance {
     void crossBlendAnimationFrame(int sourceAnimNumber, int destAnimNumber, float time,
       float blendFactor);
 
-    float getAnimationEndTime(int animNum);
+   
 
     void getSkeletonPerNode(std::shared_ptr<GltfNode> treeNode);
     void updateNodeMatrices(std::shared_ptr<GltfNode> treeNode);

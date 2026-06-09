@@ -23,7 +23,7 @@
 
 #include "OGLRenderData.h"
 #include "btBulletDynamicsCommon.h"
-
+#include "Enemy.h"
 enum  EntyAnim : int {
     KICK = 0, //
     Action = 1, // стоит не в Т-позе
@@ -59,6 +59,7 @@ class OGLRenderer {
     void handleMousePositionEvents(double xPos, double yPos);
 
     void addPhysicsToEnty(std::shared_ptr<GltfInstance> entyInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 spawnPos);
+    void addPhysicsToEnemy(std::shared_ptr<GltfInstance> entyInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 spawnPos);
     void addPhysicsToStonehenge(std::shared_ptr<GltfInstance> stonehengeInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 pos, glm::vec3 rot);
     void updatePlayerCharacter(float deltaTime);
 
@@ -127,6 +128,8 @@ class OGLRenderer {
     glm::mat4 mProjectionMatrix = glm::mat4(1.0f);
     
     bool mWasSpacePressed = false;
+    std::vector<std::unique_ptr<Enemy>> mEnemies;
+
 };
 
 

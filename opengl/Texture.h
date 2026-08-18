@@ -5,13 +5,14 @@
 #include <GLFW/glfw3.h>
 
 class Texture {
-  public:
+public:
     bool loadTexture(std::string textureFilename, bool flipImage = true);
     void bind();
     void unbind();
     void cleanup();
-
-  private:
+    void setMipmapLevel(int level);
+    void setAnisotropy(float amount);
+private:
     GLuint mTexture = 0;
     int mTexWidth = 0;
     int mTexHeight = 0;

@@ -9,6 +9,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "GameStateMachine.h"
+
 struct OGLVertex {
   glm::vec3 position;
   glm::vec3 color;
@@ -72,5 +74,42 @@ struct OGLRenderData {
 
   int rdNumberOfInstances = 0;
   int rdCurrentSelectedInstance = 0;
-  bool mIsDeveloperMode = true;
+  bool mIsDeveloperMode = false;
+  bool showCreditsWindow = false;
+  bool rdMenuAnyButtonHovered = false;  // ImGui hover над кнопками меню
+
+  int rdTextureQuality = 0; // 0 = Ультра, 1 = Высокие, 2 = Средние, 3 = Низкие
+  int rdResolutionIndex = 1;   // 0:1280x720 1:1920x1080 2:2560x1440 3:3840x2160
+  int rdFullscreenIndex = 0;   // 0 - Оконный, 1 - Fullscreen
+  int rdVSyncIndex = 1;   // 0 - Выкл, 1 - Вкл
+  int rdMSAAIndex = 3;   // 0..3 -> Off, 2x, 4x, 8x
+  int rdAnisotropyIndex = 4;   // 0..4 -> Off, 2x, 4x, 8x, 16x
+  int rdLanguageIndex = 0;
+  // =========================================================================
+  // НАСТРОЙКИ ОСВЕЩЕНИЯ ДЛЯ ШЕЙДЕРОВ (СЛАЙДЕРЫ)
+  // =========================================================================
+
+  //Sun
+  glm::vec3 rdSunDirection = glm::vec3(-0.2f, -1.0f, -0.3f);
+  glm::vec3 rdSunColor = glm::vec3(1.0f, 1.0f, 0.9f);
+  float rdSunIntensity = 1.0f;
+  // Point Light
+  glm::vec3 rdLightPos = glm::vec3(2.0f, 4.0f, 2.0f);
+  glm::vec3 rdPointColor = glm::vec3(1.0f, 0.5f, 0.0f);
+  float rdPointIntensity = 2.0f;
+  float rdPointAttenuation = 0.5f; // Коэффициент затухания (чем выше, тем ближе гаснет свет)
+
+  float rdPlayerHP = 100.0f;
+  float rdPlayerMaxHP = 100.0f;
+  bool rdPlayerIsDead = false;
+
+  bool ShowDebugMenu;
+  // --- ЭФФЕКТЫ БОЯ И КАМЕРЫ ---
+  float rdHitStopTimer = 0.0f;     // Таймер заморозки времени (Hit Stop)
+
+  float rdShakeDuration = 0.0f;    // Длительность тряски
+  float rdShakeIntensity = 0.0f;   // Интенсивность тряски
+
+  float rdZoomTimer = 0.0f;        // Таймер зума при фатальном ударе
+  float rdTargetFOV = 60.0f;       // FOV во время зума (стандартный, например, 45.0f)
 };

@@ -22,8 +22,13 @@ struct GltfNodeData {
 
 class GltfModel {
   public:
-    bool loadModel(OGLRenderData &renderData, std::string modelFilename,
-      std::string textureFilename, std::string normalFilename = "", std::string metRoughFilename = "");
+      bool loadModel(OGLRenderData& renderData, std::string modelFilename,
+          std::string textureFilename, std::string normalFilename = "",
+          std::string metalFilename = "", std::string roughFilename = "", std::string emitFilename = "",
+          std::string packedFilename = "", std::string coatRoughFilename = "");
+
+    void setTextureQuality(int level);
+    void setAnisotropicFiltering(float amount);
     void draw();
     void cleanup();
 
@@ -42,11 +47,22 @@ class GltfModel {
 
     void resetNodeData(std::shared_ptr<GltfNode> treeNode);
 
-    void processNodePhysics(const tinygltf::Model* model, int nodeIdx, const glm::mat4& parentMatrix, btTriangleMesh* meshInterface);
+    Texture mTex;          // Base Color
+    Texture mNormalTex;    // Normal Map
+    Texture mMetalTex;     // Metallic Map
+    Texture mRoughTex;     // Roughness Map
+    Texture mEmitTex;
+    Texture mPackedTex;      // Channel Packed Map
+    Texture mCoatRoughTex;   // Coat Roughness Map
 
     bool mHasNormalMap = false;
-    bool mHasMetRoughMap = false;
+    bool mHasMetalMap = false;
+    bool mHasRoughMap = false;
+    bool mHasEmitMap = false;
+    bool mHasPackedMap = false;
+    bool mHasCoatRoughMap = false;
 
+    void processNodePhysics(const tinygltf::Model* model, int nodeIdx, const glm::mat4& parentMatrix, btTriangleMesh* meshInterface);
     btBvhTriangleMeshShape* getPhysicsShape();
 
   private:
@@ -86,9 +102,5 @@ class GltfModel {
 
     std::map<std::string, GLint> attributes =
     { {"POSITION", 0}, {"NORMAL", 1}, {"TEXCOORD_0", 2}, {"JOINTS_0", 3}, {"WEIGHTS_0", 4}, {"TANGENT", 5} };
-
-    Texture mTex{}; // base color
-    Texture mNormalTex{};
-    Texture mMetRoughTex{};
     
 };

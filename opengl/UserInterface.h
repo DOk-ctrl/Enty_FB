@@ -10,12 +10,16 @@ class UserInterface {
   public:
     void init(OGLRenderData &renderData);
     void drawSystemMenu(OGLRenderData& renderData, bool& showMenu);
-    void createFrame(OGLRenderData& renderData, ModelSettings& settings, bool mShowMenu);
+    void createFrame(OGLRenderData& renderData, ModelSettings& settings, bool mShowMenu, bool debug);
     void render();
     void cleanup();
     void drawDeveloperUI(OGLRenderData& renderData, ModelSettings& settings);
     void drawPlayerHUD(OGLRenderData& renderData, ModelSettings& settings);
+    inline static bool showSettingsWindow = false;
+    inline static bool showTentacle = false;
+    inline static bool showEmit = true;
     
+    static void drawSettingsOverlay(OGLRenderData& renderData, bool& showSettings);
   private:
     float mFramesPerSecond = 0.0f;
     /* averaging speed */
@@ -46,5 +50,5 @@ class UserInterface {
     int mNumUiDrawValues = 90;
 
     std::vector<std::string> Language = { "Russian", "English" };
-
+   
 };

@@ -1,7 +1,6 @@
 #include <btBulletDynamicsCommon.h>
 #include <memory>
 #include <string>
-
 #include "Window.h"
 #include "Logger.h"
 

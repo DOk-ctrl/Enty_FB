@@ -7,6 +7,7 @@ layout (location = 4) in vec4 aJointWeight;
 
 layout (location = 0) out vec3 normal;
 layout (location = 1) out vec2 texCoord;
+layout (location = 2) out vec3 FragPos; // <--- ÄÎÁÀÂÈËÈ ÂÛÕÎÄ ÄËß ÏÎÇÈÖÈÈ
 
 layout (std140, binding = 0) uniform Matrices {
   mat4 view;
@@ -73,9 +74,12 @@ mat4 getSkinMat() {
 
 void main() {
   mat4 skinMat = getSkinMat();
-
-  gl_Position = projection * view * skinMat * vec4(aPos, 1.0);
-  normal = vec3(transpose(inverse(skinMat)) * vec4(aNormal, 1.0));
+  normal = normalize(mat3(skinMat) * aNormal);
   texCoord = aTexCoord;
-}
 
+  // Ñ÷èòàåì ìèðîâóþ ïîçèöèþ âåðøèíû ñ ó÷åòîì äåôîðìàöèè DQ
+  vec4 worldPos = skinMat * vec4(aPos, 1.0);
+  FragPos = vec3(worldPos); // <--- ÎÒÄÀÅÌ ÂÎ ÔÐÀÃÌÅÍÒÍÛÉ ØÅÉÄÅÐ
+
+  gl_Position = projection * view * worldPos;
+}

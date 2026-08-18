@@ -12,13 +12,17 @@
 class GltfAnimationClip {
   public:
     GltfAnimationClip(std::string name);
-    void addChannel(std::shared_ptr<tinygltf::Model> model, tinygltf::Animation anim,
-      tinygltf::AnimationChannel channel);
+    void addChannel(const std::shared_ptr<tinygltf::Model>& model, const tinygltf::Animation& anim,
+      const tinygltf::AnimationChannel& channel);
 
-    void setAnimationFrame(std::vector<std::shared_ptr<GltfNode>> nodes,
-      std::vector<bool> additiveMask, float time);
+    void setAnimationFrame(std::vector<std::shared_ptr<GltfNode>>& nodes,
+      const std::vector<bool>& additiveMask, float time);
     void blendAnimationFrame(std::vector<std::shared_ptr<GltfNode>> nodes,
       std::vector<bool> additiveMask, float time, float blendFactor);
+
+    void reserveChannels(size_t count) {
+        mAnimationChannels.reserve(count); // Замени mChannels на реальное имя твоей переменной-вектора каналов
+    }
 
     float getClipEndTime();
     std::string getClipName();

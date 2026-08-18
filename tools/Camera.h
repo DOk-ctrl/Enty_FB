@@ -19,4 +19,5 @@ class Camera {
 
       /* world up is positive Y */
       glm::vec3 mWorldUpVector = glm::vec3(0.0f, 1.0f, 0.0f);
+      
 };

@@ -1,44 +1,87 @@
-#include "Enemy.h"
+п»ї#include "Enemy.h"
 #include "AIStates.h"
+#include <iostream>
+#include <cstdlib>
 
-Enemy::Enemy(std::shared_ptr<GltfInstance> model, btRigidBody* body)
-    : mModel(model), mBody(body) {
-    // При спавне враг всегда появляется в состоянии "Ожидание"
+Enemy::Enemy(std::shared_ptr<GltfInstance> model, btRigidBody* body,
+    float maxHealth, float speed, float detectionRadius, float fovDegrees)
+    : mModel(model), mBody(body),
+    mSpeed(speed), mDetectionRadius(detectionRadius), mFieldOfViewDegrees(fovDegrees),
+    mHealth(maxHealth), mMaxHealth(maxHealth) {
+    // РџСЂРё СЃРїР°РІРЅРµ РІСЂР°Рі РІСЃРµРіРґР° РїРѕСЏРІР»СЏРµС‚СЃСЏ РІ СЃРѕСЃС‚РѕСЏРЅРёРё "РћР¶РёРґР°РЅРёРµ"
     changeState(std::make_unique<AIStateIdle>());
 }
 
 Enemy::~Enemy() {}
 
+void Enemy::resetToSpawn()
+{
+    if (!mBody) return;
+
+    btTransform initialTransform;
+    initialTransform.setIdentity();
+    initialTransform.setOrigin(btVector3(mSpawnPos.x, mSpawnPos.y, mSpawnPos.z));
+
+    // РўРµР»РµРїРѕСЂС‚РёСЂСѓРµРј С„РёР·РёС‡РµСЃРєРѕРµ С‚РµР»Рѕ Bullet
+    mBody->setWorldTransform(initialTransform);
+    if (mBody->getMotionState()) {
+        mBody->getMotionState()->setWorldTransform(initialTransform);
+    }
+
+    // РЎР±СЂР°СЃС‹РІР°РµРј РёРЅРµСЂС†РёСЋ Рё СЃРёР»С‹
+    mBody->setLinearVelocity(btVector3(0, 0, 0));
+    mBody->setAngularVelocity(btVector3(0, 0, 0));
+    mBody->clearForces();
+
+    // Р’РѕР·РІСЂР°С‰Р°РµРј РІ Idle
+    changeState(std::make_unique<AIStateIdle>());
+
+    std::cout << "[ENEMY] Р’СЂР°Рі СЃР±СЂРѕС€РµРЅ РЅР° СЃРїР°РІРЅ!" << std::endl;
+}
+
 void Enemy::update(float deltaTime, const glm::vec3& playerPos) {
-    mTargetPos = playerPos; // Обновляем инфу о том, где Энти
+    mTargetPos = playerPos; // РћР±РЅРѕРІР»СЏРµРј РёРЅС„Сѓ Рѕ С‚РѕРј, РіРґРµ Р­РЅС‚Рё
 
     if (mCurrentState) {
-        mCurrentState->update(this, deltaTime); // Мозг думает
+        mCurrentState->update(this, deltaTime); // РњРѕР·Рі РґСѓРјР°РµС‚
     }
 }
 
 void Enemy::changeState(std::unique_ptr<AIState> newState) {
+    if (mCurrentState) {
+        mCurrentState->exit(this);
+    }
     mCurrentState = std::move(newState);
     if (mCurrentState) {
         mCurrentState->enter(this);
     }
 }
+
+void Enemy::setJustHitPlayer(bool hit) {
+    mJustHitPlayer = hit;
+}
+
+bool Enemy::consumeHitPlayerFlag() {
+    if (mJustHitPlayer) {
+        mJustHitPlayer = false;
+        return true;
+    }
+    return false;
+}
+
 bool Enemy::CanSeeTarget() const {
     if (!mBody) return false;
 
-    // Получаем текущую позицию врага из Bullet Physics
     btTransform trans;
     mBody->getMotionState()->getWorldTransform(trans);
     glm::vec3 currentPos(trans.getOrigin().x(), trans.getOrigin().y(), trans.getOrigin().z());
 
-    // Вектор от врага к игроку (горизонтальный)
     glm::vec3 dirToTarget = mTargetPos - currentPos;
-    dirToTarget.y = 0.0f; // Игнорируем разницу в высоте
+    dirToTarget.y = 0.0f;
     float distance = glm::length(dirToTarget);
 
-    // ПРОВЕРКА 1: Радиус обнаружения
     if (distance > mDetectionRadius) {
-        return false; // Игрок слишком далеко
+        return false;
     }
 
     if (distance > 0.1f) {
@@ -54,19 +97,66 @@ bool Enemy::CanSeeTarget() const {
             forward = glm::vec3(0.0f, 0.0f, 1.0f);
         }
 
-        // Скалярное произведение (дает косинус угла между взглядом и игроком)
         float dotProduct = glm::dot(forward, dirToTarget);
-
-        // Считаем минимально допустимый косинус на основе заданных градусов
-        
         float targetCos = glm::cos(glm::radians(mFieldOfViewDegrees));
 
-        // Чем МЕНЬШЕ скалярное произведение, тем БОЛЬШЕ угол.
-        // Если dotProduct меньше targetCos — игрок вне зоны видимости.
         if (dotProduct < targetCos) {
             return false;
         }
     }
 
-    return true; // Игрок близко и перед глазами!
+    return true;
+}
+
+void Enemy::TakeDamage(float amount) {
+    if (isDead()) return; // РўСЂСѓРї РЅРµ СЂРµР°РіРёСЂСѓРµС‚ РЅР° СѓРґР°СЂС‹
+
+    float finalDamage = amount;
+    if (isBlocking()) {
+        finalDamage *= getBlockDamageMultiplier();
+        std::cout << "[ENEMY] РђС‚Р°РєР° Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅР°! РџСЂРѕС€Р»Рѕ С‚РѕР»СЊРєРѕ " << finalDamage << " СѓСЂРѕРЅР°." << std::endl;
+    }
+
+    mHealth -= finalDamage;
+    std::cout << "[ENEMY] РџРѕР»СѓС‡РµРЅРѕ " << finalDamage << " СѓСЂРѕРЅР°! РћСЃС‚Р°Р»РѕСЃСЊ РҐРџ: " << mHealth << std::endl;
+
+    if (mHealth <= 0.0f) {
+        changeState(std::make_unique<AIStateDeath>()); // РЈР‘РР›Р!
+        return;
+    }
+
+    if (canBeStaggered()) {
+        changeState(std::make_unique<AIStateHitReaction>()); // РџР РћРЎРўРћ Р‘РћР›Р¬РќРћ
+    }
+    // Р•СЃР»Рё canBeStaggered() == false вЂ” СЌС‚Рѕ "poise": Р±РѕСЃСЃС‹ Р±РµР· Р°РЅРёРјР°С†РёРё СЂРµР°РєС†РёРё
+    // РЅР° СѓСЂРѕРЅ РїСЂРѕСЃС‚Рѕ РїСЂРѕРґРѕР»Р¶Р°СЋС‚ С‚РµРєСѓС‰РµРµ СЃРѕСЃС‚РѕСЏРЅРёРµ (РЅРµ РїСЂРµСЂС‹РІР°СЋС‚СЃСЏ СѓРґР°СЂРѕРј).
+}
+
+int Enemy::getAnimIndex(EnemyAnimSlot slot) const {
+    // Р‘Р°Р·РѕРІР°СЏ СЂРµР°Р»РёР·Р°С†РёСЏ вЂ” С‚Р°Р±Р»РёС†Р° Р°РЅРёРјР°С†РёР№ Symbiote (5 РєР»РёРїРѕРІ, РєР°Рє Р±С‹Р»Рѕ СЂР°РЅСЊС€Рµ).
+    switch (slot) {
+    case EnemyAnimSlot::Idle:        return 2;
+    case EnemyAnimSlot::Move:        return 5;
+    case EnemyAnimSlot::Attack1:     return 3;
+    case EnemyAnimSlot::HitReaction: return 4;
+    case EnemyAnimSlot::Death:       return 1;
+    default:                         return -1; // Attack2/Attack3/Block вЂ” РЅРµ РїРѕРґРґРµСЂР¶РёРІР°СЋС‚СЃСЏ
+    }
+}
+
+std::vector<EnemyAnimSlot> Enemy::getAvailableAttackSlots() const {
+    return { EnemyAnimSlot::Attack1 };
+}
+
+EnemyAnimSlot Enemy::chooseAttackSlot() const {
+    auto slots = getAvailableAttackSlots();
+    if (slots.empty()) return EnemyAnimSlot::Attack1;
+    int idx = rand() % static_cast<int>(slots.size());
+    return slots[idx];
+}
+
+std::vector<HitWindow> Enemy::getHitWindows(EnemyAnimSlot /*attackSlot*/) const {
+    // Р”РµС„РѕР»С‚: РѕРґРЅРѕ РѕРєРЅРѕ СѓСЂРѕРЅР° РІ СЃРµСЂРµРґРёРЅРµ Р°РЅРёРјР°С†РёРё (55%-70% РґР»РёС‚РµР»СЊРЅРѕСЃС‚Рё РєР»РёРїР°) вЂ”
+    // СЂРѕРІРЅРѕ С‚Рѕ Р¶Рµ СЃР°РјРѕРµ, С‡С‚Рѕ Р±С‹Р»Рѕ С…Р°СЂРґРєРѕРґРѕРј (75-85 РєР°РґСЂРѕРІ РїСЂРё 60 FPS в‰€ СЌС‚Рё РґРѕР»Рё).
+    return { HitWindow{0.55f, 0.70f, false} };
 }

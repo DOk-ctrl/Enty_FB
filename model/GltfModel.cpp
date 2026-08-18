@@ -10,113 +10,120 @@
 #include "GltfModel.h"
 #include "Logger.h"
 #include "Tools.h"
-bool GltfModel::loadModel(OGLRenderData &renderData,
-    std::string modelFilename, std::string textureFilename, std::string normalFilename, std::string metRoughFilename) {
+bool GltfModel::loadModel(OGLRenderData& renderData,
+    std::string modelFilename, std::string textureFilename,
+    std::string normalFilename, std::string metalFilename, std::string roughFilename, std::string emitFilename,
+    std::string packedFilename, std::string coatRoughFilename) {
     // Загрузка Base Color
-  if (!mTex.loadTexture(textureFilename, false)) {
-    Logger::log(1, "%s: texture loading failed\n", __FUNCTION__);
-    return false;
-  }
+    if (!mTex.loadTexture(textureFilename, false)) {
+        Logger::log(1, "%s: texture loading failed\n", __FUNCTION__);
+        return false;
+    }
 
-  // Загрузка Normal map(если передана)
-  if (!normalFilename.empty()) {
-      if (mNormalTex.loadTexture(normalFilename, false)) {
-          mHasNormalMap = true;
-          Logger::log(1, "%s: Normal map successfully loaded\n", __FUNCTION__,  normalFilename.c_str());
-      }
-  }
-  if (!metRoughFilename.empty()) {
-      if (mMetRoughTex.loadTexture(metRoughFilename, false)) {
-          mHasMetRoughMap = true;
-          Logger::log(1, "%s: Metallic/Roughness map successfully loaded\n", __FUNCTION__, metRoughFilename.c_str());
-      }
-  }
-  Logger::log(1, "%s: glTF model texture '%s' successfully loaded\n", __FUNCTION__,
-    modelFilename.c_str());
+    // Загрузка Normal map(если передана)
+    if (!normalFilename.empty()) {
+        if (mNormalTex.loadTexture(normalFilename, false)) {
+            mHasNormalMap = true;
+            Logger::log(1, "%s: Normal map successfully loaded\n", __FUNCTION__, normalFilename.c_str());
+        }
+    }
+    // Загрузка Metallic map
+    if (!metalFilename.empty()) {
+        if (mMetalTex.loadTexture(metalFilename, false)) {
+            mHasMetalMap = true;
+            Logger::log(1, "%s: Metallic map successfully loaded: %s\n", __FUNCTION__, metalFilename.c_str());
+        }
+    }
 
-  mModel = std::make_shared<tinygltf::Model>();
+    // Загрузка Roughness map
+    if (!roughFilename.empty()) {
+        if (mRoughTex.loadTexture(roughFilename, false)) {
+            mHasRoughMap = true;
+            Logger::log(1, "%s: Roughness map successfully loaded: %s\n", __FUNCTION__, roughFilename.c_str());
+        }
+    }
 
-  tinygltf::TinyGLTF gltfLoader;
-  std::string loaderErrors;
-  std::string loaderWarnings;
-  bool result = false;
+    if (!emitFilename.empty()) {
+        if (mEmitTex.loadTexture(emitFilename, false)) {
+            mHasEmitMap = true;
+            Logger::log(1, "%s: Emission map successfully loaded: %s\n", __FUNCTION__, emitFilename.c_str());
+        }
+    }
+    // Загрузка Channel Packed Map
+    if (!packedFilename.empty()) {
+        if (mPackedTex.loadTexture(packedFilename, false)) {
+            mHasPackedMap = true;
+            Logger::log(1, "%s: Packed map successfully loaded: %s\n", __FUNCTION__, packedFilename.c_str());
+        }
+    }
 
-  result = gltfLoader.LoadASCIIFromFile(mModel.get(), &loaderErrors, &loaderWarnings,  modelFilename);
-  // 
-  /*
-  // 1. Читаем зашифрованный файл в память
-  std::vector<char> fileData = Tools::loadFileToMemory(modelFilename);
-  if (fileData.empty()) {
-      Logger::log(1, "%s error: could not read file to memory '%s'\n", __FUNCTION__, modelFilename.c_str());
-      return false;
-  }
+    // Загрузка Coat Roughness Map
+    if (!coatRoughFilename.empty()) {
+        if (mCoatRoughTex.loadTexture(coatRoughFilename, false)) {
+            mHasCoatRoughMap = true;
+            Logger::log(1, "%s: Coat Roughness map successfully loaded: %s\n", __FUNCTION__, coatRoughFilename.c_str());
+        }
+    }
+    Logger::log(1, "%s: glTF model texture '%s' successfully loaded\n", __FUNCTION__,
+        modelFilename.c_str());
 
-  // 2. Расшифровываем (XOR)
-  Tools::processData(fileData);
+    mModel = std::make_shared<tinygltf::Model>();
 
-  // 3. Скажем tinygltf загрузить модель из расшифрованной памяти
-  // ВАЖНО: Указываем base_dir (папку assets), чтобы tinygltf мог найти .bin файлы, если они не встроены.
-  std::string base_dir = modelFilename.substr(0, modelFilename.find_last_of('/') + 1);
+    tinygltf::TinyGLTF gltfLoader;
+    std::string loaderErrors;
+    std::string loaderWarnings;
+    bool result = false;
 
-  // Используем LoadASCIIFromString (tinygltf использует его для памяти)
-  result = gltfLoader.LoadASCIIFromString(mModel.get(), &loaderErrors, &loaderWarnings,
-      fileData.data(), fileData.size(), base_dir);
-  */
-  if (!loaderWarnings.empty()) {
-    Logger::log(1, "%s: warnings while loading glTF model:\n%s\n", __FUNCTION__,
-      loaderWarnings.c_str());
-  }
+    result = gltfLoader.LoadASCIIFromFile(mModel.get(), &loaderErrors, &loaderWarnings, modelFilename);
 
-  if (!loaderErrors.empty()) {
-    Logger::log(1, "%s: errors while loading glTF model:\n%s\n", __FUNCTION__,
-      loaderErrors.c_str());
-  }
+    if (!loaderWarnings.empty()) {
+        Logger::log(1, "%s: warnings while loading glTF model:\n%s\n", __FUNCTION__,
+            loaderWarnings.c_str());
+    }
 
-  if (!result) {
-    Logger::log(1, "%s error: could not load file '%s'\n", __FUNCTION__,
-      modelFilename.c_str());
-    return false;
-  }
-  /*
-  // --- ВСТАВЬ ЭТОТ БЛОК СЮДА ---
-  // Расшифровываем бинарные буферы (.bin), которые tinygltf только что загрузил
-  for (auto& buffer : mModel->buffers) {
-      Tools::processData(buffer.data);
-  }
-  Logger::log(1, "%s: glTF binary buffers successfully decrypted\n", __FUNCTION__);
-  // -----------------------------
-  */
-  mModelFilename = modelFilename;
-    
-  glGenVertexArrays(1, &mVAO);
-  glBindVertexArray(mVAO);
+    if (!loaderErrors.empty()) {
+        Logger::log(1, "%s: errors while loading glTF model:\n%s\n", __FUNCTION__,
+            loaderErrors.c_str());
+    }
 
-  /* extract position, normal, texture coords, and indices */
-  createVertexBuffers();
-  createIndexBuffer();
+    if (!result) {
+        Logger::log(1, "%s error: could not load file '%s'\n", __FUNCTION__,
+            modelFilename.c_str());
+        return false;
+    }
 
-  //14.01.26
-  uploadVertexBuffers();
-  uploadIndexBuffer();
+    mModelFilename = modelFilename;
 
-  glBindVertexArray(0);
+    glGenVertexArrays(1, &mVAO);
+    glBindVertexArray(mVAO);
 
-  /* extract joints, weights, and invers bind matrices*/
-  if (!mModel->skins.empty()) {
-      getJointData();
-      getWeightData();
-      getInvBindMatrices();
-  }
-  else {
-      Logger::log(1, "%s: model has no skins (static mesh)\n", __FUNCTION__);
-  }
-  mNodeCount = mModel->nodes.size();
+    /* extract position, normal, texture coords, and indices */
+    createVertexBuffers();
+    createIndexBuffer();
 
-  /* extract animation data */
-  getAnimations();
+    //14.01.26
+    uploadVertexBuffers();
+    uploadIndexBuffer();
 
-  return true;
+    glBindVertexArray(0);
+
+    /* extract joints, weights, and invers bind matrices*/
+    if (!mModel->skins.empty()) {
+        getJointData();
+        getWeightData();
+        getInvBindMatrices();
+    }
+    else {
+        Logger::log(1, "%s: model has no skins (static mesh)\n", __FUNCTION__);
+    }
+    mNodeCount = mModel->nodes.size();
+
+    /* extract animation data */
+    getAnimations();
+
+    return true;
 }
+
 
 std::string GltfModel::getModelFilename() {
   return mModelFilename;
@@ -128,7 +135,25 @@ int GltfModel::getNodeCount() {
 
 GltfNodeData GltfModel::getGltfNodes() {
   GltfNodeData nodeData{};
+  // 1. Проверка: загружена ли модель вообще?
+  if (!mModel) {
+      Logger::log(1, "%s ERROR: mModel is nullptr! Model was not loaded correctly.\n", __FUNCTION__);
+      return nodeData;
+  }
 
+  // 2. Проверка: есть ли сцены в модели?
+  if (mModel->scenes.empty()) {
+      Logger::log(1, "%s ERROR: Model has no scenes!\n", __FUNCTION__);
+      return nodeData;
+  }
+
+  const auto& defaultScene = mModel->scenes.at(0);
+
+  // 3. Проверка: есть ли ноды в первой сцене?
+  if (defaultScene.nodes.empty()) {
+      Logger::log(1, "%s ERROR: Scene 0 has no root nodes!\n", __FUNCTION__);
+      return nodeData;
+  }
   int rootNodeNum = mModel->scenes.at(0).nodes.at(0);
   Logger::log(2, "%s: model has %i nodes, root node is %i\n", __FUNCTION__,
     mNodeCount, rootNodeNum);
@@ -208,14 +233,25 @@ void GltfModel::getInvBindMatrices() {
 }
 
 void GltfModel::getAnimations() {
-  for (const auto &anim : mModel->animations) {
-    Logger::log(1, "%s: loading animation '%s' with %i channels\n", __FUNCTION__, anim.name.c_str(), anim.channels.size());
-    std::shared_ptr<GltfAnimationClip> clip = std::make_shared<GltfAnimationClip>(anim.name);
-    for (const auto& channel : anim.channels) {
-      clip->addChannel(mModel, anim, channel);
+    // 1. Выделяем память под массив клипов
+    mAnimClips.reserve(mModel->animations.size());
+
+    for (const auto& anim : mModel->animations) {
+        // Оставляем ТОЛЬКО один лог на целую анимацию (ни в коем случае не внутри цикла по каналам!)
+        Logger::log(1, "%s: loading animation '%s' with %i channels\n",
+            __FUNCTION__, anim.name.c_str(), static_cast<int>(anim.channels.size()));
+
+        auto clip = std::make_shared<GltfAnimationClip>(anim.name);
+
+        // 2. Резервируем память под 504 канала РАЗОМ
+        clip->reserveChannels(anim.channels.size());
+
+        for (const auto& channel : anim.channels) {
+            clip->addChannel(mModel, anim, channel);
+        }
+
+        mAnimClips.push_back(std::move(clip)); // std::move чтобы не инкрементировать счетчик shared_ptr лишний раз
     }
-    mAnimClips.push_back(clip);
-  }
 }
 
 std::vector<std::shared_ptr<GltfAnimationClip>> GltfModel::getAnimClips() {
@@ -562,25 +598,65 @@ int GltfModel::getTriangleCount() {
     }
     return static_cast<int>(triangles);
 }
+void GltfModel::setTextureQuality(int level)
+{
+    mTex.setMipmapLevel(level);
+
+    // Обновляем все остальные PBR карты, если они загружены
+    if (mHasNormalMap) mNormalTex.setMipmapLevel(level);
+    if (mHasMetalMap) mMetalTex.setMipmapLevel(level);
+    if (mHasRoughMap) mRoughTex.setMipmapLevel(level);
+    if (mHasEmitMap) mEmitTex.setMipmapLevel(level);
+    if (mHasPackedMap) mPackedTex.setMipmapLevel(level);
+    if (mHasCoatRoughMap) mCoatRoughTex.setMipmapLevel(level);
+}
+void GltfModel::setAnisotropicFiltering(float amount)
+{
+    mTex.setAnisotropy(amount);
+    if (mHasNormalMap)    mNormalTex.setAnisotropy(amount);
+    if (mHasMetalMap)     mMetalTex.setAnisotropy(amount);
+    if (mHasRoughMap)     mRoughTex.setAnisotropy(amount);
+    if (mHasEmitMap)      mEmitTex.setAnisotropy(amount);
+    if (mHasPackedMap)    mPackedTex.setAnisotropy(amount);
+    if (mHasCoatRoughMap) mCoatRoughTex.setAnisotropy(amount);
+}
 // 17 числа победная загрузка с костями
 void GltfModel::draw() {
-    // слот 0: для Base Color
+    // слот 0: Base Color
     glActiveTexture(GL_TEXTURE0);
     mTex.bind();
 
-    //слот 1: Normal Map
+    // слот 1: Normal Map
     if (mHasNormalMap) {
         glActiveTexture(GL_TEXTURE1);
         mNormalTex.bind();
     }
-    glBindVertexArray(mVAO);
 
-    // слот 2: Rough Map
-    if (mHasMetRoughMap) {
+    // слот 2: Metallic Map
+    if (mHasPackedMap) {
         glActiveTexture(GL_TEXTURE2);
-        mMetRoughTex.bind();
+        mPackedTex.bind();
+    }
+    else if (mHasMetalMap) {
+        glActiveTexture(GL_TEXTURE2);
+        mMetalTex.bind();
     }
 
+    // слот 3: Roughness Map
+    if (mHasCoatRoughMap) {
+        glActiveTexture(GL_TEXTURE3);
+        mCoatRoughTex.bind();
+    }
+    else if (mHasRoughMap) {
+        glActiveTexture(GL_TEXTURE3);
+        mRoughTex.bind();
+    }
+
+    if (mHasEmitMap) {
+        glActiveTexture(GL_TEXTURE4);
+        mEmitTex.bind();
+    }
+    glBindVertexArray(mVAO);
     // Привязываем наш "Гига-VBO" (где лежит весь файл)
     glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO[0]);
     // Привязываем индексы (где тоже лежит весь файл)
@@ -637,10 +713,26 @@ void GltfModel::draw() {
 
     glBindVertexArray(0);
 
-    // отвязка текстур
-    if (mHasMetRoughMap) {
+    // Отвязка текстур (в обратном порядке для красоты)
+    if (mHasEmitMap) {
+        glActiveTexture(GL_TEXTURE4);
+        mEmitTex.unbind();
+    }
+    if (mHasCoatRoughMap) {
+        glActiveTexture(GL_TEXTURE3);
+        mCoatRoughTex.unbind();
+    }
+    else if (mHasRoughMap) {
+        glActiveTexture(GL_TEXTURE3);
+        mRoughTex.unbind();
+    }
+    if (mHasPackedMap) {
         glActiveTexture(GL_TEXTURE2);
-        mMetRoughTex.unbind();
+        mPackedTex.unbind();
+    }
+    else if (mHasMetalMap) {
+        glActiveTexture(GL_TEXTURE2);
+        mMetalTex.unbind();
     }
     if (mHasNormalMap) {
         glActiveTexture(GL_TEXTURE1);
@@ -648,6 +740,7 @@ void GltfModel::draw() {
     }
     glActiveTexture(GL_TEXTURE0);
     mTex.unbind();
+
 }
 
 void GltfModel::cleanup() {

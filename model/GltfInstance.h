@@ -26,7 +26,15 @@ class GltfInstance {
 
     std::shared_ptr<OGLMesh> getSkeleton();
     void setSkeletonSplitNode(int nodeNum);
-
+    // Пересобрать кэш joint-матриц вручную (не через updateAnimation()) —
+ // нужно, когда что-то меняет позу узлов ПОСЛЕ updateAnimation()/updateJointMatrices(),
+ // например вторичная анимация (jiggle bones), IK-довески и т.п.
+ //
+ // ВАЖНО: вызываем updateNodeMatrices() (рекурсивный обход всего дерева),
+ // а НЕ updateJointMatrices() напрямую — та обрабатывает только ОДИН переданный
+ // узел без рекурсии в детей. Вызов updateJointMatrices(mRootNode) в прошлой
+ // версии корраптил joint-матрицу случайного сустава вместо пересборки всего кэша.
+    void refreshJointMatrices() { updateNodeMatrices(mRootNode); }
     int getJointMatrixSize();
     int getJointDualQuatsSize();
     std::vector<glm::mat4> getJointMatrices();

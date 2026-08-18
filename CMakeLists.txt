@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.19)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 project(Main)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -49,7 +49,7 @@ if(WIN32)
 endif()
 # ----------------------------
 
-add_executable(Main ${SOURCES} "opengl/Localization.cpp" "opengl/Localization.h"  "model/Enemy.h" "model/Enemy.cpp" "model/AIStates.h" "model/AIStates.cpp")
+add_executable(Main ${SOURCES} "opengl/Localization.cpp" "opengl/Localization.h"  "model/Enemy.h" "model/Enemy.cpp" "model/AIStates.h" "model/AIStates.cpp" "opengl/GraphicsManager.h" "opengl/GraphicsManager.cpp" "opengl/SkyBox.h" "opengl/SkyBox.cpp" "opengl/GameStateMachine.h" "opengl/MenuController.h" "opengl/MenuController.cpp" "model/EnemyTypes.h" "model/Bossconway.h" "model/Bossconway.cpp" "model/Bossbismark.h" "model/Bossbismark.cpp" "model/JigglePhysics.h" "model/JigglePhysics.cpp")
 
 target_include_directories(Main 
 PUBLIC include src window tools opengl model imgui tinygltf ${bulletphysics_SOURCE_DIR}/src ${bulletphysics_BINARY_DIR}/src)
@@ -120,6 +120,8 @@ endif()
 include_directories(${GLFW3_INCLUDE_DIR} ${GLM_INCLUDE_DIR} ${bulletphysics_SOURCE_DIR}/src ${bulletphysics_BINARY_DIR}/src)
 
 if(MSVC)
+  # Указываем кодировку исходников и исполнения раздельно
+  target_compile_options(Main PRIVATE /source-charset:windows-1251 /execution-charset:utf-8 /Zc:char8_t-)
   target_link_libraries(Main ${GLFW3_LIBRARY} OpenGL::GL BulletDynamics BulletCollision LinearMath)
 else()
   # Clang and GCC may need libstd++ and libmath

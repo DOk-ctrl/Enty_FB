@@ -11,9 +11,12 @@ class Shader {
     bool getUniformLocation(std::string uniformName);
     void setUniformValue(int value);
     void cleanup();
-
+    GLuint getHandle() const { return mShaderProgram; }
     void setUniformValue(glm::mat4 value);
     void setUniformValue(glm::vec3 value);
+    void setUniformValue(glm::vec2 value);
+    //17.06
+    void setUniformValue(float value);
   private:
     GLuint mShaderProgram = 0;
     GLint mUniformLocation = -1;

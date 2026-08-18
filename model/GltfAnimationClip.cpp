@@ -3,43 +3,58 @@
 
 GltfAnimationClip::GltfAnimationClip(std::string name) : mClipName(name) {}
 
-void GltfAnimationClip::addChannel(std::shared_ptr<tinygltf::Model> model,
-    tinygltf::Animation anim, tinygltf::AnimationChannel channel) {
-    std::shared_ptr<GltfAnimationChannel> chan = std::make_shared<GltfAnimationChannel>();
+void GltfAnimationClip::addChannel(const std::shared_ptr<tinygltf::Model>& model,
+    const tinygltf::Animation& anim, const tinygltf::AnimationChannel& channel) {
+    // Создаем канал
+    auto chan = std::make_shared<GltfAnimationChannel>();
     chan->loadChannelData(model, anim, channel);
-    mAnimationChannels.push_back(chan);
+
+    // Добавляем без лишнего копирования shared_ptr
+    mAnimationChannels.push_back(std::move(chan));
 }
 
-void GltfAnimationClip::setAnimationFrame(std::vector<std::shared_ptr<GltfNode>> nodes,
-    std::vector<bool> additiveMask, float time) {
-    for (auto& channel : mAnimationChannels) {
+void GltfAnimationClip::setAnimationFrame(std::vector<std::shared_ptr<GltfNode>>& nodes, // Было по значению! Ставим ссылку &
+    const std::vector<bool>& additiveMask,       // Тоже по ссылке &
+    float time) {
+
+    // Используем сырые ссылки в цикле, чтобы не инкрементировать счетчики shared_ptr
+    for (const auto& channel : mAnimationChannels) {
         int targetNode = channel->getTargetNode();
-        /* do not change if masked out */
-        if (additiveMask.at(targetNode)) {
+
+        // Быстрый доступ по индексу [ ] вместо at() (at() делает проверку границ в Debug)
+        if (targetNode >= 0 && targetNode < additiveMask.size() && additiveMask[targetNode]) {
+
+            // Используем [ ] вместо at()
+            auto& tNode = nodes[targetNode];
+            if (!tNode) continue;
+
             switch (channel->getTargetPath()) {
             case ETargetPath::ROTATION:
-                nodes.at(targetNode)->setRotation(channel->getRotation(time));
+                tNode->setRotation(channel->getRotation(time));
                 break;
-            case ETargetPath::TRANSLATION: { // <-- Добавили фигурные скобки
-                glm::vec3 translation = channel->getTranslation(time);
-                std::shared_ptr<GltfNode> tNode = nodes.at(targetNode);
 
-                // ХАК ДЛЯ ОСТАНОВКИ НА МЕСТЕ (In-Place)
-                // Если это кость таза Mixamo, сбрасываем движение по осям X и Z в ноль
-                if (tNode->getNodeName() == "mixamorig:Hips" || tNode->getNodeName() == "Hips") {
+            case ETargetPath::TRANSLATION: {
+                glm::vec3 translation = channel->getTranslation(time);
+
+                // Оптимизация: Сравнение строк — операция не быстрая. 
+                // Но если это Hips, сбрасываем X и Z
+                const std::string& nodeName = tNode->getNodeName();
+                if (nodeName == "mixamorig:Hips" || nodeName == "Hips") {
                     translation.x = 0.0f;
                     translation.z = 0.0f;
                 }
 
                 tNode->setTranslation(translation);
                 break;
-            } // <-- Закрыли фигурные скобки
+            }
+
             case ETargetPath::SCALE:
-                nodes.at(targetNode)->setScale(channel->getScaling(time));
+                tNode->setScale(channel->getScaling(time));
                 break;
             }
         }
     }
+
     /* update all nodes in a single run */
     for (auto& node : nodes) {
         if (node) {

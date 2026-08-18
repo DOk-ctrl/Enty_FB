@@ -42,28 +42,53 @@ glm::mat4 Camera::getThirdPersonViewMatrix(OGLRenderData& renderData, glm::vec3 
     float sinElev = glm::sin(elevRad);
     float cosElev = glm::cos(elevRad);
 
-    // Вектор направления взгляда камеры
     mViewDirection = glm::normalize(glm::vec3(sinAzim * cosElev, sinElev, -cosAzim * cosElev));
     mRightDirection = glm::normalize(glm::cross(mViewDirection, mWorldUpVector));
     mUpDirection = glm::normalize(glm::cross(mRightDirection, mViewDirection));
 
-    // 1. Точка фокуса (целимся в район шеи/головы персонажа)
+    // 1. Точка фокуса
     glm::vec3 headPos = targetPosition + glm::vec3(0.0f, 1.4f, 0.0f);
 
-    // 2. Смещение камеры (Offset). 
-    // Вправо на 0.6м, вверх на 0.2м, назад на 2.5м. (Как в RE2)
-    glm::vec3 offset = (mRightDirection * 0.6f) + (mUpDirection * 0.2f) - (mViewDirection * 2.5f);
+    // 2. ПЛАВНЫЙ QUICK ZOOM (Исправление дерганости)
+    static float currentCamDistance = 2.5f; // Хранит текущую дистанцию между кадрами
+    float targetDistance = 2.5f;            // Обычная дистанция
 
+    if (renderData.rdZoomTimer > 0.0f) {
+        targetDistance = 1.2f;              // Целевая дистанция при ударе
+        renderData.rdZoomTimer -= renderData.rdTickDiff;
+    }
+
+    // Скорость наезда/отхода камеры (20.0f дает очень быстрый, но мягкий наезд)
+    float zoomSpeed = 20.0f * renderData.rdTickDiff;
+    if (zoomSpeed > 1.0f) zoomSpeed = 1.0f;
+
+    // Интерполируем текущую дистанцию к целевой
+    currentCamDistance = glm::mix(currentCamDistance, targetDistance, zoomSpeed);
+
+    // 3. Вычисляем позицию с плавно изменяющейся дистанцией
+    glm::vec3 offset = (mRightDirection * 0.6f) + (mUpDirection * 0.2f) - (mViewDirection * currentCamDistance);
     glm::vec3 desiredPosition = headPos + offset;
 
-    // 3. Плавное следование камеры (Lerp)
-    float smoothSpeed = 15.0f * renderData.rdTickDiff;
-    if (smoothSpeed > 1.0f) smoothSpeed = 1.0f; // Защита от рывков при лагах
+    // 4. Плавное следование всей камеры за игроком (Lerp)
+    float smoothSpeed = 5.0f * renderData.rdTickDiff;
+    if (smoothSpeed > 1.0f) smoothSpeed = 1.0f;
 
     renderData.rdCameraWorldPosition = glm::mix(renderData.rdCameraWorldPosition, desiredPosition, smoothSpeed);
 
-    // Камера смотрит немного вперед от персонажа
-    glm::vec3 lookAtTarget = renderData.rdCameraWorldPosition + mViewDirection;
+    // 5. SCREEN SHAKE (Тряска камеры)
+    glm::vec3 shakeOffset(0.0f);
+    if (renderData.rdShakeDuration > 0.0f) {
+        renderData.rdShakeDuration -= renderData.rdTickDiff;
 
-    return glm::lookAt(renderData.rdCameraWorldPosition, lookAtTarget, mUpDirection);
+        float shakeX = ((rand() % 100) / 100.0f - 0.5f) * 2.0f * renderData.rdShakeIntensity;
+        float shakeY = ((rand() % 100) / 100.0f - 0.5f) * 2.0f * renderData.rdShakeIntensity;
+        float shakeZ = ((rand() % 100) / 100.0f - 0.5f) * 2.0f * renderData.rdShakeIntensity;
+
+        shakeOffset = (mRightDirection * shakeX) + (mUpDirection * shakeY) + (mViewDirection * shakeZ);
+    }
+
+    glm::vec3 finalCamPos = renderData.rdCameraWorldPosition + shakeOffset;
+    glm::vec3 lookAtTarget = finalCamPos + mViewDirection;
+
+    return glm::lookAt(finalCamPos, lookAtTarget, mUpDirection);
 }

@@ -10,7 +10,14 @@ FetchContent_Declare(
   bulletphysics
   URL      https://github.com/bulletphysics/bullet3/archive/refs/tags/3.24.tar.gz
 )
+# Автоматически загружаем miniaudio из официального репозитория
+FetchContent_Declare(
+    miniaudio
+    URL https://raw.githubusercontent.com/mackron/miniaudio/0.11.21/miniaudio.h
+    DOWNLOAD_NO_EXTRACT TRUE
+)
 
+FetchContent_MakeAvailable(miniaudio)
 # Отключаем лишнее, чтобы проект не собирался полчаса
 set(INSTALL_LIBS OFF CACHE BOOL "" FORCE)
 set(BUILD_UNIT_TESTS OFF CACHE BOOL "" FORCE)
@@ -49,10 +56,10 @@ if(WIN32)
 endif()
 # ----------------------------
 
-add_executable(Main ${SOURCES} "opengl/Localization.cpp" "opengl/Localization.h"  "model/Enemy.h" "model/Enemy.cpp" "model/AIStates.h" "model/AIStates.cpp" "opengl/GraphicsManager.h" "opengl/GraphicsManager.cpp" "opengl/SkyBox.h" "opengl/SkyBox.cpp" "opengl/GameStateMachine.h" "opengl/MenuController.h" "opengl/MenuController.cpp" "model/EnemyTypes.h" "model/Bossconway.h" "model/Bossconway.cpp" "model/Bossbismark.h" "model/Bossbismark.cpp" "model/JigglePhysics.h" "model/JigglePhysics.cpp")
+add_executable(Main ${SOURCES} "opengl/Localization.cpp" "opengl/Localization.h"  "model/Enemy.h" "model/Enemy.cpp" "model/AIStates.h" "model/AIStates.cpp" "opengl/GraphicsManager.h" "opengl/GraphicsManager.cpp" "opengl/SkyBox.h" "opengl/SkyBox.cpp" "opengl/GameStateMachine.h" "opengl/MenuController.h" "opengl/MenuController.cpp" "model/EnemyTypes.h" "model/Bossconway.h" "model/Bossconway.cpp" "model/Bossbismark.h" "model/Bossbismark.cpp" "model/JigglePhysics.h" "model/JigglePhysics.cpp" "opengl/audio.cpp" "opengl/audio.h")
 
 target_include_directories(Main 
-PUBLIC include src window tools opengl model imgui tinygltf ${bulletphysics_SOURCE_DIR}/src ${bulletphysics_BINARY_DIR}/src)
+PUBLIC include src window tools opengl model imgui tinygltf ${bulletphysics_SOURCE_DIR}/src ${bulletphysics_BINARY_DIR}/src ${miniaudio_SOURCE_DIR})
 
 find_package(glfw3 3.3 REQUIRED)
 set(OpenGL_GL_PREFERENCE GLVND)
@@ -122,10 +129,10 @@ include_directories(${GLFW3_INCLUDE_DIR} ${GLM_INCLUDE_DIR} ${bulletphysics_SOUR
 if(MSVC)
   # Указываем кодировку исходников и исполнения раздельно
   target_compile_options(Main PRIVATE /source-charset:windows-1251 /execution-charset:utf-8 /Zc:char8_t-)
-  target_link_libraries(Main ${GLFW3_LIBRARY} OpenGL::GL BulletDynamics BulletCollision LinearMath)
+  target_link_libraries(Main ${GLFW3_LIBRARY} OpenGL::GL BulletDynamics BulletCollision LinearMath winmm) 
 else()
   # Clang and GCC may need libstd++ and libmath
-  target_link_libraries(Main ${GLFW3_LIBRARY} OpenGL::GL stdc++ m BulletDynamics  BulletCollision LinearMath)
+  target_link_libraries(Main ${GLFW3_LIBRARY} OpenGL::GL stdc++ m BulletDynamics  BulletCollision LinearMath winmm)
 endif()
 
 if(MSVC)

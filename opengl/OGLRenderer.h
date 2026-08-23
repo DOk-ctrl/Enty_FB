@@ -64,7 +64,7 @@ enum  EntyAnim : int {
 class OGLRenderer {
 public:
     OGLRenderer(GLFWwindow* window);
-    void updateAgness(float deltaTime, const glm::vec3& playerPos);
+    void updateAgness(float deltaTime, const glm::vec3& playerPos, OGLRenderData& renderData);
     bool init(unsigned int width, unsigned int height);
     void setSize(unsigned int width, unsigned int height);
     void uploadData(OGLMesh vertexData);
@@ -221,6 +221,9 @@ private:
     float  mBossBarVisibleAlpha = 0.0f;   // плавное появление/исчезание всей полосы
     AgnessState mAgnessState = AgnessState::Sitting;
     float mAgnessStandUpTimer = 0.0f;
+
+    Enemy* mBismarkBossPtr = nullptr;   // указатель на конкретного босса, охраняющего эту арену
+    bool   mBismarkGateCollisionActive = true; // флаг: коллизия ворот ещё жива
 };
 
 

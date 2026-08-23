@@ -1,4 +1,4 @@
-#define GLM_ENABLE_EXPERIMENTAL
+п»ї#define GLM_ENABLE_EXPERIMENTAL
 #include <string>
 
 #include <glm/glm.hpp>
@@ -86,16 +86,16 @@ void UserInterface::init(OGLRenderData &renderData) {
 
   const char *glslVersion = "#version 460 core";
   ImGui_ImplOpenGL3_Init(glslVersion);
-  // загружаем русский язык
+  // Р·Р°РіСЂСѓР¶Р°РµРј СЂСѓСЃСЃРєРёР№ СЏР·С‹Рє
   ImGuiIO& io = ImGui::GetIO();
 
-  // Загружаем шрифт с поддержкой кириллицы
+  // Р—Р°РіСЂСѓР¶Р°РµРј С€СЂРёС„С‚ СЃ РїРѕРґРґРµСЂР¶РєРѕР№ РєРёСЂРёР»Р»РёС†С‹
   ImFontConfig font_config;
   font_config.OversampleH = 1;
   font_config.OversampleV = 1;
   font_config.PixelSnapH = true;
 
-  // Указываем диапазон символов для кириллицы
+  // РЈРєР°Р·С‹РІР°РµРј РґРёР°РїР°Р·РѕРЅ СЃРёРјРІРѕР»РѕРІ РґР»СЏ РєРёСЂРёР»Р»РёС†С‹
   static const ImWchar cyrillic_ranges[] = {
       0x0020, 0x00FF, // Basic Latin + Latin Supplement
       0x0400, 0x044F, // Cyrillic
@@ -105,12 +105,12 @@ void UserInterface::init(OGLRenderData &renderData) {
  
   io.Fonts->AddFontFromFileTTF("C:/Windows/Fonts/Arial.ttf", 16.0f, &font_config, cyrillic_ranges);
  
-  // [1] Вытянутый шрифт Rajdhani для YOU DIED (размер 64px)
+  // [1] Р’С‹С‚СЏРЅСѓС‚С‹Р№ С€СЂРёС„С‚ Rajdhani РґР»СЏ YOU DIED (СЂР°Р·РјРµСЂ 64px)
   io.Fonts->AddFontFromFileTTF("assets/fonts/Rajdhani/Rajdhani-Bold.ttf", 120.0f);
   io.Fonts->AddFontFromFileTTF("assets/fonts/Monomaniac_One/MonomaniacOne-Regular.ttf", 36.0f);
-  // [3] ExtraBold с поддержкой КИРИЛЛИЦЫ для кнопок в стиле MiSide
+  // [3] ExtraBold СЃ РїРѕРґРґРµСЂР¶РєРѕР№ РљРР РР›Р›РР¦Р« РґР»СЏ РєРЅРѕРїРѕРє РІ СЃС‚РёР»Рµ MiSide
   io.Fonts->AddFontFromFileTTF("assets/fonts/ExtraBold.ttf", 22.0f, &font_config, cyrillic_ranges);
-  // конец кода с добавлением кириллицы
+  // РєРѕРЅРµС† РєРѕРґР° СЃ РґРѕР±Р°РІР»РµРЅРёРµРј РєРёСЂРёР»Р»РёС†С‹
   style();
   /* init plot vectors */
   //24.01
@@ -134,11 +134,11 @@ void UserInterface::drawDeveloperUI(OGLRenderData& renderData, ModelSettings& se
         //imguiWindowFlags |= ImGuiWindowFlags_NoMove;
 
         ImGui::SetNextWindowBgAlpha(0.8f);
-        const char* title = "Информация";
-        const char* text = "Вы можете переключить на UI персонажа кнопкой F1(нажмите пробел чтобы убавить здоровье)";
-        const char* text1 = "Вы можете нажать кнопку Esc, чтобы вызвать контекстное меню";
-        const char* text2 = "Нажмите ПКМ(Правая кнопка мыши), чтобы управлять камерой";
-        const char* text3 = "WASD - управление";
+        const char* title = "РРЅС„РѕСЂРјР°С†РёСЏ";
+        const char* text = "Р’С‹ РјРѕР¶РµС‚Рµ РїРµСЂРµРєР»СЋС‡РёС‚СЊ РЅР° UI РїРµСЂСЃРѕРЅР°Р¶Р° РєРЅРѕРїРєРѕР№ F1(РЅР°Р¶РјРёС‚Рµ РїСЂРѕР±РµР» С‡С‚РѕР±С‹ СѓР±Р°РІРёС‚СЊ Р·РґРѕСЂРѕРІСЊРµ)";
+        const char* text1 = "Р’С‹ РјРѕР¶РµС‚Рµ РЅР°Р¶Р°С‚СЊ РєРЅРѕРїРєСѓ Esc, С‡С‚РѕР±С‹ РІС‹Р·РІР°С‚СЊ РєРѕРЅС‚РµРєСЃС‚РЅРѕРµ РјРµРЅСЋ";
+        const char* text2 = "РќР°Р¶РјРёС‚Рµ РџРљРњ(РџСЂР°РІР°СЏ РєРЅРѕРїРєР° РјС‹С€Рё), С‡С‚РѕР±С‹ СѓРїСЂР°РІР»СЏС‚СЊ РєР°РјРµСЂРѕР№";
+        const char* text3 = "WASD - СѓРїСЂР°РІР»РµРЅРёРµ";
         ImGui::Begin(title, nullptr, imguiWindowFlags);
         //24.01
         ImGui::Text(text);
@@ -412,14 +412,14 @@ void UserInterface::drawDeveloperUI(OGLRenderData& renderData, ModelSettings& se
                 ImGui::EndTooltip();
             }
         }
-        // ================= ДОБАВЛЯЕМ СЮДА =================
+        // ================= Р”РћР‘РђР’Р›РЇР•Рњ РЎР®Р”Рђ =================
         if (ImGui::CollapsingHeader("Graphics Settings")) {
             const char* qualities[] = { "Ultra (Full Res)", "High (Skip 1 Mip)", "Medium (Skip 2 Mips)", "Low (Potato)" };
 
             ImGui::Text("Texture Quality:");
             ImGui::SameLine();
 
-            // Если игрок меняет значение в комбобоксе, оно автоматически запишется в renderData.rdTextureQuality
+            // Р•СЃР»Рё РёРіСЂРѕРє РјРµРЅСЏРµС‚ Р·РЅР°С‡РµРЅРёРµ РІ РєРѕРјР±РѕР±РѕРєСЃРµ, РѕРЅРѕ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё Р·Р°РїРёС€РµС‚СЃСЏ РІ renderData.rdTextureQuality
             ImGui::PushItemWidth(200);
             ImGui::Combo("##TexQuality", &renderData.rdTextureQuality, qualities, IM_ARRAYSIZE(qualities));
             ImGui::PopItemWidth();
@@ -716,23 +716,21 @@ void UserInterface::drawPlayerHUD(OGLRenderData& renderData, ModelSettings& sett
     ImVec4 nierColorText = ImVec4(0.72f, 0.70f, 0.60f, 0.9f);
     ImU32 nierColorBar = IM_COL32(160, 155, 130, 255);
 
-    // 1. ПАРАМЕТРЫ ЗДОРОВЬЯ
+    // -------------------------------------------------------------------
+    // 1. РҐРџ-Р‘РђР  (Р›РµРІС‹Р№ РІРµСЂС…РЅРёР№ СѓРіРѕР»)
+    // -------------------------------------------------------------------
     float maxHP = renderData.rdPlayerMaxHP;
     float currentHP = renderData.rdPlayerHP;
-    static float displayedHP = renderData.rdPlayerMaxHP; // Переменная для плавной анимации
+    static float displayedHP = renderData.rdPlayerMaxHP;
 
-
-    // Плавная интерполяция (анимация догона)
-    // Чем меньше 0.05f, тем медленнее полоска будет ползти
     if (displayedHP > currentHP) {
-        displayedHP -= 0.1f; // Линейное уменьшение
+        displayedHP -= 0.1f;
         if (displayedHP < currentHP) displayedHP = currentHP;
     }
     else {
-        displayedHP = currentHP; // При лечении восстанавливаем мгновенно
+        displayedHP = currentHP;
     }
 
-    // 2. ГЕОМЕТРИЯ
     float totalBarWidth = screenSize.x * 0.15f;
     float barHeight = 7.0f;
 
@@ -745,23 +743,87 @@ void UserInterface::drawPlayerHUD(OGLRenderData& renderData, ModelSettings& sett
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         ImVec2 p = ImGui::GetCursorScreenPos();
 
-        // 3. СЛОИ ОТРИСОВКИ (от заднего к переднему)
-
-        // Слой 1: Темный фон (пустая шкала)
         drawList->AddRectFilled(p, ImVec2(p.x + totalBarWidth, p.y + barHeight), IM_COL32(40, 40, 40, 200));
 
-        // Слой 2: Анимированная полоска (эффект догона - темно-серый или красный)
         float animWidth = totalBarWidth * (displayedHP / maxHP);
         drawList->AddRectFilled(p, ImVec2(p.x + animWidth, p.y + barHeight), IM_COL32(100, 100, 100, 255));
 
-        // Слой 3: Актуальное HP (Ярко-белая полоска)
         float currentWidth = totalBarWidth * (currentHP / maxHP);
         drawList->AddRectFilled(p, ImVec2(p.x + currentWidth, p.y + barHeight), IM_COL32(235, 235, 220, 255));
 
-        // 4. ТЕКСТ
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + barHeight + 8);
         ImGui::Text("  HP: %.0f / %.0f", currentHP, maxHP);
         ImGui::PopStyleColor();
+        ImGui::End();
+    }
+
+    // -------------------------------------------------------------------
+    // 2. РљР’Р•РЎРў-РўР Р•РљР•Р  / Р¦Р•Р›Р¬ (РџСЂР°РІС‹Р№ РІРµСЂС…РЅРёР№ СѓРіРѕР»)
+    // -------------------------------------------------------------------
+    float questWidth = 340.0f;
+    float rightPadding = 40.0f;
+    float topPadding = 45.0f;
+
+    ImGui::SetNextWindowPos(ImVec2(screenSize.x - rightPadding, topPadding), ImGuiCond_Always, ImVec2(1.0f, 0.0f));
+    ImGui::SetNextWindowSize(ImVec2(questWidth, 0.0f));
+
+    if (ImGui::Begin("QuestHUD", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+        // Р”РёРЅР°РјРёС‡РµСЃРєРёР№ РІС‹Р±РѕСЂ РїР°Р»РёС‚СЂС‹ РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ СЃРѕСЃС‚РѕСЏРЅРёСЏ РёРіСЂС‹
+        ImVec4 headerTextColor;
+        ImU32 headerLineColor;
+
+        if (renderData.rdIsGameWon) {
+            // РР·СѓРјСЂСѓРґРЅРѕ-Р·РµР»РµРЅР°СЏ РіР°РјРјР° РїРѕР±РµРґС‹
+            headerTextColor = ImVec4(0.25f, 0.88f, 0.42f, 1.0f);
+            headerLineColor = IM_COL32(50, 210, 100, 230);
+        }
+        else {
+            // РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ Р·РѕР»РѕС‚Р°СЏ Р РџР“ РіР°РјРјР°
+            headerTextColor = ImVec4(0.98f, 0.80f, 0.25f, 1.0f);
+            headerLineColor = IM_COL32(240, 185, 45, 220);
+        }
+
+        ImU32 shadowLineColor = IM_COL32(10, 10, 10, 180);
+
+        // Р—Р°РіРѕР»РѕРІРѕРє С†РµР»Рё
+        ImGui::PushStyleColor(ImGuiCol_Text, headerTextColor);
+        if (renderData.rdIsGameWon) {
+            ImGui::Text(Localization::get("goalT").c_str());
+        }
+        else {
+            ImGui::Text(Localization::get("goal").c_str());
+        }
+        ImGui::PopStyleColor();
+
+        // Р Р°Р·РґРµР»РёС‚РµР»СЊРЅР°СЏ Р»РёРЅРёСЏ
+        ImVec2 lineStart = ImGui::GetCursorScreenPos();
+        lineStart.y += 4.0f;
+        ImVec2 lineEnd = ImVec2(lineStart.x + questWidth, lineStart.y);
+
+        drawList->AddLine(ImVec2(lineStart.x, lineStart.y + 1.5f), ImVec2(lineEnd.x, lineEnd.y + 1.5f), shadowLineColor, 2.0f);
+        drawList->AddLine(lineStart, lineEnd, headerLineColor, 2.0f);
+
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 10.0f);
+
+        // РўРµРєСЃС‚ Р·Р°РґР°С‡Рё / Р‘Р»Р°РіРѕРґР°СЂРЅРѕСЃС‚СЊ
+        if (renderData.rdIsGameWon) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.85f, 0.95f, 0.88f, 0.95f));
+            ImGui::Text(Localization::get("1.1").c_str());
+            ImGui::Text(Localization::get("2.1").c_str());
+            ImGui::Text(Localization::get("3.1").c_str());
+            ImGui::Text(Localization::get("email").c_str());
+            ImGui::PopStyleColor();
+        }
+        else {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.92f, 0.90f, 0.82f, 0.95f));
+            ImGui::Text(Localization::get("14.1").c_str());
+            ImGui::Text(Localization::get("15.1").c_str());
+            ImGui::PopStyleColor();
+        }
+
         ImGui::End();
     }
 }
@@ -769,26 +831,26 @@ void UserInterface::drawSettingsOverlay(OGLRenderData& renderData, bool& showSet
 {
     if (!showSettings) return;
 
-    static int activeSettingTab = 2; // По умолчанию Графика
+    static int activeSettingTab = 2; // РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ Р“СЂР°С„РёРєР°
 
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiStyle oldStyle = style;
 
-    // --- Настройка стиля под визуал скриншота ---
+    // --- РќР°СЃС‚СЂРѕР№РєР° СЃС‚РёР»СЏ РїРѕРґ РІРёР·СѓР°Р» СЃРєСЂРёРЅС€РѕС‚Р° ---
     style.WindowRounding = 14.0f;
     style.FrameRounding = 10.0f;
     style.PopupRounding = 10.0f;
     style.WindowBorderSize = 1.0f;
     style.FrameBorderSize = 0.0f;
 
-    // Цветовая палитра (Deep Indigo / Neon Blue / Soft Violet)
-    ImVec4 bgDark = ImVec4(0.08f, 0.09f, 0.18f, 0.88f); // Полупрозрачный темно-синий фон
-    ImVec4 panelBg = ImVec4(0.18f, 0.18f, 0.32f, 0.45f); // Фиолетово-серые плашки
-    ImVec4 buttonNormal = ImVec4(0.25f, 0.24f, 0.42f, 0.70f); // Цвет кнопок из главного меню
-    ImVec4 buttonHovered = ImVec4(0.38f, 0.35f, 0.65f, 0.90f); // Ярче при наведении
-    ImVec4 buttonActive = ImVec4(0.18f, 0.55f, 0.95f, 0.90f); // Неоново-голубой актив
-    ImVec4 textColor = ImVec4(0.92f, 0.95f, 1.00f, 0.95f); // Бело-голубой текст
-    ImVec4 accentCyan = ImVec4(0.20f, 0.75f, 1.00f, 1.00f); // Неоновый циан
+    // Р¦РІРµС‚РѕРІР°СЏ РїР°Р»РёС‚СЂР° (Deep Indigo / Neon Blue / Soft Violet)
+    ImVec4 bgDark = ImVec4(0.08f, 0.09f, 0.18f, 0.88f); // РџРѕР»СѓРїСЂРѕР·СЂР°С‡РЅС‹Р№ С‚РµРјРЅРѕ-СЃРёРЅРёР№ С„РѕРЅ
+    ImVec4 panelBg = ImVec4(0.18f, 0.18f, 0.32f, 0.45f); // Р¤РёРѕР»РµС‚РѕРІРѕ-СЃРµСЂС‹Рµ РїР»Р°С€РєРё
+    ImVec4 buttonNormal = ImVec4(0.25f, 0.24f, 0.42f, 0.70f); // Р¦РІРµС‚ РєРЅРѕРїРѕРє РёР· РіР»Р°РІРЅРѕРіРѕ РјРµРЅСЋ
+    ImVec4 buttonHovered = ImVec4(0.38f, 0.35f, 0.65f, 0.90f); // РЇСЂС‡Рµ РїСЂРё РЅР°РІРµРґРµРЅРёРё
+    ImVec4 buttonActive = ImVec4(0.18f, 0.55f, 0.95f, 0.90f); // РќРµРѕРЅРѕРІРѕ-РіРѕР»СѓР±РѕР№ Р°РєС‚РёРІ
+    ImVec4 textColor = ImVec4(0.92f, 0.95f, 1.00f, 0.95f); // Р‘РµР»Рѕ-РіРѕР»СѓР±РѕР№ С‚РµРєСЃС‚
+    ImVec4 accentCyan = ImVec4(0.20f, 0.75f, 1.00f, 1.00f); // РќРµРѕРЅРѕРІС‹Р№ С†РёР°РЅ
 
     style.Colors[ImGuiCol_WindowBg] = bgDark;
     style.Colors[ImGuiCol_Border] = ImVec4(0.35f, 0.45f, 0.80f, 0.30f);
@@ -797,7 +859,7 @@ void UserInterface::drawSettingsOverlay(OGLRenderData& renderData, bool& showSet
     style.Colors[ImGuiCol_ButtonHovered] = buttonHovered;
     style.Colors[ImGuiCol_ButtonActive] = buttonActive;
 
-    // Полноэкранный оверлей с небольшим отступом от краев для ощущения "плавающей карточки"
+    // РџРѕР»РЅРѕСЌРєСЂР°РЅРЅС‹Р№ РѕРІРµСЂР»РµР№ СЃ РЅРµР±РѕР»СЊС€РёРј РѕС‚СЃС‚СѓРїРѕРј РѕС‚ РєСЂР°РµРІ РґР»СЏ РѕС‰СѓС‰РµРЅРёСЏ "РїР»Р°РІР°СЋС‰РµР№ РєР°СЂС‚РѕС‡РєРё"
     float marginX = renderData.rdWidth * 0.05f;
     float marginY = renderData.rdHeight * 0.05f;
 
@@ -813,16 +875,16 @@ void UserInterface::drawSettingsOverlay(OGLRenderData& renderData, bool& showSet
     ImVec2 winPos = ImGui::GetWindowPos();
     ImVec2 winSize = ImGui::GetWindowSize();
 
-    // --- ЗАГОЛОВОК ---
+    // --- Р—РђР“РћР›РћР’РћРљ ---
     std::string rawTitle = Localization::get("settings");
-    if (rawTitle.empty()) rawTitle = "НАСТРОЙКИ";
+    if (rawTitle.empty()) rawTitle = "РќРђРЎРўР РћР™РљР";
 
     ImGui::SetCursorPos(ImVec2(35.0f, 25.0f));
     ImGui::SetWindowFontScale(1.4f);
     ImGui::TextColored(accentCyan, "%s", rawTitle.c_str());
     ImGui::SetWindowFontScale(1.0f);
 
-    // Разделительная линия с градиентом/своим свечением
+    // Р Р°Р·РґРµР»РёС‚РµР»СЊРЅР°СЏ Р»РёРЅРёСЏ СЃ РіСЂР°РґРёРµРЅС‚РѕРј/СЃРІРѕРёРј СЃРІРµС‡РµРЅРёРµРј
     float lineY = winPos.y + 70.0f;
     drawList->AddLine(
         ImVec2(winPos.x + 35.0f, lineY),
@@ -831,12 +893,12 @@ void UserInterface::drawSettingsOverlay(OGLRenderData& renderData, bool& showSet
         2.0f
     );
 
-    // Разметка контента
+    // Р Р°Р·РјРµС‚РєР° РєРѕРЅС‚РµРЅС‚Р°
     float contentStartY = 95.0f;
     float leftColWidth = 240.0f;
     float itemHeight = 48.0f;
 
-    // Лямбда для создания стилизованных закругленных кнопок категорий
+    // Р›СЏРјР±РґР° РґР»СЏ СЃРѕР·РґР°РЅРёСЏ СЃС‚РёР»РёР·РѕРІР°РЅРЅС‹С… Р·Р°РєСЂСѓРіР»РµРЅРЅС‹С… РєРЅРѕРїРѕРє РєР°С‚РµРіРѕСЂРёР№
     auto DrawCategoryTab = [&](const char* locKey, int tabIdx) {
         bool isActive = (activeSettingTab == tabIdx);
         std::string label = Localization::get(locKey);
@@ -860,7 +922,7 @@ void UserInterface::drawSettingsOverlay(OGLRenderData& renderData, bool& showSet
         return pressed;
         };
 
-    // --- ЛЕВАЯ ПАНЕЛЬ (КАТЕГОРИИ) ---
+    // --- Р›Р•Р’РђРЇ РџРђРќР•Р›Р¬ (РљРђРўР•Р“РћР РР) ---
     ImGui::SetCursorPos(ImVec2(35.0f, contentStartY));
     ImGui::BeginGroup();
 
@@ -870,7 +932,7 @@ void UserInterface::drawSettingsOverlay(OGLRenderData& renderData, bool& showSet
 
     ImGui::EndGroup();
 
-    // Вертикальный разделитель между категориями и настройками
+    // Р’РµСЂС‚РёРєР°Р»СЊРЅС‹Р№ СЂР°Р·РґРµР»РёС‚РµР»СЊ РјРµР¶РґСѓ РєР°С‚РµРіРѕСЂРёСЏРјРё Рё РЅР°СЃС‚СЂРѕР№РєР°РјРё
     float sepX = winPos.x + 35.0f + leftColWidth + 25.0f;
     drawList->AddLine(
         ImVec2(sepX, winPos.y + contentStartY),
@@ -879,11 +941,11 @@ void UserInterface::drawSettingsOverlay(OGLRenderData& renderData, bool& showSet
         1.5f
     );
 
-    // --- ПРАВАЯ ПАНЕЛЬ (ОПЦИИ) ---
+    // --- РџР РђР’РђРЇ РџРђРќР•Р›Р¬ (РћРџР¦РР) ---
     float rightColX = leftColWidth + 85.0f;
     float dropdownWidth = 480.0f;
 
-    // Лямбда для кастомных выпадок в стиле овала/закругленной плашки
+    // Р›СЏРјР±РґР° РґР»СЏ РєР°СЃС‚РѕРјРЅС‹С… РІС‹РїР°РґРѕРє РІ СЃС‚РёР»Рµ РѕРІР°Р»Р°/Р·Р°РєСЂСѓРіР»РµРЅРЅРѕР№ РїР»Р°С€РєРё
     auto DrawOptionDropdown = [&](const char* labelKey, int* currentIndex, const char* options[], int optionsCount) {
         ImVec2 screenPos = ImGui::GetCursorScreenPos();
         std::string label = Localization::get(labelKey);
@@ -891,7 +953,7 @@ void UserInterface::drawSettingsOverlay(OGLRenderData& renderData, bool& showSet
 
         const char* currentValText = options[*currentIndex];
 
-        // Задняя карточка для опции
+        // Р—Р°РґРЅСЏСЏ РєР°СЂС‚РѕС‡РєР° РґР»СЏ РѕРїС†РёРё
         drawList->AddRectFilled(
             screenPos,
             ImVec2(screenPos.x + dropdownWidth, screenPos.y + itemHeight),
@@ -899,11 +961,11 @@ void UserInterface::drawSettingsOverlay(OGLRenderData& renderData, bool& showSet
             10.0f
         );
 
-        // Текст названия настройки
+        // РўРµРєСЃС‚ РЅР°Р·РІР°РЅРёСЏ РЅР°СЃС‚СЂРѕР№РєРё
         ImVec2 textPos = ImVec2(screenPos.x + 20.0f, screenPos.y + (itemHeight - ImGui::GetTextLineHeight()) * 0.5f);
         drawList->AddText(textPos, ImGui::ColorConvertFloat4ToU32(textColor), label.c_str());
 
-        // Выпадающий селектор справа
+        // Р’С‹РїР°РґР°СЋС‰РёР№ СЃРµР»РµРєС‚РѕСЂ СЃРїСЂР°РІР°
         std::string comboId = std::string("##combo_") + labelKey;
         ImGui::SetCursorPos(ImVec2(ImGui::GetCursorPosX() + dropdownWidth - 210.0f, ImGui::GetCursorPosY() + (itemHeight - 32.0f) * 0.5f));
         ImGui::SetNextItemWidth(190.0f);
@@ -924,23 +986,23 @@ void UserInterface::drawSettingsOverlay(OGLRenderData& renderData, bool& showSet
         }
         ImGui::PopStyleColor(3);
 
-        // Сдвигаем курсор под элемент
+        // РЎРґРІРёРіР°РµРј РєСѓСЂСЃРѕСЂ РїРѕРґ СЌР»РµРјРµРЅС‚
         ImGui::SetCursorScreenPos(ImVec2(screenPos.x, screenPos.y + itemHeight + 10.0f));
         };
 
-    // Отрисовка подменю "Язык"
+    // РћС‚СЂРёСЃРѕРІРєР° РїРѕРґРјРµРЅСЋ "РЇР·С‹Рє"
     if (activeSettingTab == 0) {
         ImGui::SetCursorPos(ImVec2(rightColX, contentStartY));
         ImGui::BeginGroup();
 
-        std::string labelRu = Localization::get("russian"); if (labelRu.empty()) labelRu = "Русский";
+        std::string labelRu = Localization::get("russian"); if (labelRu.empty()) labelRu = "Р СѓСЃСЃРєРёР№";
         const char* language[] = { labelRu.c_str(), "English" };
         DrawOptionDropdown("language", &renderData.rdLanguageIndex, language, IM_ARRAYSIZE(language));
 
         ImGui::EndGroup();
     }
 
-    // Отрисовка подменю "Графика"
+    // РћС‚СЂРёСЃРѕРІРєР° РїРѕРґРјРµРЅСЋ "Р“СЂР°С„РёРєР°"
     if (activeSettingTab == 2) {
         ImGui::SetCursorPos(ImVec2(rightColX, contentStartY));
         ImGui::BeginGroup();
@@ -948,8 +1010,8 @@ void UserInterface::drawSettingsOverlay(OGLRenderData& renderData, bool& showSet
         const char* resolutions[] = { "1280x720", "1920x1080", "2560x1440", "3840x2160" };
         DrawOptionDropdown("resolution", &renderData.rdResolutionIndex, resolutions, IM_ARRAYSIZE(resolutions));
 
-        std::string labelOff = Localization::get("off"); if (labelOff.empty()) labelOff = "Выкл.";
-        std::string labelOn = Localization::get("on");   if (labelOn.empty()) labelOn = "Вкл.";
+        std::string labelOff = Localization::get("off"); if (labelOff.empty()) labelOff = "Р’С‹РєР».";
+        std::string labelOn = Localization::get("on");   if (labelOn.empty()) labelOn = "Р’РєР».";
         const char* toggleOptions[] = { labelOff.c_str(), labelOn.c_str() };
 
         DrawOptionDropdown("fullscreen", &renderData.rdFullscreenIndex, toggleOptions, IM_ARRAYSIZE(toggleOptions));
@@ -961,18 +1023,18 @@ void UserInterface::drawSettingsOverlay(OGLRenderData& renderData, bool& showSet
         const char* afOptions[] = { labelOff.c_str(), "AF 2x", "AF 4x", "AF 8x", "AF 16x" };
         DrawOptionDropdown("texture_filtering", &renderData.rdAnisotropyIndex, afOptions, IM_ARRAYSIZE(afOptions));
 
-        std::string labelUltra = Localization::get("ultra");  if (labelUltra.empty())  labelUltra = "Ультра";
-        std::string labelHigh = Localization::get("high");   if (labelHigh.empty())   labelHigh = "Высокое";
-        std::string labelMedium = Localization::get("medium"); if (labelMedium.empty()) labelMedium = "Среднее";
-        std::string labelLow = Localization::get("low");    if (labelLow.empty())    labelLow = "Низкое";
+        std::string labelUltra = Localization::get("ultra");  if (labelUltra.empty())  labelUltra = "РЈР»СЊС‚СЂР°";
+        std::string labelHigh = Localization::get("high");   if (labelHigh.empty())   labelHigh = "Р’С‹СЃРѕРєРѕРµ";
+        std::string labelMedium = Localization::get("medium"); if (labelMedium.empty()) labelMedium = "РЎСЂРµРґРЅРµРµ";
+        std::string labelLow = Localization::get("low");    if (labelLow.empty())    labelLow = "РќРёР·РєРѕРµ";
 
         const char* qualities[] = { labelUltra.c_str(), labelHigh.c_str(), labelMedium.c_str(), labelLow.c_str() };
         DrawOptionDropdown("texture_quality", &renderData.rdTextureQuality, qualities, IM_ARRAYSIZE(qualities));
 
         ImGui::EndGroup();
     }
-
-    // --- НИЖНЯЯ ПАНЕЛЬИ КНОПКА "НАЗАД" ---
+    
+    // --- РќРР–РќРЇРЇ РџРђРќР•Р›Р¬Р РљРќРћРџРљРђ "РќРђР—РђР”" ---
     float footerY = winSize.y - 65.0f;
     drawList->AddLine(
         ImVec2(winPos.x + 35.0f, winPos.y + footerY - 15.0f),
@@ -984,7 +1046,7 @@ void UserInterface::drawSettingsOverlay(OGLRenderData& renderData, bool& showSet
     ImGui::SetCursorPos(ImVec2(35.0f, footerY));
 
     std::string backLabel = Localization::get("back");
-    if (backLabel.empty()) backLabel = "Назад";
+    if (backLabel.empty()) backLabel = "РќР°Р·Р°Рґ";
 
     if (ImGui::Button(backLabel.c_str(), ImVec2(160.0f, 40.0f))) {
         showSettings = false;
@@ -992,7 +1054,7 @@ void UserInterface::drawSettingsOverlay(OGLRenderData& renderData, bool& showSet
 
     ImGui::End();
 
-    // Восстанавливаем дефолтный стиль
+    // Р’РѕСЃСЃС‚Р°РЅР°РІР»РёРІР°РµРј РґРµС„РѕР»С‚РЅС‹Р№ СЃС‚РёР»СЊ
     style = oldStyle;
 }
 //15.01.26
@@ -1000,17 +1062,17 @@ void UserInterface::drawSettingsOverlay(OGLRenderData& renderData, bool& showSet
 void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
     if (!showMenu) return;
 
-    // Состояния окон меню
-    static int currentSubMenu = 0;   // 0 - Главное меню, 1 - Экран настроек
-    static int activeSettingTab = 2; // По умолчанию активна вкладка "Экран"
+    // РЎРѕСЃС‚РѕСЏРЅРёСЏ РѕРєРѕРЅ РјРµРЅСЋ
+    static int currentSubMenu = 0;   // 0 - Р“Р»Р°РІРЅРѕРµ РјРµРЅСЋ, 1 - Р­РєСЂР°РЅ РЅР°СЃС‚СЂРѕРµРє
+    static int activeSettingTab = 2; // РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ Р°РєС‚РёРІРЅР° РІРєР»Р°РґРєР° "Р­РєСЂР°РЅ"
 
     ImGuiStyle& style = ImGui::GetStyle();
 
-    // Бэкап дефолтных стилей приложения
+    // Р‘СЌРєР°Рї РґРµС„РѕР»С‚РЅС‹С… СЃС‚РёР»РµР№ РїСЂРёР»РѕР¶РµРЅРёСЏ
     ImVec4 oldWinBg = style.Colors[ImGuiCol_WindowBg];
     ImVec4 oldText = style.Colors[ImGuiCol_Text];
 
-    // Применяем фирменные приглушенные тона NieR
+    // РџСЂРёРјРµРЅСЏРµРј С„РёСЂРјРµРЅРЅС‹Рµ РїСЂРёРіР»СѓС€РµРЅРЅС‹Рµ С‚РѕРЅР° NieR
     style.WindowRounding = 0.0f;
     style.FrameRounding = 0.0f;
     style.WindowBorderSize = 0.0f;
@@ -1023,7 +1085,7 @@ void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
     ImGui::Begin("SYSTEM_SCREEN", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove);
 
     // ==========================================
-    // ВЕРХНЯЯ ПАНЕЛЬ: Вкладка справа сверху
+    // Р’Р•Р РҐРќРЇРЇ РџРђРќР•Р›Р¬: Р’РєР»Р°РґРєР° СЃРїСЂР°РІР° СЃРІРµСЂС…Сѓ
     // ==========================================
     float topMargin = 20.0f;
     float tabWidth = 200.0f;
@@ -1039,7 +1101,7 @@ void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
 
     ImGui::Button(Localization::get("system").c_str(), ImVec2(tabWidth, tabHeight));
 
-    // Возвращаем цвета текста для остальной рабочей области
+    // Р’РѕР·РІСЂР°С‰Р°РµРј С†РІРµС‚Р° С‚РµРєСЃС‚Р° РґР»СЏ РѕСЃС‚Р°Р»СЊРЅРѕР№ СЂР°Р±РѕС‡РµР№ РѕР±Р»Р°СЃС‚Рё
     style.Colors[ImGuiCol_Text] = ImVec4(0.20f, 0.19f, 0.17f, 0.90f);
 
     ImGui::SetCursorPosY(topMargin + tabHeight + 10.0f);
@@ -1048,7 +1110,7 @@ void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
     ImGui::Separator();
 
     // ==========================================
-    // РАЗМЕРЫ И ОСТУПЫ ДЛЯ КНОПОК И ЛИНИЙ
+    // Р РђР—РњР•Р Р« Р РћРЎРўРЈРџР« Р”Р›РЇ РљРќРћРџРћРљ Р Р›РРќРР™
     // ==========================================
     static float testWidth = 615.926f;
     static float testHeight = 78.424f;
@@ -1063,12 +1125,12 @@ void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
     float buttonsStartY = renderData.rdHeight * 0.24f;
 
     // ==========================================
-    // 1. ДИНАМИЧЕСКИЙ ЗАГОЛОВОК С ЭФФЕКТОМ ТЕНИ
+    // 1. Р”РРќРђРњРР§Р•РЎРљРР™ Р—РђР“РћР›РћР’РћРљ РЎ Р­Р¤Р¤Р•РљРўРћРњ РўР•РќР
     // ==========================================
     float titleX = leftMargin;
     float titleY = buttonsStartY - 110.0f;
 
-    // Если зашли в настройки, заголовок меняется на соответствующий
+    // Р•СЃР»Рё Р·Р°С€Р»Рё РІ РЅР°СЃС‚СЂРѕР№РєРё, Р·Р°РіРѕР»РѕРІРѕРє РјРµРЅСЏРµС‚СЃСЏ РЅР° СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёР№
     std::string rawTitle = (currentSubMenu == 1) ? Localization::get("settings") : Localization::get("system");
 
     if (currentSubMenu != 1) {
@@ -1093,7 +1155,7 @@ void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
     ImGui::SetWindowFontScale(1.0f);
 
     // ==========================================
-    // 2. ОТРИСОВКА ВЕРТИКАЛЬНОЙ ДВОЙНОЙ ЛИНИИ
+    // 2. РћРўР РРЎРћР’РљРђ Р’Р•Р РўРРљРђР›Р¬РќРћР™ Р”Р’РћР™РќРћР™ Р›РРќРР
     // ==========================================
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 windowPos = ImGui::GetWindowPos();
@@ -1109,7 +1171,7 @@ void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
     drawList->AddLine(ImVec2(thinLineX, lineStartY), ImVec2(thinLineX, lineEndY), lineColor, thinLineThickness);
 
     // ==========================================
-    // 3. ЛЕВАЯ КОЛОНКА МЕНЮ (Кнопки / Категории)
+    // 3. Р›Р•Р’РђРЇ РљРћР›РћРќРљРђ РњР•РќР® (РљРЅРѕРїРєРё / РљР°С‚РµРіРѕСЂРёРё)
     // ==========================================
     ImGui::SetCursorPos(ImVec2(lineStartX - windowPos.x + 35.0f, buttonsStartY));
     ImGui::BeginGroup();
@@ -1117,22 +1179,22 @@ void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
     float bW = testWidth;
     float bH = testHeight;
 
-    // Автоматическое сужение кнопок, если находимся внутри меню настроек
+    // РђРІС‚РѕРјР°С‚РёС‡РµСЃРєРѕРµ СЃСѓР¶РµРЅРёРµ РєРЅРѕРїРѕРє, РµСЃР»Рё РЅР°С…РѕРґРёРјСЃСЏ РІРЅСѓС‚СЂРё РјРµРЅСЋ РЅР°СЃС‚СЂРѕРµРє
     float currentButtonWidth = (currentSubMenu == 1) ? 260.0f : bW;
 
-    // Универсальный лямбда-виджет кнопки (теперь строго работает по ключам локализации)
+    // РЈРЅРёРІРµСЂСЃР°Р»СЊРЅС‹Р№ Р»СЏРјР±РґР°-РІРёРґР¶РµС‚ РєРЅРѕРїРєРё (С‚РµРїРµСЂСЊ СЃС‚СЂРѕРіРѕ СЂР°Р±РѕС‚Р°РµС‚ РїРѕ РєР»СЋС‡Р°Рј Р»РѕРєР°Р»РёР·Р°С†РёРё)
     auto DrawNieRButton = [&](const char* localizationKey, bool isActiveTab = false) {
         ImVec2 screenPos = ImGui::GetCursorScreenPos();
 
-        // ТЕПЕРЬ ВСЕГДА тащим строку из твоего файла локализации
+        // РўР•РџР•Р Р¬ Р’РЎР•Р“Р”Рђ С‚Р°С‰РёРј СЃС‚СЂРѕРєСѓ РёР· С‚РІРѕРµРіРѕ С„Р°Р№Р»Р° Р»РѕРєР°Р»РёР·Р°С†РёРё
         std::string label = Localization::get(localizationKey);
 
-        // Если вдруг ключа нет в файле, выведем сам ключ, чтобы код не падал
+        // Р•СЃР»Рё РІРґСЂСѓРі РєР»СЋС‡Р° РЅРµС‚ РІ С„Р°Р№Р»Рµ, РІС‹РІРµРґРµРј СЃР°Рј РєР»СЋС‡, С‡С‚РѕР±С‹ РєРѕРґ РЅРµ РїР°РґР°Р»
         if (label.empty()) {
             label = localizationKey;
         }
 
-        // Цвета заднего фона плашек
+        // Р¦РІРµС‚Р° Р·Р°РґРЅРµРіРѕ С„РѕРЅР° РїР»Р°С€РµРє
         if (isActiveTab) {
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.19f, 0.17f, 0.8f));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.19f, 0.17f, 0.8f));
@@ -1143,7 +1205,7 @@ void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
         }
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.19f, 0.17f, 0.9f));
 
-        // Цвета текста по умолчанию
+        // Р¦РІРµС‚Р° С‚РµРєСЃС‚Р° РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
         if (isActiveTab) {
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.95f, 0.94f, 0.886f, 1.0f));
         }
@@ -1154,13 +1216,13 @@ void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
         ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(45.0f, style.FramePadding.y));
 
-        // Вызов кнопки
+        // Р’С‹Р·РѕРІ РєРЅРѕРїРєРё
         bool pressed = ImGui::Button(label.c_str(), ImVec2(currentButtonWidth, bH));
         bool isHovered = ImGui::IsItemHovered() || isActiveTab;
 
         ImDrawList* wDrawList = ImGui::GetWindowDrawList();
 
-        // Отрисовка светлого текста при наведении + имитация жирного Bold-эффекта
+        // РћС‚СЂРёСЃРѕРІРєР° СЃРІРµС‚Р»РѕРіРѕ С‚РµРєСЃС‚Р° РїСЂРё РЅР°РІРµРґРµРЅРёРё + РёРјРёС‚Р°С†РёСЏ Р¶РёСЂРЅРѕРіРѕ Bold-СЌС„С„РµРєС‚Р°
         if (isHovered) {
             ImVec2 textPos = ImVec2(screenPos.x + 45.0f, screenPos.y + (bH - ImGui::GetTextLineHeight()) * 0.5f);
             ImU32 textActiveColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.95f, 0.94f, 0.886f, 1.0f));
@@ -1178,7 +1240,7 @@ void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
             wDrawList->AddText(ImVec2(textPos.x, textPos.y + 0.5f), textActiveColor, label.c_str());
         }
 
-        // Геометрия квадратного маркера слева
+        // Р“РµРѕРјРµС‚СЂРёСЏ РєРІР°РґСЂР°С‚РЅРѕРіРѕ РјР°СЂРєРµСЂР° СЃР»РµРІР°
         float squareSize = 14.0f;
         float sqX = screenPos.x + 18.0f;
         float sqY = screenPos.y + (bH - squareSize) * 0.5f;
@@ -1195,55 +1257,124 @@ void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
         return pressed;
         };
 
-    // Отрисовка левой рабочей зоны (теперь передаем только КЛЮЧИ из твоего файла локализации)
+    // РћС‚СЂРёСЃРѕРІРєР° Р»РµРІРѕР№ СЂР°Р±РѕС‡РµР№ Р·РѕРЅС‹ (С‚РµРїРµСЂСЊ РїРµСЂРµРґР°РµРј С‚РѕР»СЊРєРѕ РљР›Р®Р§Р РёР· С‚РІРѕРµРіРѕ С„Р°Р№Р»Р° Р»РѕРєР°Р»РёР·Р°С†РёРё)
     if (currentSubMenu == 0) {
-        // --- ГЛАВНЫЙ ЭКРАН СИСТЕМЫ ---
-        if (DrawNieRButton("save")) { /* код сохранения */ } ImGui::Dummy(ImVec2(0, testSpacing));
-        if (DrawNieRButton("load")) { /* код загрузки */ }   ImGui::Dummy(ImVec2(0, testSpacing));
+        // --- Р“Р›РђР’РќР«Р™ Р­РљР РђРќ РЎРРЎРўР•РњР« ---
+        if (DrawNieRButton("save")) { /* РєРѕРґ СЃРѕС…СЂР°РЅРµРЅРёСЏ */ } ImGui::Dummy(ImVec2(0, testSpacing));
+        if (DrawNieRButton("load")) { /* РєРѕРґ Р·Р°РіСЂСѓР·РєРё */ }   ImGui::Dummy(ImVec2(0, testSpacing));
         if (DrawNieRButton("settings")) { currentSubMenu = 1; }  ImGui::Dummy(ImVec2(0, testSpacing));
         if (DrawNieRButton("exit")) { glfwSetWindowShouldClose(renderData.rdWindow, true); }
     }
     else if (currentSubMenu == 1) {
-        // --- ПОДМЕНЮ НАСТРОЕК (ПАНЕЛЬ КАТЕГОРИЙ) ---
+        // --- РџРћР”РњР•РќР® РќРђРЎРўР РћР•Рљ (РџРђРќР•Р›Р¬ РљРђРўР•Р“РћР РР™) ---
         if (DrawNieRButton("language", activeSettingTab == 0)) { activeSettingTab = 0; } ImGui::Dummy(ImVec2(0, 12.0f));
         if (DrawNieRButton("camera", activeSettingTab == 1)) { activeSettingTab = 1; } ImGui::Dummy(ImVec2(0, 12.0f));
         if (DrawNieRButton("grathics", activeSettingTab == 2)) { activeSettingTab = 2; } ImGui::Dummy(ImVec2(0, 12.0f));
 
-        // ИЗ ЭТОГО МЕСТА СТАРЫЙ СЕПАРАТОР И КНОПКА "НАЗАД" УДАЛЕНЫ!
+        // РР— Р­РўРћР“Рћ РњР•РЎРўРђ РЎРўРђР Р«Р™ РЎР•РџРђР РђРўРћР  Р РљРќРћРџРљРђ "РќРђР—РђР”" РЈР”РђР›Р•РќР«!
     }
 
     ImGui::EndGroup();
+
     // ==========================================
-    // 3. ПРАВАЯ ЧАСТЬ: ОПЦИИ ДЛЯ ВКЛАДКИ "Язык"
+    // --- РџР РђР’РђРЇ РџРђРќР•Р›Р¬: РџРРЎР¬РњРћ РћРў РљРћРњРђРќР”РР Рђ ---
+    // ==========================================
+    if (currentSubMenu == 0) {
+        float contentStartY = buttonsStartY;
+        ImVec2 winSize = ImGui::GetWindowSize();
+        float footerY = winSize.y - 40.0f;
+
+        float letterWidth = 400.0f;
+        float letterX = winSize.x - 35.0f - letterWidth;
+        float letterY = contentStartY;
+        float letterHeight = footerY - contentStartY - 20.0f;
+
+        ImVec2 letterMin = ImVec2(windowPos.x + letterX, windowPos.y + letterY);
+        ImVec2 letterMax = ImVec2(letterMin.x + letterWidth, letterMin.y + letterHeight);
+
+        // Р¦РІРµС‚РѕРІР°СЏ РїР°Р»РёС‚СЂР° NieR
+        ImVec4 panelBg = ImVec4(0.20f, 0.19f, 0.17f, 0.05f); // Р•РґРІР° Р·Р°РјРµС‚РЅС‹Р№ С‚РµРјРЅС‹Р№ РїРѕРґС‚РѕРЅ
+        ImVec4 borderColor = ImVec4(0.20f, 0.19f, 0.17f, 0.45f); // РЎС‚СЂРѕРіРёР№ РєРѕРЅС‚СѓСЂ
+        ImVec4 textColor = ImVec4(0.20f, 0.19f, 0.17f, 0.90f); // РЈРіРѕР»СЊРЅС‹Р№ С‚РµРєСЃС‚
+
+        // 1. РЎС‚СЂРѕРіР°СЏ РїСЂСЏРјРѕСѓРіРѕР»СЊРЅР°СЏ РїР»Р°С€РєР° Р±РµР· СЃРєСЂСѓРіР»РµРЅРёР№
+        drawList->AddRectFilled(letterMin, letterMax, ImGui::ColorConvertFloat4ToU32(panelBg), 0.0f);
+        drawList->AddRect(letterMin, letterMax, ImGui::ColorConvertFloat4ToU32(borderColor), 0.0f, 0, 1.5f);
+
+        // Р›РµРІР°СЏ Р°РєС†РµРЅС‚РЅР°СЏ РїРѕР»РѕСЃР° (С…Р°СЂР°РєС‚РµСЂРЅР°СЏ РґР»СЏ РёРЅС‚РµСЂС„РµР№СЃРѕРІ NieR)
+        drawList->AddRectFilled(
+            ImVec2(letterMin.x, letterMin.y),
+            ImVec2(letterMin.x + 5.0f, letterMax.y),
+            ImGui::ColorConvertFloat4ToU32(borderColor)
+        );
+
+        // 2. РљРѕРЅС‚РµРЅС‚ РІРЅСѓС‚СЂРё РєР°СЂС‚РѕС‡РєРё
+        ImGui::SetCursorPos(ImVec2(letterX + 25.0f, letterY + 18.0f));
+        ImGui::BeginGroup();
+
+        // Р—Р°РіРѕР»РѕРІРѕРє РІ СЃС‚СЂРѕРіРёС… СЃРєРѕР±РєР°С… РІРјРµСЃС‚Рѕ СЃР»РѕРјР°РЅРЅРѕР№ РёРєРѕРЅРєРё вњ‰
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.20f, 0.19f, 0.17f, 1.0f));
+        ImGui::Text(Localization::get("letter").c_str());
+        ImGui::PopStyleColor();
+
+        // Р Р°Р·РґРµР»РёС‚РµР»СЊРЅР°СЏ Р»РёРЅРёСЏ
+        ImVec2 lineStart = ImGui::GetCursorScreenPos();
+        lineStart.y += 6.0f;
+        ImVec2 lineEnd = ImVec2(lineStart.x + letterWidth - 50.0f, lineStart.y);
+        drawList->AddLine(lineStart, lineEnd, ImGui::ColorConvertFloat4ToU32(borderColor), 1.5f);
+
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 15.0f);
+
+        // 3. РћР±Р»Р°СЃС‚СЊ СЃ С‚РµРєСЃС‚РѕРј
+        ImGui::BeginChild("CommanderLetterScroll", ImVec2(letterWidth - 45.0f, letterHeight - 75.0f), false, ImGuiWindowFlags_NoBackground);
+
+        ImGui::PushStyleColor(ImGuiCol_Text, textColor);
+        ImGui::Text(Localization::get("4.1").c_str());
+        ImGui::Text(Localization::get("5.1").c_str());
+        ImGui::Text(Localization::get("6.1").c_str());
+        ImGui::Text(Localization::get("7.1").c_str());
+        ImGui::Text(Localization::get("8.1").c_str());
+        ImGui::Text(Localization::get("9.1").c_str());
+        ImGui::Text(Localization::get("10.1").c_str());
+        ImGui::Text(Localization::get("11.1").c_str());
+        ImGui::Text(Localization::get("12.1").c_str());
+        ImGui::Text(Localization::get("13.1").c_str());
+        ImGui::PopStyleColor();
+
+        ImGui::EndChild();
+        ImGui::EndGroup();
+    }
+    // ==========================================
+    // 3. РџР РђР’РђРЇ Р§РђРЎРўР¬: РћРџР¦РР Р”Р›РЇ Р’РљР›РђР”РљР "РЇР·С‹Рє"
     // ==========================================
     if (currentSubMenu == 1 && activeSettingTab == 0) {
-        // Смещаем позицию вывода вправо от левой колонки категорий
+        // РЎРјРµС‰Р°РµРј РїРѕР·РёС†РёСЋ РІС‹РІРѕРґР° РІРїСЂР°РІРѕ РѕС‚ Р»РµРІРѕР№ РєРѕР»РѕРЅРєРё РєР°С‚РµРіРѕСЂРёР№
         ImGui::SetCursorPos(ImVec2(lineStartX - windowPos.x + currentButtonWidth + 80.0f, buttonsStartY));
         ImGui::BeginGroup();
 
-        // Стилизуем сам выпадающий список ImGui, чтобы он подходил по цвету под NieR
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));         // Полностью прозрачная подложка комбобокса
-        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));  // Убираем реакцию на наведение у стандартного комбобокса
+        // РЎС‚РёР»РёР·СѓРµРј СЃР°Рј РІС‹РїР°РґР°СЋС‰РёР№ СЃРїРёСЃРѕРє ImGui, С‡С‚РѕР±С‹ РѕРЅ РїРѕРґС…РѕРґРёР» РїРѕ С†РІРµС‚Сѓ РїРѕРґ NieR
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));         // РџРѕР»РЅРѕСЃС‚СЊСЋ РїСЂРѕР·СЂР°С‡РЅР°СЏ РїРѕРґР»РѕР¶РєР° РєРѕРјР±РѕР±РѕРєСЃР°
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));  // РЈР±РёСЂР°РµРј СЂРµР°РєС†РёСЋ РЅР° РЅР°РІРµРґРµРЅРёРµ Сѓ СЃС‚Р°РЅРґР°СЂС‚РЅРѕРіРѕ РєРѕРјР±РѕР±РѕРєСЃР°
         ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-        ImGui::PushStyleColor(ImGuiCol_PopupBg, ImVec4(0.90f, 0.89f, 0.83f, 1.0f));       // Светло-бежевый фон выпадающего списка
-        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.19f, 0.17f, 0.25f));        // Цвет выделения элемента в списке
+        ImGui::PushStyleColor(ImGuiCol_PopupBg, ImVec4(0.90f, 0.89f, 0.83f, 1.0f));       // РЎРІРµС‚Р»Рѕ-Р±РµР¶РµРІС‹Р№ С„РѕРЅ РІС‹РїР°РґР°СЋС‰РµРіРѕ СЃРїРёСЃРєР°
+        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.19f, 0.17f, 0.25f));        // Р¦РІРµС‚ РІС‹РґРµР»РµРЅРёСЏ СЌР»РµРјРµРЅС‚Р° РІ СЃРїРёСЃРєРµ
         ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.2f, 0.19f, 0.17f, 0.4f));
 
-        // Умный виджет настройки: внешне NieR, по клику — красивый выпадающий список
+        // РЈРјРЅС‹Р№ РІРёРґР¶РµС‚ РЅР°СЃС‚СЂРѕР№РєРё: РІРЅРµС€РЅРµ NieR, РїРѕ РєР»РёРєСѓ вЂ” РєСЂР°СЃРёРІС‹Р№ РІС‹РїР°РґР°СЋС‰РёР№ СЃРїРёСЃРѕРє
         auto DrawNieRDropdownSetting = [&](const char* labelKey, int* currentIndex, const char* options[], int optionsCount) {
             ImVec2 screenPos = ImGui::GetCursorScreenPos();
-            float settingWidth = 550.0f; // Длина прямоугольной плашки
+            float settingWidth = 550.0f; // Р”Р»РёРЅР° РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРѕР№ РїР»Р°С€РєРё
 
             std::string label = Localization::get(labelKey);
             if (label.empty()) label = labelKey;
 
             const char* valueText = options[*currentIndex];
 
-            // 1. Делаем невидимую кнопку-подложку на ВЕСЬ размер прямоугольника
+            // 1. Р”РµР»Р°РµРј РЅРµРІРёРґРёРјСѓСЋ РєРЅРѕРїРєСѓ-РїРѕРґР»РѕР¶РєСѓ РЅР° Р’Р•РЎР¬ СЂР°Р·РјРµСЂ РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР°
             std::string btnId = std::string("##btn_") + labelKey;
             ImGui::SetNextItemWidth(settingWidth);
 
-            // Заставляем ImGui думать, что кнопка прозрачная, но обрабатывает клики
+            // Р—Р°СЃС‚Р°РІР»СЏРµРј ImGui РґСѓРјР°С‚СЊ, С‡С‚Рѕ РєРЅРѕРїРєР° РїСЂРѕР·СЂР°С‡РЅР°СЏ, РЅРѕ РѕР±СЂР°Р±Р°С‚С‹РІР°РµС‚ РєР»РёРєРё
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
@@ -1253,43 +1384,43 @@ void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
             bool isHovered = ImGui::IsItemHovered();
             ImDrawList* wDrawList = ImGui::GetWindowDrawList();
 
-            // 2. Отрисовка фонового прямоугольника NieR
+            // 2. РћС‚СЂРёСЃРѕРІРєР° С„РѕРЅРѕРІРѕРіРѕ РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР° NieR
             ImVec4 bgColor = isHovered ? ImVec4(0.2f, 0.19f, 0.17f, 0.28f) : ImVec4(0.2f, 0.19f, 0.17f, 0.12f);
             wDrawList->AddRectFilled(screenPos, ImVec2(screenPos.x + settingWidth, screenPos.y + bH), ImGui::ColorConvertFloat4ToU32(bgColor));
 
-            // Цвет элементов интерфейса
+            // Р¦РІРµС‚ СЌР»РµРјРµРЅС‚РѕРІ РёРЅС‚РµСЂС„РµР№СЃР°
             ImU32 elementColor = isHovered
                 ? ImGui::ColorConvertFloat4ToU32(ImVec4(0.20f, 0.19f, 0.17f, 1.0f))
                 : ImGui::ColorConvertFloat4ToU32(ImVec4(0.20f, 0.19f, 0.17f, 0.75f));
 
-            // 3. Рисуем квадратный маркер слева
+            // 3. Р РёСЃСѓРµРј РєРІР°РґСЂР°С‚РЅС‹Р№ РјР°СЂРєРµСЂ СЃР»РµРІР°
             float squareSize = 14.0f;
             float sqX = screenPos.x + 18.0f;
             float sqY = screenPos.y + (bH - squareSize) * 0.5f;
             wDrawList->AddRectFilled(ImVec2(sqX, sqY), ImVec2(sqX + squareSize, sqY + squareSize), elementColor);
 
-            // 4. Рисуем название опции слева
+            // 4. Р РёСЃСѓРµРј РЅР°Р·РІР°РЅРёРµ РѕРїС†РёРё СЃР»РµРІР°
             ImVec2 textPos = ImVec2(screenPos.x + 45.0f, screenPos.y + (bH - ImGui::GetTextLineHeight()) * 0.5f);
             wDrawList->AddText(textPos, elementColor, label.c_str());
 
-            // 5. Рисуем текущее значение опции справа
+            // 5. Р РёСЃСѓРµРј С‚РµРєСѓС‰РµРµ Р·РЅР°С‡РµРЅРёРµ РѕРїС†РёРё СЃРїСЂР°РІР°
             ImVec2 valSize = ImGui::CalcTextSize(valueText);
             ImVec2 valPos = ImVec2(screenPos.x + settingWidth - valSize.x - 25.0f, screenPos.y + (bH - valSize.y) * 0.5f);
             wDrawList->AddText(valPos, elementColor, valueText);
 
-            // ИД для нашего кастомного поп-апа
+            // РР” РґР»СЏ РЅР°С€РµРіРѕ РєР°СЃС‚РѕРјРЅРѕРіРѕ РїРѕРї-Р°РїР°
             std::string popupId = std::string("popup_") + labelKey;
 
-            // Если кликнули на прямоугольник — открываем меню
+            // Р•СЃР»Рё РєР»РёРєРЅСѓР»Рё РЅР° РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРє вЂ” РѕС‚РєСЂС‹РІР°РµРј РјРµРЅСЋ
             if (pressed) {
                 ImGui::OpenPopup(popupId.c_str());
             }
 
-            // Позиционируем выпадающий список ровно под плашкой
+            // РџРѕР·РёС†РёРѕРЅРёСЂСѓРµРј РІС‹РїР°РґР°СЋС‰РёР№ СЃРїРёСЃРѕРє СЂРѕРІРЅРѕ РїРѕРґ РїР»Р°С€РєРѕР№
             ImGui::SetNextWindowPos(ImVec2(screenPos.x, screenPos.y + bH));
-            ImGui::SetNextWindowSize(ImVec2(settingWidth, 0.0f)); // Ширина как у плашки
+            ImGui::SetNextWindowSize(ImVec2(settingWidth, 0.0f)); // РЁРёСЂРёРЅР° РєР°Рє Сѓ РїР»Р°С€РєРё
 
-            // Стилизуем окно выпадающего списка под NieR
+            // РЎС‚РёР»РёР·СѓРµРј РѕРєРЅРѕ РІС‹РїР°РґР°СЋС‰РµРіРѕ СЃРїРёСЃРєР° РїРѕРґ NieR
             ImGui::PushStyleColor(ImGuiCol_PopupBg, ImVec4(0.90f, 0.89f, 0.83f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.19f, 0.17f, 0.25f));
             ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.2f, 0.19f, 0.17f, 0.4f));
@@ -1309,8 +1440,8 @@ void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
             ImGui::PopStyleColor(3);
             };
 
-        // 1. Язык
-        std::string labelRu = Localization::get("russian"); if (labelRu.empty()) labelRu = "Русский";
+        // 1. РЇР·С‹Рє
+        std::string labelRu = Localization::get("russian"); if (labelRu.empty()) labelRu = "Р СѓСЃСЃРєРёР№";
         const char* language[] = { labelRu.c_str(), "English",};
         DrawNieRDropdownSetting("language", &renderData.rdLanguageIndex, language, IM_ARRAYSIZE(language));
         ImGui::Dummy(ImVec2(0, 10.0f));
@@ -1322,36 +1453,36 @@ void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
         ImGui::EndGroup();
     }
     // ==========================================
-    // 4. ПРАВАЯ ЧАСТЬ: ОПЦИИ ДЛЯ ВКЛАДКИ "ГРАФИКА"
+    // 4. РџР РђР’РђРЇ Р§РђРЎРўР¬: РћРџР¦РР Р”Р›РЇ Р’РљР›РђР”РљР "Р“Р РђР¤РРљРђ"
     // ==========================================
     if (currentSubMenu == 1 && activeSettingTab == 2) {
-        // Смещаем позицию вывода вправо от левой колонки категорий
+        // РЎРјРµС‰Р°РµРј РїРѕР·РёС†РёСЋ РІС‹РІРѕРґР° РІРїСЂР°РІРѕ РѕС‚ Р»РµРІРѕР№ РєРѕР»РѕРЅРєРё РєР°С‚РµРіРѕСЂРёР№
         ImGui::SetCursorPos(ImVec2(lineStartX - windowPos.x + currentButtonWidth + 80.0f, buttonsStartY));
         ImGui::BeginGroup();
 
-        // Стилизуем сам выпадающий список ImGui, чтобы он подходил по цвету под NieR
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));         // Полностью прозрачная подложка комбобокса
-        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));  // Убираем реакцию на наведение у стандартного комбобокса
+        // РЎС‚РёР»РёР·СѓРµРј СЃР°Рј РІС‹РїР°РґР°СЋС‰РёР№ СЃРїРёСЃРѕРє ImGui, С‡С‚РѕР±С‹ РѕРЅ РїРѕРґС…РѕРґРёР» РїРѕ С†РІРµС‚Сѓ РїРѕРґ NieR
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));         // РџРѕР»РЅРѕСЃС‚СЊСЋ РїСЂРѕР·СЂР°С‡РЅР°СЏ РїРѕРґР»РѕР¶РєР° РєРѕРјР±РѕР±РѕРєСЃР°
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));  // РЈР±РёСЂР°РµРј СЂРµР°РєС†РёСЋ РЅР° РЅР°РІРµРґРµРЅРёРµ Сѓ СЃС‚Р°РЅРґР°СЂС‚РЅРѕРіРѕ РєРѕРјР±РѕР±РѕРєСЃР°
         ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-        ImGui::PushStyleColor(ImGuiCol_PopupBg, ImVec4(0.90f, 0.89f, 0.83f, 1.0f));       // Светло-бежевый фон выпадающего списка
-        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.19f, 0.17f, 0.25f));        // Цвет выделения элемента в списке
+        ImGui::PushStyleColor(ImGuiCol_PopupBg, ImVec4(0.90f, 0.89f, 0.83f, 1.0f));       // РЎРІРµС‚Р»Рѕ-Р±РµР¶РµРІС‹Р№ С„РѕРЅ РІС‹РїР°РґР°СЋС‰РµРіРѕ СЃРїРёСЃРєР°
+        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.19f, 0.17f, 0.25f));        // Р¦РІРµС‚ РІС‹РґРµР»РµРЅРёСЏ СЌР»РµРјРµРЅС‚Р° РІ СЃРїРёСЃРєРµ
         ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.2f, 0.19f, 0.17f, 0.4f));
 
-        // Умный виджет настройки: внешне NieR, по клику — красивый выпадающий список
+        // РЈРјРЅС‹Р№ РІРёРґР¶РµС‚ РЅР°СЃС‚СЂРѕР№РєРё: РІРЅРµС€РЅРµ NieR, РїРѕ РєР»РёРєСѓ вЂ” РєСЂР°СЃРёРІС‹Р№ РІС‹РїР°РґР°СЋС‰РёР№ СЃРїРёСЃРѕРє
         auto DrawNieRDropdownSetting = [&](const char* labelKey, int* currentIndex, const char* options[], int optionsCount) {
             ImVec2 screenPos = ImGui::GetCursorScreenPos();
-            float settingWidth = 550.0f; // Длина прямоугольной плашки
+            float settingWidth = 550.0f; // Р”Р»РёРЅР° РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРѕР№ РїР»Р°С€РєРё
 
             std::string label = Localization::get(labelKey);
             if (label.empty()) label = labelKey;
 
             const char* valueText = options[*currentIndex];
 
-            // 1. Делаем невидимую кнопку-подложку на ВЕСЬ размер прямоугольника
+            // 1. Р”РµР»Р°РµРј РЅРµРІРёРґРёРјСѓСЋ РєРЅРѕРїРєСѓ-РїРѕРґР»РѕР¶РєСѓ РЅР° Р’Р•РЎР¬ СЂР°Р·РјРµСЂ РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР°
             std::string btnId = std::string("##btn_") + labelKey;
             ImGui::SetNextItemWidth(settingWidth);
 
-            // Заставляем ImGui думать, что кнопка прозрачная, но обрабатывает клики
+            // Р—Р°СЃС‚Р°РІР»СЏРµРј ImGui РґСѓРјР°С‚СЊ, С‡С‚Рѕ РєРЅРѕРїРєР° РїСЂРѕР·СЂР°С‡РЅР°СЏ, РЅРѕ РѕР±СЂР°Р±Р°С‚С‹РІР°РµС‚ РєР»РёРєРё
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
@@ -1361,43 +1492,43 @@ void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
             bool isHovered = ImGui::IsItemHovered();
             ImDrawList* wDrawList = ImGui::GetWindowDrawList();
 
-            // 2. Отрисовка фонового прямоугольника NieR
+            // 2. РћС‚СЂРёСЃРѕРІРєР° С„РѕРЅРѕРІРѕРіРѕ РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР° NieR
             ImVec4 bgColor = isHovered ? ImVec4(0.2f, 0.19f, 0.17f, 0.28f) : ImVec4(0.2f, 0.19f, 0.17f, 0.12f);
             wDrawList->AddRectFilled(screenPos, ImVec2(screenPos.x + settingWidth, screenPos.y + bH), ImGui::ColorConvertFloat4ToU32(bgColor));
 
-            // Цвет элементов интерфейса
+            // Р¦РІРµС‚ СЌР»РµРјРµРЅС‚РѕРІ РёРЅС‚РµСЂС„РµР№СЃР°
             ImU32 elementColor = isHovered
                 ? ImGui::ColorConvertFloat4ToU32(ImVec4(0.20f, 0.19f, 0.17f, 1.0f))
                 : ImGui::ColorConvertFloat4ToU32(ImVec4(0.20f, 0.19f, 0.17f, 0.75f));
 
-            // 3. Рисуем квадратный маркер слева
+            // 3. Р РёСЃСѓРµРј РєРІР°РґСЂР°С‚РЅС‹Р№ РјР°СЂРєРµСЂ СЃР»РµРІР°
             float squareSize = 14.0f;
             float sqX = screenPos.x + 18.0f;
             float sqY = screenPos.y + (bH - squareSize) * 0.5f;
             wDrawList->AddRectFilled(ImVec2(sqX, sqY), ImVec2(sqX + squareSize, sqY + squareSize), elementColor);
 
-            // 4. Рисуем название опции слева
+            // 4. Р РёСЃСѓРµРј РЅР°Р·РІР°РЅРёРµ РѕРїС†РёРё СЃР»РµРІР°
             ImVec2 textPos = ImVec2(screenPos.x + 45.0f, screenPos.y + (bH - ImGui::GetTextLineHeight()) * 0.5f);
             wDrawList->AddText(textPos, elementColor, label.c_str());
 
-            // 5. Рисуем текущее значение опции справа
+            // 5. Р РёСЃСѓРµРј С‚РµРєСѓС‰РµРµ Р·РЅР°С‡РµРЅРёРµ РѕРїС†РёРё СЃРїСЂР°РІР°
             ImVec2 valSize = ImGui::CalcTextSize(valueText);
             ImVec2 valPos = ImVec2(screenPos.x + settingWidth - valSize.x - 25.0f, screenPos.y + (bH - valSize.y) * 0.5f);
             wDrawList->AddText(valPos, elementColor, valueText);
 
-            // ИД для нашего кастомного поп-апа
+            // РР” РґР»СЏ РЅР°С€РµРіРѕ РєР°СЃС‚РѕРјРЅРѕРіРѕ РїРѕРї-Р°РїР°
             std::string popupId = std::string("popup_") + labelKey;
 
-            // Если кликнули на прямоугольник — открываем меню
+            // Р•СЃР»Рё РєР»РёРєРЅСѓР»Рё РЅР° РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРє вЂ” РѕС‚РєСЂС‹РІР°РµРј РјРµРЅСЋ
             if (pressed) {
                 ImGui::OpenPopup(popupId.c_str());
             }
 
-            // Позиционируем выпадающий список ровно под плашкой
+            // РџРѕР·РёС†РёРѕРЅРёСЂСѓРµРј РІС‹РїР°РґР°СЋС‰РёР№ СЃРїРёСЃРѕРє СЂРѕРІРЅРѕ РїРѕРґ РїР»Р°С€РєРѕР№
             ImGui::SetNextWindowPos(ImVec2(screenPos.x, screenPos.y + bH));
-            ImGui::SetNextWindowSize(ImVec2(settingWidth, 0.0f)); // Ширина как у плашки
+            ImGui::SetNextWindowSize(ImVec2(settingWidth, 0.0f)); // РЁРёСЂРёРЅР° РєР°Рє Сѓ РїР»Р°С€РєРё
 
-            // Стилизуем окно выпадающего списка под NieR
+            // РЎС‚РёР»РёР·СѓРµРј РѕРєРЅРѕ РІС‹РїР°РґР°СЋС‰РµРіРѕ СЃРїРёСЃРєР° РїРѕРґ NieR
             ImGui::PushStyleColor(ImGuiCol_PopupBg, ImVec4(0.90f, 0.89f, 0.83f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.19f, 0.17f, 0.25f));
             ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.2f, 0.19f, 0.17f, 0.4f));
@@ -1417,44 +1548,44 @@ void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
             ImGui::PopStyleColor(3);
             };
 
-        // 1. Разрешение экрана
+        // 1. Р Р°Р·СЂРµС€РµРЅРёРµ СЌРєСЂР°РЅР°
       
         const char* resolutions[] = { "1280x720", "1920x1080", "2560x1440", "3840x2160" };
         DrawNieRDropdownSetting("resolution", &renderData.rdResolutionIndex, resolutions, IM_ARRAYSIZE(resolutions));
         ImGui::Dummy(ImVec2(0, 10.0f));
 
-        // Кешируем переводы статусов "Вкл / Выкл"
-        std::string labelOff = Localization::get("off"); if (labelOff.empty()) labelOff = "Выкл.";
-        std::string labelOn = Localization::get("on");   if (labelOn.empty()) labelOn = "Вкл.";
+        // РљРµС€РёСЂСѓРµРј РїРµСЂРµРІРѕРґС‹ СЃС‚Р°С‚СѓСЃРѕРІ "Р’РєР» / Р’С‹РєР»"
+        std::string labelOff = Localization::get("off"); if (labelOff.empty()) labelOff = "Р’С‹РєР».";
+        std::string labelOn = Localization::get("on");   if (labelOn.empty()) labelOn = "Р’РєР».";
         const char* toggleOptions[] = { labelOff.c_str(), labelOn.c_str() };
 
-        // 2. Полноэкранный режим
+        // 2. РџРѕР»РЅРѕСЌРєСЂР°РЅРЅС‹Р№ СЂРµР¶РёРј
         
         DrawNieRDropdownSetting("fullscreen", &renderData.rdFullscreenIndex, toggleOptions, IM_ARRAYSIZE(toggleOptions));
         ImGui::Dummy(ImVec2(0, 10.0f));
 
-        // 3. Вертикальная синхронизация
+        // 3. Р’РµСЂС‚РёРєР°Р»СЊРЅР°СЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ
        
         DrawNieRDropdownSetting("vsync", &renderData.rdVSyncIndex, toggleOptions, IM_ARRAYSIZE(toggleOptions));
         ImGui::Dummy(ImVec2(0, 10.0f));
 
-        // 4. Сглаживание
+        // 4. РЎРіР»Р°Р¶РёРІР°РЅРёРµ
         
         const char* msaaOptions[] = { labelOff.c_str(), "MSAA 2x", "MSAA 4x", "MSAA 8x" };
         DrawNieRDropdownSetting("antialiasing", &renderData.rdMSAAIndex, msaaOptions, IM_ARRAYSIZE(msaaOptions));
         ImGui::Dummy(ImVec2(0, 10.0f));
 
-        // 5. Фильтрация текстур
+        // 5. Р¤РёР»СЊС‚СЂР°С†РёСЏ С‚РµРєСЃС‚СѓСЂ
         
         const char* afOptions[] = { labelOff.c_str(), "Anisotropic 2x", "Anisotropic 4x", "Anisotropic 8x", "Anisotropic 16x" };
         DrawNieRDropdownSetting("texture_filtering", &renderData.rdAnisotropyIndex, afOptions, IM_ARRAYSIZE(afOptions));
 
-        // 6. Качество текстур (Mipmapping)
-        // 6. Качество текстур (Mipmapping)
-        std::string labelUltra = Localization::get("ultra");  if (labelUltra.empty())  labelUltra = "Ультра (Макс.)";
-        std::string labelHigh = Localization::get("high");   if (labelHigh.empty())   labelHigh = "Высокое";
-        std::string labelMedium = Localization::get("medium"); if (labelMedium.empty()) labelMedium = "Среднее";
-        std::string labelLow = Localization::get("low");    if (labelLow.empty())    labelLow = "Низкое (Картошка)";
+        // 6. РљР°С‡РµСЃС‚РІРѕ С‚РµРєСЃС‚СѓСЂ (Mipmapping)
+        // 6. РљР°С‡РµСЃС‚РІРѕ С‚РµРєСЃС‚СѓСЂ (Mipmapping)
+        std::string labelUltra = Localization::get("ultra");  if (labelUltra.empty())  labelUltra = "РЈР»СЊС‚СЂР° (РњР°РєСЃ.)";
+        std::string labelHigh = Localization::get("high");   if (labelHigh.empty())   labelHigh = "Р’С‹СЃРѕРєРѕРµ";
+        std::string labelMedium = Localization::get("medium"); if (labelMedium.empty()) labelMedium = "РЎСЂРµРґРЅРµРµ";
+        std::string labelLow = Localization::get("low");    if (labelLow.empty())    labelLow = "РќРёР·РєРѕРµ (РљР°СЂС‚РѕС€РєР°)";
 
         const char* qualities[] = {
             labelUltra.c_str(),
@@ -1469,28 +1600,28 @@ void UserInterface::drawSystemMenu(OGLRenderData& renderData, bool& showMenu) {
     }
 
     // ==========================================
-    // ЛИНИЯ И КНОПКА "НАЗАД" СТРОГО ВНИЗУ ОКНА
+    // Р›РРќРРЇ Р РљРќРћРџРљРђ "РќРђР—РђР”" РЎРўР РћР“Рћ Р’РќРР—РЈ РћРљРќРђ
     // ==========================================
     if (currentSubMenu == 1) {
         ImVec2 windowSize = ImGui::GetWindowSize();
 
-        // Позиция линии: ровно в 120 пикселях от низа экрана
+        // РџРѕР·РёС†РёСЏ Р»РёРЅРёРё: СЂРѕРІРЅРѕ РІ 120 РїРёРєСЃРµР»СЏС… РѕС‚ РЅРёР·Р° СЌРєСЂР°РЅР°
         float footerLineY = windowPos.y + windowSize.y - 120.0f;
 
-        // Рисуем сплошную тонкую линию NieR на всю ширину окна поверх всего
+        // Р РёСЃСѓРµРј СЃРїР»РѕС€РЅСѓСЋ С‚РѕРЅРєСѓСЋ Р»РёРЅРёСЋ NieR РЅР° РІСЃСЋ С€РёСЂРёРЅСѓ РѕРєРЅР° РїРѕРІРµСЂС… РІСЃРµРіРѕ
         ImU32 footerLineColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.20f, 0.19f, 0.17f, 0.4f));
         drawList->AddLine(ImVec2(windowPos.x, footerLineY), ImVec2(windowPos.x + windowSize.x, footerLineY), footerLineColor, 1.5f);
 
-        // Сдвигаем курсор под линию и выравниваем по иксу с левыми кнопками категории
+        // РЎРґРІРёРіР°РµРј РєСѓСЂСЃРѕСЂ РїРѕРґ Р»РёРЅРёСЋ Рё РІС‹СЂР°РІРЅРёРІР°РµРј РїРѕ РёРєСЃСѓ СЃ Р»РµРІС‹РјРё РєРЅРѕРїРєР°РјРё РєР°С‚РµРіРѕСЂРёРё
         ImGui::SetCursorScreenPos(ImVec2(lineStartX + 35.0f, footerLineY + 25.0f));
 
-        // Вызываем уже готовую лямбду кнопки "Назад"
+        // Р’С‹Р·С‹РІР°РµРј СѓР¶Рµ РіРѕС‚РѕРІСѓСЋ Р»СЏРјР±РґСѓ РєРЅРѕРїРєРё "РќР°Р·Р°Рґ"
         if (DrawNieRButton("back")) {
             currentSubMenu = 0;
         }
     }
 
-    ImGui::End(); // Закрываем SYSTEM_SCREEN
+    ImGui::End(); // Р—Р°РєСЂС‹РІР°РµРј SYSTEM_SCREEN
 }
 
 
@@ -1504,11 +1635,11 @@ void UserInterface::createFrame(OGLRenderData &renderData, ModelSettings &settin
       }
       drawSystemMenu(renderData, mShowMenu);
       if (renderData.mIsDeveloperMode) {
-          // Твое текущее окно "Control" со всеми ползунками
+          // РўРІРѕРµ С‚РµРєСѓС‰РµРµ РѕРєРЅРѕ "Control" СЃРѕ РІСЃРµРјРё РїРѕР»Р·СѓРЅРєР°РјРё
           drawDeveloperUI(renderData, settings);
       }
       else {
-          // Тот самый минималистичный NieR HUD
+          // РўРѕС‚ СЃР°РјС‹Р№ РјРёРЅРёРјР°Р»РёСЃС‚РёС‡РЅС‹Р№ NieR HUD
           drawPlayerHUD(renderData, settings);
       }
   }

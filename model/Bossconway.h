@@ -1,6 +1,6 @@
 #pragma once
 #include "Enemy.h"
-
+#include "audio.h"
 // ============================================================
 //
 //
@@ -22,5 +22,6 @@ public:
     bool  canBeStaggered() const override { return false; }
     void onAttackPhysicsUpdate(float attackTimeAccumulator, float deltaTime, EnemyAnimSlot currentAttackAnim) override;
     bool isBoss() const override { return true; }
+    void  playmusic() override { gAudio.playMusic("assets/audio/conmusic.mp3"); }
     std::string getBossName() const override { return "CONWAY"; } // подставь реальное имя
 };

@@ -14,6 +14,11 @@ Enemy::Enemy(std::shared_ptr<GltfInstance> model, btRigidBody* body,
 
 Enemy::~Enemy() {}
 
+void Enemy::playmusic()
+{
+
+}
+
 void Enemy::resetToSpawn()
 {
     if (!mBody) return;

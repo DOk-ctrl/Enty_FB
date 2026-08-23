@@ -44,13 +44,15 @@ public:
     bool isDead() const { return mHealth <= 0.0f; }
     bool isBlocking() const { return mIsBlocking; }
     void setBlocking(bool blocking) { mIsBlocking = blocking; }
-
+    virtual void playmusic();
     int getStunCount() const { return mStunCount; }
     void incrementStunCount() { mStunCount++; }
     // Раз войдя в бой (увидел игрока -> Chase), остаётся "вовлечённым" до смерти —
     // именно на этом флаге держится показ boss health bar (не мигает при потере FOV).
     bool isEngaged() const { return mHasEngagedPlayer; }
     void setEngaged(bool engaged) { mHasEngagedPlayer = engaged; }
+
+    virtual bool isBismark() const { return false; }
 
     // Возвращает true, если враг нарушил границы арены/зоны
     virtual bool shouldResetPosition() const { return false; }

@@ -13,7 +13,7 @@
 #include <Localization.h>
 #include <UserInterface.h>
 #include <JigglePhysics.h>
-// #include <imgui.cpp>  <--- ЭТУ СТРОКУ УДАЛИ
+#include "audio.h"
 /* ============================================================
  *  init()
  * ============================================================ */
@@ -23,7 +23,7 @@ bool MenuController::init(std::shared_ptr<GltfModel> model) {
         return false;
     }
     mNJModel = model;
-
+    gAudio.playMusic("assets/audio/mainMenu.MP3", true); // true = зациклить
     /* Создаём инстанс — сразу ставим в комнату меню */
     mNJInstance = std::make_shared<GltfInstance>(mNJModel, NJ_WORLD_POS, NJ_WORLD_ROT);
     {
@@ -339,6 +339,8 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
     // Кнопка 1
     ImGui::SetCursorPosX(btnX);
     if (ImGui::Button(Localization::get("start").c_str(), ImVec2(btnW, btnH))) {
+        gAudio.playSound("assets/audio/Ting Coins.wav");
+        gAudio.stopMusic();
         if (mAnimState != MenuAnimState::SALUTE) {
             startSalute();
         }
@@ -348,6 +350,7 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
     // Кнопка 2
     ImGui::SetCursorPosX(btnX);
     if (ImGui::Button(Localization::get("settings").c_str(), ImVec2(btnW, btnH))) {
+        gAudio.playSound("assets/audio/Ting Coins.wav");
         action = MenuAction::SETTINGS;
         UserInterface::showSettingsWindow = true;
     }
@@ -356,6 +359,7 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
     // Кнопка CREDITS (Внутриигровые титры)
     ImGui::SetCursorPosX(btnX);
     if (ImGui::Button("CREDITS", ImVec2(btnW, btnH))) {
+        gAudio.playSound("assets/audio/Ting Coins.wav");
         renderData.showCreditsWindow = true; // Открываем внутриигровое окно титров
     }
    
@@ -394,7 +398,7 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
     ImGui::PopStyleColor(4);
     ImGui::PopStyleVar(2);
     if (renderData.showCreditsWindow == true) {
-        float panelW = 900.0f;
+        float panelW = 1800.0f;
         float panelH = 950.0f;
         float screenW = (float)renderData.rdWidth;
         float screenH = (float)renderData.rdHeight;
@@ -437,34 +441,33 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[3]); // ExtraBold / основной шрифт
 
         // Раздел 1: Разработчики
-        ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "DEVELOPMENT");
+        ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "   DEVELOPMENT");
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Project Lead & Engine Architecture: Volkov Dinar");
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "3D Art & Assets: Volkov Dinar");
+        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Main menu guitar performer: Volkov Dinar");
         ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
         // Раздел 2: Источники вдохновения
-        ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "INSPIRATIONS");
-        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "AZur lane - 3D Shipgirls");
+        ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "   INSPIRATIONS");
+        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Azur lane - 3D Shipgirls");
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Nier automata - UI Aesthetics");
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Stellar Blade - Death Screen UI ");
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Dark Souls - Boss Health Bar");
-        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Sid Meier's Civilization V — Wonders");
-        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "TLOU p.1 — camera stun? camera effect when fatal blow");
-        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Conway — ну этот чел  с ютуба с этим аватаром клоунихи");
-        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Agness — Umamusume не смотрел: просто сказали сделать, я сделал");
-        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "7DTD - ");
+        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Sid Meier's Civilization V - Wonders");
+        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "TLOU p.1 - camera stun? camera effect when fatal blow");
+        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Conway - youtube bloger, with nice avatar ");
+        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Agness - Umamusume");
         ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
         // Раздел 3: Особые благодарности
-        ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "SPECIAL THANKS");
+        ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "   SPECIAL THANKS");
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "AI Co-Pilots: Gemini, Grok & Claude");
-        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "David Goggins - for the podcasts");
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "To everyone who didn't believe, betrayed, humiliated, or insulted me:");
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Thank you for the motivation. STAY HARD.");
         ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
         // Раздел 2: Сторонние библиотеки (C++)
-        ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "=== THIRD-PARTY LIBRARIES ===");
+        ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "    THIRD-PARTY LIBRARIES");
 
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Bullet Physics SDK");
         ImGui::TextDisabled("Zlib License | Erwin Coumans");
@@ -480,13 +483,106 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
         ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
         // Раздел 3: Графика и Ассеты
-        ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "=== ASSETS & GRAPHICS ===");
+        ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "    ASSETS, ANIMATIONS & GRAPHICS  ");
+
+        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "3D Character Rigging & Character Animations ");
+        ImGui::TextDisabled("Provided by Adobe Mixamo (mixamo.com) | Royalty-Free Commercial License");
 
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "3D Nature Assets (Trees & Grass)");
         ImGui::TextDisabled("Kenney (kenney.nl) | CC0 1.0 Public Domain");
 
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Cloudy Skyboxes Pack");
         ImGui::TextDisabled("Screaming Brain Studios | CC0 1.0 Public Domain");
+
+
+        // Раздел 4: Ацдио
+        ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "   Audio & Sound Effects  ");
+
+        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Sound Effects ");
+        ImGui::TextDisabled("Sound Effects provided by Sonnis (sonnis.com) | Royalty-Free Commercial License (GDC Archives)");
+        ImGui::TextDisabled("Sound Effects provided by various creators on Freesound.org | Creative Commons / Public Domain Licenses");
+
+        ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+        // 1. Красивый центрированный заголовок (без ручных пробелов)
+        float windowWidth = ImGui::GetWindowSize().x;
+        float textWidth = ImGui::CalcTextSize("About AI").x;
+        ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
+
+        // Выделяем заголовок более ярким цветом или золотым (акцент)
+        ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.98f, 1.0f), "About AI");
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // 2. Выводим основной блок текста (строки 1-8) в цикле
+        ImGui::SetCursorPosX(40.0f);
+        ImGui::BeginGroup(); // Группируем, чтобы отступ работал для всего блока
+        for (int i = 1; i <= 8; ++i) {
+            // Используем основной цвет текста из стиля ImGui (чтобы не писать ImVec4 в каждой строке)
+            ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), Localization::get(std::to_string(i).c_str()).c_str());
+        }
+        ImGui::EndGroup();
+
+        // 3. Заметный визуальный разрыв между абзацами
+        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+
+        // 4. Выводим второй блок текста (строки 9-10)
+        ImGui::SetCursorPosX(40.0f);
+        ImGui::BeginGroup();
+        for (int i = 9; i <= 10; ++i) {
+            ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), Localization::get(std::to_string(i).c_str()).c_str());
+        }
+        // 3. Заметный визуальный разрыв между абзацами
+        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+
+        // 4. Выводим второй блок текста (строки 9-10)
+        ImGui::SetCursorPosX(40.0f);
+        ImGui::BeginGroup();
+        for (int i = 11; i <= 15; ++i) {
+            ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), Localization::get(std::to_string(i).c_str()).c_str());
+        }
+        // 3. Заметный визуальный разрыв между абзацами
+        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+
+        // 4. Выводим второй блок текста (строки 9-10)
+        ImGui::SetCursorPosX(40.0f);
+        ImGui::BeginGroup();
+        for (int i = 16; i <= 19; ++i) {
+            ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), Localization::get(std::to_string(i).c_str()).c_str());
+        }
+        // 3. Заметный визуальный разрыв между абзацами
+        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+
+        // 4. Выводим второй блок текста (строки 9-10)
+        ImGui::SetCursorPosX(40.0f);
+        ImGui::BeginGroup();
+        for (int i = 20; i <= 24; ++i) {
+            ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), Localization::get(std::to_string(i).c_str()).c_str());
+        }
+
+        ImGui::EndGroup();
+        ImGui::Spacing(); ImGui::Spacing(); ImGui::Spacing(); ImGui::Spacing();
+        // 1. Красивый центрированный заголовок (без ручных пробелов)
+        float windowWidth2 = ImGui::GetWindowSize().x;
+        float textWidth2 = ImGui::CalcTextSize("Cost of this pet-proect").x;
+        ImGui::SetCursorPosX((windowWidth2 - textWidth2) * 0.5f);
+
+        // Выделяем заголовок более ярким цветом или золотым (акцент)
+        ImGui::TextColored(ImVec4(0.0f, 0.94f, 0.7f, 1.0f), "Cost of this pet-proect");
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // 2. Выводим основной блок текста (строки 1-8) в цикле
+        ImGui::SetCursorPosX(40.0f);
+        ImGui::BeginGroup(); // Группируем, чтобы отступ работал для всего блока
+        for (int i = 25; i <= 31; ++i) {
+            // Используем основной цвет текста из стиля ImGui (чтобы не писать ImVec4 в каждой строке)
+            ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), Localization::get(std::to_string(i).c_str()).c_str());
+        }
+        ImGui::EndGroup();
+
+        // 3. Заметный визуальный разрыв между абзацами
+        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+
 
         ImGui::PopFont();
         ImGui::EndChild(); // Конец скролл-области
@@ -504,6 +600,7 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
 
         if (ImGui::Button("BACK", ImVec2(btnW, btnH))) {
             // Переключаем обратно на главное меню
+            gAudio.playSound("assets/audio/Ting Coins.wav");
             renderData.showCreditsWindow = false;
 
         }
@@ -515,6 +612,39 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
         ImGui::PopStyleColor();
         ImGui::PopStyleVar(2);
     }
+    // -------------------------------------------------------------------
+// Feedback (аккуратный вариант)
+// -------------------------------------------------------------------
+    float questWidth = 280.0f;
+    float rightPadding = 30.0f;
+    float topPadding = 25.0f;
+
+    ImVec2 screenSize = ImGui::GetIO().DisplaySize;
+    ImGui::SetNextWindowPos(ImVec2(screenSize.x - rightPadding, topPadding), ImGuiCond_Always, ImVec2(1.0f, 0.0f));
+    ImGui::SetNextWindowSize(ImVec2(questWidth, 0.0f));
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(12.0f, 10.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 4.0f));
+
+    if (ImGui::Begin("Feedback", nullptr,
+        ImGuiWindowFlags_NoDecoration |
+        ImGuiWindowFlags_NoBackground |
+        ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        // Полупрозрачный приглушённый цвет
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.75f, 0.80f, 0.90f, 0.55f));
+
+        ImGui::SetWindowFontScale(1.15f);
+        ImGui::Text("%s", Localization::get("feedback").c_str());
+
+        ImGui::SetWindowFontScale(1.05f);
+        ImGui::Text("%s", Localization::get("email").c_str());
+
+        ImGui::PopStyleColor();
+    }
+    ImGui::End();
+
+    ImGui::PopStyleVar(2);
     renderData.rdMenuAnyButtonHovered = anyHovered;
 
     return action;

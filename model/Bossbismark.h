@@ -1,6 +1,6 @@
 #pragma once
 #include "Enemy.h"
-
+#include "audio.h"
 // ============================================================
 // Босс №2 — быстрый боец.
 //
@@ -32,6 +32,9 @@ public:
     }
     float getAttackRange() const override { return 1.8f; }
     bool  canBlock() const override { return false; }
+
+    bool  isBismark() const override { return true; }
+    void  playmusic() override { gAudio.playMusic("assets/audio/bismusic.mp3"); }
     void onAttackPhysicsUpdate(float attackTimeAccumulator, float deltaTime, EnemyAnimSlot currentAttackAnim) override;
     bool isBoss() const override { return true; }
     std::string getBossName() const override { return "BISMARK"; } // подставь реальное имя

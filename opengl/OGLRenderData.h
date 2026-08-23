@@ -112,4 +112,6 @@ struct OGLRenderData {
 
   float rdZoomTimer = 0.0f;        // Таймер зума при фатальном ударе
   float rdTargetFOV = 60.0f;       // FOV во время зума (стандартный, например, 45.0f)
+
+  bool rdIsGameWon = false;
 };

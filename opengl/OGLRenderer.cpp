@@ -14,15 +14,19 @@
 #include "Logger.h"
 #include "UserInterface.h"
 #include "SkyBox.h"
+#include "audio.h"
 #include <iostream>
 #include <imgui_internal.h>
+#include <random> // добавь в начало файла, если ещё нет
 
+static std::mt19937 rngMeleeCrit(std::random_device{}());
+static std::uniform_real_distribution<float> critDist(0.0f, 1.0f);
 
 OGLRenderer::OGLRenderer(GLFWwindow *window) {
   mRenderData.rdWindow = window;
 }
 
-void OGLRenderer::updateAgness(float deltaTime, const glm::vec3& playerPos)
+void OGLRenderer::updateAgness(float deltaTime, const glm::vec3& playerPos, OGLRenderData& renderData)
 {
     auto& agness = mGltfInstances.at(9);
     btTransform trans;
@@ -35,7 +39,10 @@ void OGLRenderer::updateAgness(float deltaTime, const glm::vec3& playerPos)
     switch (mAgnessState) {
     case AgnessState::Sitting: {
         if (distance <= triggerRadius) {
+            gAudio.playMusic("assets/audio/wonmusic.MP3");
+
             // Энти подошла — один раз проигрываем анимацию встания (клип 4)
+            gAudio.playSound("assets/audio/win.wav");
             ModelSettings s = agness->getInstanceSettings();
             s.msAnimClip = 4;
             s.msCrossBlendDestAnimClip = 4;
@@ -48,6 +55,7 @@ void OGLRenderer::updateAgness(float deltaTime, const glm::vec3& playerPos)
 
             mAgnessStandUpTimer = 0.0f;
             mAgnessState = AgnessState::StandUp;
+            renderData.rdIsGameWon = true;
         }
         break;
     }
@@ -163,6 +171,9 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   if (!mLineShader.loadShaders("shader/line.vert", "shader/line.frag")) {
       Logger::log(1, "%s: line shader loading failed\n", __FUNCTION__);
       return false;
+  }
+  if (!gAudio.init()) {
+      Logger::log(1, "%s: line shader loading failed\n", __FUNCTION__);
   }
 
   if (!mBloomBlurShader.loadShaders("shader/Bloom_Blur.vert", "shader/Bloom_Blur.frag")) {
@@ -325,8 +336,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
 
   mGltfModels.at(1) = std::make_shared<GltfModel>();
   std::string modelFilename2 = "assets/EntyBrMix.gltf";
- // std::string modelFilename2 = "assets/EntyMay.gltf";
-  std::string modelTexFilename2 = "textures/EntyMay.png";
+  //std::string modelFilename2 = "assets/EntyMay.gltf";
+  std::string modelTexFilename2 = "textures/EntyAug.png";
   std::string modelTexFilename2N = "textures/EntyNormal.png";
   std::string modelTexFilename2M = "textures/EntyMetal.png";
   std::string modelTexFilename2R = "textures/EntyRough.png";
@@ -345,11 +356,11 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   }
 
   mGltfModels.at(3) = std::make_shared<GltfModel>();
-  std::string modelFilename4 = "assets/vorota ishtarDoor.gltf";
-  std::string modelTexFilename4 = "textures/VrataBase.png";
-  std::string modelTexFilename4N = "textures/VrataNormal.png";
-  std::string modelTexFilename4M = "textures/VrataMetal.png";
-  std::string modelTexFilename4R = "textures/VrataRough.png";
+  std::string modelFilename4 = "assets/vorota ishtar3.gltf";
+  std::string modelTexFilename4 = "textures/VrataBase2.png";
+  std::string modelTexFilename4N = "textures/VrataNormal2.png";
+  std::string modelTexFilename4M = "textures/VrataMetal2.png";
+  std::string modelTexFilename4R = "textures/VrataRough2.png";
 
   if (!mGltfModels.at(3)->loadModel(mRenderData, modelFilename4, modelTexFilename4, modelTexFilename4N, modelTexFilename4M, modelTexFilename4R)) {
       Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename4.c_str());
@@ -377,7 +388,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   }
 
   mGltfModels.at(6) = std::make_shared<GltfModel>();
-  std::string modelFilename7 = "assets/gates 2.0.gltf";
+  std::string modelFilename7 = "assets/gates 2.3.gltf";
   std::string modelTexFilename7 = "textures/GatesBase.png";
   std::string modelTexFilename7N = "textures/GatesNormal.png";
   std::string modelTexFilename7M = "textures/GatesMetal.png";
@@ -452,6 +463,13 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   std::string modelTexFilename14R = "textures/AgnessRough.png";
   if (!mGltfModels.at(13)->loadModel(mRenderData, modelFilename14, modelTexFilename14, modelTexFilename14N, modelTexFilename14M, modelTexFilename14R)) {
       Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename14.c_str());
+      return false;
+  }
+
+  mGltfModels.at(14) = std::make_shared<GltfModel>();
+  std::string modelFilename15 = "assets/boxG.gltf";
+  if (!mGltfModels.at(14)->loadModel(mRenderData, modelFilename15, modelTexFilename14)) {
+      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename15.c_str());
       return false;
   }
   //mGltfModels.at(0)->uploadVertexBuffers();
@@ -555,8 +573,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
       static_cast<float>(zPos7)), defaultRot));
   numTriangles += static_cast<unsigned int>(mGltfModels.at(6)->getTriangleCount());
 
-  int xPos8 = 392;
-  int yPos8 = -1;
+  int xPos8 = 394;
+  int yPos8 = 0;
   int zPos8 = 322;
   glm::vec3 CustomRot3 = glm::vec3(0.0f, 90.0f, 0.0f);
   mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(7), glm::vec3(static_cast<float>(xPos8), static_cast<float>(yPos8),
@@ -573,6 +591,13 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(13), glm::vec3(static_cast<float>(xPos9), static_cast<float>(yPos9),
       static_cast<float>(zPos9)), defaultRot));
   numTriangles += static_cast<unsigned int>(mGltfModels.at(13)->getTriangleCount());
+
+  int xPos10 = 53;
+  int yPos10 = -100;
+  int zPos10 = 70;
+  mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(14), glm::vec3(static_cast<float>(xPos10), static_cast<float>(yPos10),
+      static_cast<float>(zPos10)), defaultRot));
+  numTriangles += static_cast<unsigned int>(mGltfModels.at(14)->getTriangleCount());
 
   addEnemy(mGltfModels.at(8), -17, 1, 147);
   addEnemy(mGltfModels.at(8), 15, 1, 148);
@@ -591,6 +616,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   addEnemy(mGltfModels.at(8), -220, 10, 313);
 
   addBossBismark(mGltfModels.at(10), 49, 8, 408);
+  mBismarkBossPtr = mEnemies.back().get(); // только что запушенный враг — это и есть Bismark
   addBossConway(mGltfModels.at(11), 389, 1, 323);
   addPhysicsToStonehenge(mGltfInstances.at(0), mDynamicsWorld, glm::vec3(77, 0, 580),defaultRot);
   addPhysicsToEnty(mGltfInstances.at(1), mDynamicsWorld, glm::vec3(0, 0, 0)); // Она заспавнится на высоте 10м и упадет на пол
@@ -640,11 +666,15 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
       initBreastJiggle(mLeftBreastJiggle, leftNode,40.0f,4.0f,18.0f,1.5f);
       initBreastJiggle(mRightBreastJiggle, rightNode, 40.0f, 4.0f, 18.0f, 1.5f);
   }
+  addPhysicsToStonehenge(mGltfInstances.at(3), mDynamicsWorld, glm::vec3(0, 0, 160), defaultRot);
   addPhysicsToStonehenge(mGltfInstances.at(4), mDynamicsWorld, glm::vec3(0, 0, 180),defaultRot);
   addPhysicsToStonehenge(mGltfInstances.at(2), mDynamicsWorld, glm::vec3(50, 0.1, 419),CustomRot);
   addPhysicsToStonehenge(mGltfInstances.at(5), mDynamicsWorld, glm::vec3(-166, 1, 261), CustomRot2);
-  addPhysicsToStonehenge(mGltfInstances.at(7), mDynamicsWorld, glm::vec3(392, -1, 322), CustomRot3);
-
+  addPhysicsToStonehenge(mGltfInstances.at(6), mDynamicsWorld, glm::vec3(53, 0, 522), defaultRot);
+  addPhysicsToStonehenge(mGltfInstances.at(7), mDynamicsWorld, glm::vec3(394, 0, 322), CustomRot3);
+  //
+  addPhysicsToStonehenge(mGltfInstances.at(10), mDynamicsWorld, glm::vec3(53, 1, 513), defaultRot);
+  
   mRenderData.rdTriangleCount = numTriangles;
 
   mRenderData.rdNumberOfInstances = mGltfInstances.size();
@@ -1110,6 +1140,7 @@ void OGLRenderer::draw() {
     }
     else if (mGameState == GameState::LOADING) {
         // Во время загрузки физика и ввод не обновляются
+        gAudio.playMusic("assets/audio/ambient.MP3", true);
     }
     else if (mGameState == GameState::DEATH) {
         // Мир заморожен: враги и ввод игрока не трогаем вообще.
@@ -1137,7 +1168,18 @@ void OGLRenderer::draw() {
             entyTrans.getOrigin().z()
         );
         for (auto& enemy : mEnemies) enemy->update(deltaTime, entyPos);
-        updateAgness(deltaTime, entyPos); // <-- добавить сюда
+        updateAgness(deltaTime, entyPos, mRenderData); // <-- добавить сюда
+        // --- Открытие арены Бисмарка после его смерти ---
+        // Флаг mBismarkGateCollisionActive проверяется ПЕРВЫМ — значит removeRigidBody()
+        // вызовется ровно один раз в момент смерти босса, а не каждый кадр, пока он мёртв.
+        if (mBismarkGateCollisionActive && mBismarkBossPtr && mBismarkBossPtr->isDead()) {
+            btRigidBody* gateBody = mGltfInstances.at(10)->getRigidBody();
+            if (gateBody && mDynamicsWorld) {
+                mDynamicsWorld->removeRigidBody(gateBody);
+            }
+            mBismarkGateCollisionActive = false;
+            Logger::log(1, "OGLRenderer: Bismark defeated — gate collision removed\n");
+        }
         // --- Ищем активного босса для health bar ---
         Enemy* foundBoss = nullptr;
         for (auto& enemy : mEnemies) {
@@ -1150,15 +1192,34 @@ void OGLRenderer::draw() {
         if (foundBoss != mActiveBossEnemy) {
             // Новый босс стал активным (или прежний умер/исчез) — сбрасываем "хвост" бара,
             // чтобы не тянулся с прошлого боя.
+            if (mActiveBossEnemy && !foundBoss) {
+                // вышли из боя (босс пропал/умер/потерян из виду)
+                gAudio.stopMusic();
+                gAudio.playMusic("assets/audio/ambient.MP3", true); // фоновая тема, если есть
+            }
+            else if (!mActiveBossEnemy && foundBoss) {
+                // зашли в бой с боссом
+                gAudio.stopMusic();
+                foundBoss->playmusic();
+                // если у Enemy пока нет такого метода — временно можно захардкодить
+                // gAudio.playMusic("assets/audio/boss_battle.MP3", true);
+            }
+            else if (mActiveBossEnemy && foundBoss && mActiveBossEnemy != foundBoss) {
+                // редкий случай: один босс сменился другим без паузы между боями
+                gAudio.stopMusic();
+                foundBoss->playmusic();
+            }
             mActiveBossEnemy = foundBoss;
             if (mActiveBossEnemy) {
                 mBossBarDisplayHealth = mActiveBossEnemy->getHealth() / mActiveBossEnemy->getMaxHealth();
             }
+
         }
         float targetAlpha = (mActiveBossEnemy != nullptr) ? 1.0f : 0.0f;
         mBossBarVisibleAlpha += (targetAlpha - mBossBarVisibleAlpha) * std::min(1.0f, deltaTime * 4.0f);
 
         if (mActiveBossEnemy) {
+          
             float actualRatio = mActiveBossEnemy->getHealth() / mActiveBossEnemy->getMaxHealth();
             actualRatio = std::clamp(actualRatio, 0.0f, 1.0f);
 
@@ -2409,7 +2470,7 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
                 std::cout << "[BOOM] Рука Энти вылетела! Запускаем хитчек!" << std::endl;
 
                 // Вызываем функцию урона (мы её добавим в класс OGLRenderer)
-                CheckPlayerMeleeHit(2.2f, 70.0f);
+                CheckPlayerMeleeHit(2.2f, 700.0f);
 
                 hasDealtDamage = true; // Фиксируем, что в этом ударе урон уже просчитан
             }
@@ -2426,14 +2487,19 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
             }
         }
         if (currentAttackAnim == EntyAnim::DoubleJumpKick) {
-            // Если анимация дошла до кадра 29 (0.483 секунды) и урон еще НЕ был нанесен
             if (attackTimeAccumulator >= 1.833f && !hasDealtDamage) {
                 std::cout << "[BOOM] Рука Энти вылетела! Запускаем хитчек!" << std::endl;
 
-                // Вызываем функцию урона (мы её добавим в класс OGLRenderer)
-                CheckPlayerMeleeHit(4.0f, 80.0f);
+                float baseDamage = 80.0f;
+                bool isCrit = critDist(rngMeleeCrit) < 0.8f; // 80% шанс
+                float finalDamage = isCrit ? baseDamage * 2.0f : baseDamage;
 
-                hasDealtDamage = true; // Фиксируем, что в этом ударе урон уже просчитан
+                if (isCrit) {
+                    std::cout << "[CRIT] Двойной урон!" << std::endl;
+                }
+
+                CheckPlayerMeleeHit(4.0f, finalDamage);
+                hasDealtDamage = true;
             }
         }
     }
@@ -2503,7 +2569,7 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
 
             hasDealtDamage = false;
         }
-        else if (keyZ) {
+        else if (keyG) {
             currentAttackAnim = EntyAnim::DoubleJumpKick;
             attackDurationTimer = enty->getAnimationEndTime(currentAttackAnim);
             attackTimeAccumulator = 0.0f;
@@ -2589,7 +2655,7 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
     else if (!isOnGround) {
         currentTargetAnim = EntyAnim::Jump;
     }
-    else if (keyG) {
+    else if (keyZ) {
         currentTargetAnim = EntyAnim::Dance1;
     }
     else if (keyH) {
@@ -2788,6 +2854,7 @@ void OGLRenderer::CheckPlayerMeleeHit(float hitRadius, float damage) {
                 // Передаем урон
                 enemy->TakeDamage(damage);
                 if (enemy->isDead()) {
+                    gAudio.playSound("assets/audio/death_punch.wav");
                     // ==========================================
                     //  ФАТАЛЬНОЕ ДОБИВАНИЕ (ЗУМ + ХИТСТОП)
                     // ==========================================
@@ -2797,6 +2864,7 @@ void OGLRenderer::CheckPlayerMeleeHit(float hitRadius, float damage) {
                     mRenderData.rdZoomTimer = 0.25f;      // Зум плавно сработает только при смертельном ударе!
                 }
                 else {
+                    gAudio.playSound("assets/audio/punch.MP3");
                     // ==========================================
                     //  ОБЫЧНЫЙ УДАР (БЕЗ ЗУМА)
                     // ==========================================
@@ -2851,5 +2919,6 @@ void OGLRenderer::cleanup() {
     mDeathCaptureFBO.cleanup();
     mDeathGlowShader.cleanup();
     mDeathGlowCompositeShader.cleanup();
+    gAudio.shutdown();
 }
 

@@ -18,7 +18,6 @@
 #include "ShaderStorageBuffer.h"
 #include "UserInterface.h"
 #include "Camera.h"
-#include "CoordArrowsModel.h"
 #include "GltfModel.h"
 #include "GltfInstance.h"
 
@@ -29,20 +28,18 @@
 #include "Bossbismark.h"
 #include "SkyBox.h"
 #include "GraphicsManager.h"
-#include <cmath>   // std::atan2 — если ещё нет
+#include <cmath>   
 #include "GameStateMachine.h"
 #include "MenuController.h"
 
 enum class AgnessState {
-    Sitting,   // клип 3 — сидит/ждёт
-    StandUp,   // клип 4 — встаёт, один раз
-    Idle       // клип 1 — стоит, зациклено
+    Sitting,   
+    StandUp,   
+    Idle       
 };
 
 enum  EntyAnim : int {
-    KICK = 11, //
-    Action = 0, // стоит не в Т-позе
-    Dance1 = 2,
+    KICK = 11,     Action = 0,     Dance1 = 2,
     Boxing = 1,
     DashBack = 4,
     Death = 5,
@@ -89,8 +86,7 @@ public:
     OGLRenderData& getRenderData() { return mRenderData; }
 private:
 
-    // --- ПЕРЕМЕННЫЕ BULLET PHYSICS ---
-    btDefaultCollisionConfiguration* mCollisionConfiguration = nullptr;
+        btDefaultCollisionConfiguration* mCollisionConfiguration = nullptr;
     btCollisionDispatcher* mDispatcher = nullptr;
     btBroadphaseInterface* mOverlappingPairCache = nullptr;
     btSequentialImpulseConstraintSolver* mSolver = nullptr;
@@ -106,13 +102,7 @@ private:
     Timer mUIGenerateTimer{};
     Timer mUIDrawTimer{};
 
-    Shader mLineShader{}; // Для отрисовки скелета и стрелочек координат
-    Shader mGltfGPUShader{}; // Для стандартного скиннинга на GPU (матрицы)
-    Shader mGltfGPUDualQuatShader{}; // Для скиннинга через дуальные кватернионы
-    Shader mStaticShader{}; // Для статичных объектов без костей (храмы, арены) mStaticShader.loadShaders("shader/gltf.vert", "shader/gltf.frag")) {
-    Shader mGltfGPUShaderToy{}; // Для тестирования нового шейдера на основе старого гпу для костлявых
-    Shader mGltfGPUShaderToyChannelPack{}; // Для тестирования нового шейдера на основе старого гпу для костлявых
-    Shader mGltfGPUDualQuatChannelShader{};
+    Shader mLineShader{};     Shader mGltfGPUShader{};     Shader mGltfGPUDualQuatShader{};     Shader mStaticShader{};     Shader mGltfGPUShaderToy{};     Shader mGltfGPUShaderToyChannelPack{};     Shader mGltfGPUDualQuatChannelShader{};
 
     Framebuffer mFramebuffer{};
     MSFramebuffer mMSFramebuffer;
@@ -125,49 +115,28 @@ private:
     UserInterface mUserInterface{};
     Camera mCamera{};
 
-    //GameState mGameState = GameState::MAIN_MENU;
-    GameState mGameState = GameState::MAIN_MENU;
+        GameState mGameState = GameState::MAIN_MENU;
     std::unique_ptr<MenuController> mMenuController;
-    std::shared_ptr<GltfModel>      mNJMenuModel;   // модель NJ только для меню
-
+    std::shared_ptr<GltfModel>      mNJMenuModel;   
     SkyBox mSkyBox{};
-    float mAccumulatedTime = 0.0f;   // секунды с момента старта
-    // Такой же тип, как mBlurFBO[0] / mFramebuffer — подставьте ваш реальный класс
-    Framebuffer mDeathCaptureFBO;   // сюда уходит финальный composite вместо экрана
-    Framebuffer mDeathGlowFBO[2];   // ping-pong для блюра HDR-кнопки (можно переиспользовать mBlurFBO, см. ниже)
-
-    // Bloom: ping-pong blur FBO (два буфера чередуются)
-    BlurFramebuffer mBlurFBO[2]{};
+    float mAccumulatedTime = 0.0f;           Framebuffer mDeathCaptureFBO;       Framebuffer mDeathGlowFBO[2];   
+        BlurFramebuffer mBlurFBO[2]{};
 
     BreastJiggle mLeftBreastJiggle;
     BreastJiggle mRightBreastJiggle;
-    // Bloom шейдеры
-    Shader mBloomBlurShader{};       // bloom_blur.vert / bloom_blur.frag
-    Shader mBloomCompositeShader{};  // bloom_blur.vert / bloom_composite.frag
-    Shader mDeathGlowShader;          // DeathScreen_Glow.frag + ваш Bloom_Blur.vert
-    Shader mDeathGlowCompositeShader; // DeathScreen_GlowComposite.frag + Bloom_Blur.vert
-    // Настройки bloom
-    float mBloomStrength = 1.0f;  // итоговый множитель bloom
-    float mEmitStrength = 2.5f;  // множитель emission в geometry шейдерах
-    int   mBloomPasses = 10;    // кол-во ping-pong итераций (чётное число)
-
-    // VAO для fullscreen triangle (без VBO — используем gl_VertexID)
-    GLuint mBloomVAO = 0;
+        Shader mBloomBlurShader{};           Shader mBloomCompositeShader{};      Shader mDeathGlowShader;              Shader mDeathGlowCompositeShader;         float mBloomStrength = 1.0f;      float mEmitStrength = 2.5f;      int   mBloomPasses = 10;    
+        GLuint mBloomVAO = 0;
 
     std::vector<std::shared_ptr<GltfModel>> mGltfModels{};
 
     std::vector<std::shared_ptr<GltfInstance>> mGltfInstances{};
     std::vector<std::shared_ptr<GltfInstance>> mGltfMatrixInstances{};
     std::vector<std::shared_ptr<GltfInstance>> mGltfDQInstances{};
-    //24.01
-    std::vector<std::shared_ptr<GltfInstance>> mStaticInstances;
+        std::vector<std::shared_ptr<GltfInstance>> mStaticInstances;
 
     std::vector<glm::mat4> mModelJointMatrices{};
     std::vector<glm::mat2x4> mModelJointDualQuats{};
 
-    CoordArrowsModel mCoordArrowsModel{};
-    OGLMesh mCoordArrowsMesh{};
-    std::shared_ptr<OGLMesh> mLineMesh = nullptr;
     unsigned int mSkeletonLineIndexCount = 0;
     unsigned int mCoordArrowsLineIndexCount = 0;
 
@@ -184,9 +153,7 @@ private:
     glm::mat4 mProjectionMatrix = glm::mat4(1.0f);
 
     bool mWasSpacePressed = false;
-   // std::vector<std::unique_ptr<Enemy>> mEnemies; OOP
-    std::vector<std::unique_ptr<Enemy>> mEnemies; // DOD - Data-Oriented Design (ориентированное на данные проектирование)
-    bool mIsEntyStunned = false;
+       std::vector<std::unique_ptr<Enemy>> mEnemies;     bool mIsEntyStunned = false;
     float mEntyStunTimer = 0.0f;
     float mEntyStunDuration = 1.13f;
 
@@ -207,23 +174,13 @@ private:
     static constexpr float FADE_DURATION = 0.55f;  /* секунды затемнения/осветления    */
     static constexpr float LOADING_MIN_TIME = 0.8f;   /* мин. время на экране загрузки    */
 
-    // --- Death Screen (Stellar Blade style) ---
-    bool  mShowDeathScreen = false;
+        bool  mShowDeathScreen = false;
     bool  mRespawnRequested = false;
-    float mDeathFadeAlpha = 0.0f;   // 0.0 .. DEATH_FADE_MAX, blur+darken
-    float mRespawnGlowPulse = 0.0f;   // для лёгкой пульсации неона кнопки
-    static constexpr float DEATH_FADE_DURATION = 1.4f;  // сек. до полного затемнения
-    static constexpr float DEATH_FADE_MAX = 0.85f;
+    float mDeathFadeAlpha = 0.0f;       float mRespawnGlowPulse = 0.0f;       static constexpr float DEATH_FADE_DURATION = 1.4f;      static constexpr float DEATH_FADE_MAX = 0.85f;
 
-    // --- Boss Health Bar (DS3 / Elden Ring style) ---
-    Enemy* mActiveBossEnemy = nullptr;     // не владеющий указатель — жизнь боссов у mEnemies
-    float  mBossBarDisplayHealth = 0.0f;   // "хвостовая" белая полоса чип-урона (0..1)
-    float  mBossBarVisibleAlpha = 0.0f;   // плавное появление/исчезание всей полосы
-    AgnessState mAgnessState = AgnessState::Sitting;
+        Enemy* mActiveBossEnemy = nullptr;         float  mBossBarDisplayHealth = 0.0f;       float  mBossBarVisibleAlpha = 0.0f;       AgnessState mAgnessState = AgnessState::Sitting;
     float mAgnessStandUpTimer = 0.0f;
 
-    Enemy* mBismarkBossPtr = nullptr;   // указатель на конкретного босса, охраняющего эту арену
-    bool   mBismarkGateCollisionActive = true; // флаг: коллизия ворот ещё жива
-};
+    Enemy* mBismarkBossPtr = nullptr;       bool   mBismarkGateCollisionActive = true; };
 
 

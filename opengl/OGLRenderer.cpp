@@ -17,8 +17,7 @@
 #include "audio.h"
 #include <iostream>
 #include <imgui_internal.h>
-#include <random> // добавь в начало файла, если ещё нет
-
+#include <random> 
 static std::mt19937 rngMeleeCrit(std::random_device{}());
 static std::uniform_real_distribution<float> critDist(0.0f, 1.0f);
 
@@ -34,23 +33,20 @@ void OGLRenderer::updateAgness(float deltaTime, const glm::vec3& playerPos, OGLR
     glm::vec3 agnessPos(trans.getOrigin().x(), trans.getOrigin().y(), trans.getOrigin().z());
 
     float distance = glm::length(playerPos - agnessPos);
-    const float triggerRadius = 8.0f; // подстрой дистанцию срабатывания
-
+    const float triggerRadius = 8.0f; 
     switch (mAgnessState) {
     case AgnessState::Sitting: {
         if (distance <= triggerRadius) {
             gAudio.playMusic("assets/audio/wonmusic.MP3");
 
-            // Энти подошла — один раз проигрываем анимацию встания (клип 4)
-            gAudio.playSound("assets/audio/win.wav");
+                        gAudio.playSound("assets/audio/win.wav");
             ModelSettings s = agness->getInstanceSettings();
             s.msAnimClip = 4;
             s.msCrossBlendDestAnimClip = 4;
             s.msBlendingMode = blendMode::crossfade;
             s.msAnimCrossBlendFactor = 1.0f;
             s.msAnimTimePosition = 0.0f;
-            s.msPlayAnimation = false; // время кормим сами, чтобы точно поймать конец
-            agness->setInstanceSettings(s);
+            s.msPlayAnimation = false;             agness->setInstanceSettings(s);
             agness->checkForUpdates();
 
             mAgnessStandUpTimer = 0.0f;
@@ -73,15 +69,13 @@ void OGLRenderer::updateAgness(float deltaTime, const glm::vec3& playerPos, OGLR
         agness->checkForUpdates();
 
         if (mAgnessStandUpTimer >= standUpDuration) {
-            // Встала — переключаемся на вечный Idle (клип 1)
-            ModelSettings idle = agness->getInstanceSettings();
+                        ModelSettings idle = agness->getInstanceSettings();
             idle.msAnimClip = 1;
             idle.msCrossBlendDestAnimClip = 1;
             idle.msBlendingMode = blendMode::crossfade;
             idle.msAnimCrossBlendFactor = 1.0f;
             idle.msAnimTimePosition = 0.0f;
-            idle.msPlayAnimation = true; // тут можно спокойно зациклить автоматом
-            agness->setInstanceSettings(idle);
+            idle.msPlayAnimation = true;             agness->setInstanceSettings(idle);
             agness->checkForUpdates();
 
             mAgnessState = AgnessState::Idle;
@@ -90,20 +84,19 @@ void OGLRenderer::updateAgness(float deltaTime, const glm::vec3& playerPos, OGLR
     }
 
     case AgnessState::Idle:
-        // Ничего не делаем — клип 1 уже зациклен движком через msPlayAnimation=true
-        break;
+                break;
     }
 }
 
 bool OGLRenderer::init(unsigned int width, unsigned int height) {
-  /* randomize rand() */
+  
   std::srand(static_cast<int>(time(NULL)));
 
-  /* required for perspective */
+  
   mRenderData.rdWidth = width;
   mRenderData.rdHeight = height;
 
-  /* initalize GLAD */
+  
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     Logger::log(1, "%s error: failed to initialize GLAD\n", __FUNCTION__);
     return false;
@@ -111,8 +104,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
 
   mCollisionConfiguration = new btDefaultCollisionConfiguration();
   mDispatcher = new btCollisionDispatcher(mCollisionConfiguration);
-  mOverlappingPairCache = new btDbvtBroadphase(); // Для быстрого отсечения столкновений
-  mSolver = new btSequentialImpulseConstraintSolver();
+  mOverlappingPairCache = new btDbvtBroadphase();   mSolver = new btSequentialImpulseConstraintSolver();
   mDynamicsWorld = new btDiscreteDynamicsWorld(mDispatcher, mOverlappingPairCache, mSolver, mCollisionConfiguration);
 
   mDynamicsWorld->setGravity(btVector3(0, -9.81f, 0));
@@ -125,8 +117,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   /*
   if (glDebugMessageCallback) {
       glEnable(GL_DEBUG_OUTPUT);
-      glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // Ошибки будут прилетать сразу в момент вызова
-      glDebugMessageCallback([](GLenum source, GLenum type, GLuint id, GLenum severity,
+      glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);       glDebugMessageCallback([](GLenum source, GLenum type, GLuint id, GLenum severity,
           GLsizei length, const GLchar* message, const void* userParam) {
               fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
                   (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
@@ -144,9 +135,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
       return false;
   }
 
-  // MSAA-таргет создаём сразу с 4 samples по умолчанию;
-  // реальное число samples подстроится в draw() по mRenderData.rdMSAAIndex
-  if (!mMSFramebuffer.init(width, height, 4)) {
+      if (!mMSFramebuffer.init(width, height, 4)) {
       Logger::log(1, "%s error: could not init MSFramebuffer\n", __FUNCTION__);
       return false;
   }
@@ -157,8 +146,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
       return false;
   }
 
-  // VAO для fullscreen triangle (gl_VertexID trick — VBO не нужен)
-  glGenVertexArrays(1, &mBloomVAO);
+    glGenVertexArrays(1, &mBloomVAO);
 
   Logger::log(1, "%s: bloom FBOs initialized\n", __FUNCTION__);
   mVertexBuffer.init();
@@ -244,11 +232,11 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   mUserInterface.init(mRenderData);
   Logger::log(1, "%s: user interface initialized\n", __FUNCTION__);
 
-  /* add backface culling and depth test already here */
+  
   glDisable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
   glLineWidth(3.0);
-  /* load and init the skybox (cross-layout cubemap) */
+  
   if (!mSkyBox.init()) {
       Logger::log(1, "%s error: could not init skybox\n", __FUNCTION__);
       return false;
@@ -265,21 +253,17 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   }
   mSkyBox.addParallaxLayer(1, "textures/sky_mountainss.png",
       0.12f, 0.0f, { 0,1 }, 0.9f,
-      0.1f);  // windSpeed: горы не движутся от ветра
-  {
+      0.1f);    {
       Logger::log(1, "%s warning: could not load mountains layer\n", __FUNCTION__);
-      // не fatal — продолжаем без этого слоя
-  }
+        }
 
   if (!mSkyBox.addParallaxLayer(2, "textures/sky_cloudss.png",
-      0.35f,    // parallaxFactor: облака ближе гор
-      0.0004f, glm::vec2(1.0f, 0.5f)))  // windSpeed: ~0.004 рад/с = очень медленный дрейф
-  {
+      0.35f,          0.0004f, glm::vec2(1.0f, 0.5f)))    {
       Logger::log(1, "%s warning: could not load clouds layer\n", __FUNCTION__);
   }
   Logger::log(1, "%s: IBL maps successfully generated\n", __FUNCTION__);
   mGltfModels.resize(30);
-  /* ---- Главное меню: загрузка модели New Jersey ---- */
+  
   mNJMenuModel = std::make_shared<GltfModel>();
  
   std::string modelFilenameNJ = "assets/AngeBr.gltf";
@@ -301,10 +285,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   }
 
   Logger::log(1, "%s: Main menu initialized\n", __FUNCTION__);
-  /* load 2x the woman and the sq model */
- // test 12.01.26 - 1 model only 1 instance
-  //mGltfModels.resize(3);
   
+     
   
   mGltfModels.at(0) = std::make_shared<GltfModel>();
   std::string modelFilename = "assets/StonehengeAug.gltf";
@@ -336,8 +318,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
 
   mGltfModels.at(1) = std::make_shared<GltfModel>();
   std::string modelFilename2 = "assets/EntyBrMix.gltf";
-  //std::string modelFilename2 = "assets/EntyMay.gltf";
-  std::string modelTexFilename2 = "textures/EntyAug.png";
+    std::string modelTexFilename2 = "textures/EntyAug.png";
   std::string modelTexFilename2N = "textures/EntyNormal.png";
   std::string modelTexFilename2M = "textures/EntyMetal.png";
   std::string modelTexFilename2R = "textures/EntyRough.png";
@@ -472,9 +453,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
       Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename15.c_str());
       return false;
   }
-  //mGltfModels.at(0)->uploadVertexBuffers();
-  //mGltfModels.at(0)->uploadIndexBuffer();
-  /*
+      /*
   mGltfModels.at(1) = std::make_shared<GltfModel>();
   modelTexFilename = "textures/FigureBase Color - 4096px.png";
   if (!mGltfModels.at(1)->loadModel(mRenderData, modelFilename, modelTexFilename)) {
@@ -498,7 +477,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
 
   int numTriangles = 0;
 
-  /* create glTF instances from the model */
+  
   /*
   for (int i = 0; i < 5; ++i) {
     int xPos = std::rand() % 40 - 20;
@@ -508,8 +487,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
       static_cast<float>(zPos)), true));
     numTriangles += mGltfModels.at(modelNo)->getTriangleCount();
   }
-  // dq model
-  
+    
   for (int i = 0; i < 10; ++i) {
     int xPos = std::rand() % 50 - 25;
     int zPos = std::rand() % 20 - 50;
@@ -518,8 +496,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
     numTriangles += mGltfModels.at(2)->getTriangleCount();
   }
   */
-  // 1 model coordinates
-  glm::vec3 defaultRot = glm::vec3(0.0);
+    glm::vec3 defaultRot = glm::vec3(0.0);
 
   int xPos = 77;
   int yPos = 0;
@@ -616,17 +593,17 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   addEnemy(mGltfModels.at(8), -220, 10, 313);
 
   addBossBismark(mGltfModels.at(10), 49, 8, 408);
-  mBismarkBossPtr = mEnemies.back().get(); // только что запушенный враг — это и есть Bismark
-  addBossConway(mGltfModels.at(11), 389, 1, 323);
+  mBismarkBossPtr = mEnemies.back().get();   addBossConway(mGltfModels.at(11), 389, 1, 323);
   addPhysicsToStonehenge(mGltfInstances.at(0), mDynamicsWorld, glm::vec3(77, 0, 580),defaultRot);
-  addPhysicsToEnty(mGltfInstances.at(1), mDynamicsWorld, glm::vec3(0, 0, 0)); // Она заспавнится на высоте 10м и упадет на пол
-  {
+
+  addPhysicsToEnty(mGltfInstances.at(1), mDynamicsWorld, glm::vec3(0, 0, 0));   {
       ModelSettings entySettings = mGltfInstances.at(1)->getInstanceSettings();
       entySettings.msAnimClip = EntyAnim::Idle; 
       entySettings.msPlayAnimation = true;      
       mGltfInstances.at(1)->setInstanceSettings(entySettings);
-      Logger::log(1, "Agness anim count: %d\n", mGltfModels.at(13)->getAnimClips());
+      Logger::log(1, "Enty anim count: %zu\n", mGltfModels.at(1)->getAnimClips().size());
   }
+
   addPhysicsToEnty(mGltfInstances.at(9), mDynamicsWorld, glm::vec3(81, 2, 615));
   {
       ModelSettings AgnessSettings = mGltfInstances.at(9)->getInstanceSettings();
@@ -639,20 +616,13 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
       mGltfInstances.at(9)->setInstanceSettings(AgnessSettings);
       mGltfInstances.at(9)->checkForUpdates();
 
-      // Раз уж проверяем — сразу узнаём, сколько клипов реально есть у Агнесс,
-      // чтобы убедиться, что индекс 2 в принципе существует (лог у тебя раньше
-      // стоял в блоке Enty и проверял model(13), а не факт того, что клип 2 валиден)
-      Logger::log(1, "Agness anim count: %d (запрошенный клип: %d)\n",
-          mGltfModels.at(13)->getAnimClips(), AgnessSettings.msAnimClip);
+                        Logger::log(1, "Agness anim count: %zu (запрошенный клип: %d)\n",
+          mGltfModels.at(13)->getAnimClips().size(), AgnessSettings.msAnimClip);
   }
   {
       auto root = mGltfInstances.at(1)->getRootNode();
 
-      // Разово проверить реальные имена костей в логе — Mixamo иногда
-      // переименовывает кости при экспорте (см. "mixamorig:Hips" в клипах).
-      // Если "Breast.L"/"Breast.R" внизу не найдутся — раскомментируй и глянь лог:
-      // root->printTree();
-
+                        
       auto leftNode = findNodeByName(root, "Breast.L");
       auto rightNode = findNodeByName(root, "Breast.R");
 
@@ -672,8 +642,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   addPhysicsToStonehenge(mGltfInstances.at(5), mDynamicsWorld, glm::vec3(-166, 1, 261), CustomRot2);
   addPhysicsToStonehenge(mGltfInstances.at(6), mDynamicsWorld, glm::vec3(53, 0, 522), defaultRot);
   addPhysicsToStonehenge(mGltfInstances.at(7), mDynamicsWorld, glm::vec3(394, 0, 322), CustomRot3);
-  //
-  addPhysicsToStonehenge(mGltfInstances.at(10), mDynamicsWorld, glm::vec3(53, 1, 513), defaultRot);
+    addPhysicsToStonehenge(mGltfInstances.at(10), mDynamicsWorld, glm::vec3(53, 1, 513), defaultRot);
   
   mRenderData.rdTriangleCount = numTriangles;
 
@@ -693,14 +662,12 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
     modelJointDualQuatBufferSize += instance->getJointDualQuatsSize() *
       sizeof(glm::mat2x4);
   }
-  // проверка от 10.01.26
-  printf("\n--- [SSBO DEBUG] ---\n");
+    printf("\n--- [SSBO DEBUG] ---\n");
   printf("Total Joint Matrices: %d\n", jointMatrixSize);
   printf("Required Matrix Buffer Size: %llu bytes\n", (unsigned long long)modelJointMatrixBufferSize);
   printf("Required DualQuat Buffer Size: %llu bytes\n", (unsigned long long)modelJointDualQuatBufferSize);
 
-  // Проверим лимит видеокарты
-  GLint maxSize;
+    GLint maxSize;
   glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &maxSize);
   printf("Your GPU Max SSBO Size: %d bytes\n", maxSize);
 
@@ -715,15 +682,13 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   if (modelJointMatrixBufferSize == 0) modelJointMatrixBufferSize = sizeof(glm::mat4);
   if (modelJointDualQuatBufferSize == 0) modelJointDualQuatBufferSize = sizeof(glm::mat2x4);
 
-  // конец проверки
-  mGltfShaderStorageBuffer.init(modelJointMatrixBufferSize);
+    mGltfShaderStorageBuffer.init(modelJointMatrixBufferSize);
   Logger::log(1, "%s: glTF joint matrix shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointMatrixBufferSize);
   
   mGltfDualQuatSSBuffer.init(modelJointDualQuatBufferSize);
   Logger::log(1, "%s: glTF joint dual quaternions shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointDualQuatBufferSize);
 
-  /* valid, but emtpy */
-  mLineMesh = std::make_shared<OGLMesh>();
+  
   Logger::log(1, "%s: line mesh storage initialized\n", __FUNCTION__);
 
   mFrameTimer.start();
@@ -732,7 +697,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
 }
 
 void OGLRenderer::setSize(unsigned int width, unsigned int height) {
-   /* handle minimize */
+   
     if (width == 0 || height == 0) {
         return;
     }
@@ -793,8 +758,7 @@ void OGLRenderer::GltfGPUShaderToyChannelPack(unsigned int matrixPos, const std:
     if (mGltfGPUShaderToyChannelPack.getUniformLocation("u_HasPackedMap"))    mGltfGPUShaderToyChannelPack.setUniformValue(instance->getModel()->mHasPackedMap ? 1 : 0);
     if (mGltfGPUShaderToyChannelPack.getUniformLocation("u_HasCoatRoughMap")) mGltfGPUShaderToyChannelPack.setUniformValue(instance->getModel()->mHasCoatRoughMap ? 1 : 0);
     if (mGltfGPUShaderToyChannelPack.getUniformLocation("u_HasEmitMap"))      mGltfGPUShaderToyChannelPack.setUniformValue(instance->getModel()->mHasEmitMap ? 1 : 0);
-    // Если тумблер выключен — передаем 0.0f, если включен — передаем желаемую яркость (например, 3.0f или переменную из UI)
-    float emitIntensity = UserInterface::showEmit ? 3.0f : 0.0f;
+        float emitIntensity = UserInterface::showEmit ? 3.0f : 0.0f;
 
     if (mGltfGPUShaderToyChannelPack.getUniformLocation("u_EmissionMultiplier"))
         mGltfGPUShaderToyChannelPack.setUniformValue(emitIntensity);
@@ -809,31 +773,28 @@ void OGLRenderer::handleKeyEvents(int key, int scancode, int action, int mods) {
             glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
         else {
-            // Если у тебя камера управляется правой кнопкой (mMouseLock), 
-            // решай сам — скрывать курсор обратно или нет. Пока оставим так:
-            glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                                    glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
     }
 }
 
 void OGLRenderer::handleMouseButtonEvents(int button, int action, int mods) {
-  /* forward to ImGui */
+  
   ImGuiIO& io = ImGui::GetIO();
   if (button >= 0 && button < ImGuiMouseButton_COUNT) {
     io.AddMouseButtonEvent(button, action == GLFW_PRESS);
   }
 
-  /* hide from application if above ImGui window */
+  
   if (io.WantCaptureMouse) {
     return;
   }
   
   if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
-  //if (button == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-    mMouseLock = !mMouseLock;
+      mMouseLock = !mMouseLock;
     if (mMouseLock) {
       glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-      /* enable raw mode if possible */
+      
       if (glfwRawMouseMotionSupported()) {
         glfwSetInputMode(mRenderData.rdWindow, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
       }
@@ -844,24 +805,24 @@ void OGLRenderer::handleMouseButtonEvents(int button, int action, int mods) {
 }
 
 void OGLRenderer::handleMousePositionEvents(double xPos, double yPos) {
-  /* forward to ImGui */
+  
   ImGuiIO& io = ImGui::GetIO();
   io.AddMousePosEvent((float)xPos, (float)yPos);
 
-  /* hide from application if above ImGui window */
+  
   if (io.WantCaptureMouse) {
     return;
   }
   if (mShowMenu) {
       return;
   }
-  /* calculate relative movement from last position */
+  
   int mouseMoveRelX = static_cast<int>(xPos) - mMouseXPos;
   int mouseMoveRelY = static_cast<int>(yPos) - mMouseYPos;
 
   if (mMouseLock) {
     mRenderData.rdViewAzimuth += mouseMoveRelX / 10.0;
-    /* keep between 0 and 360 degree */
+    
     if (mRenderData.rdViewAzimuth < 0.0) {
       mRenderData.rdViewAzimuth += 360.0;
     }
@@ -870,7 +831,7 @@ void OGLRenderer::handleMousePositionEvents(double xPos, double yPos) {
     }
 
     mRenderData.rdViewElevation -= mouseMoveRelY / 10.0;
-    /* keep between -89 and +89 degree */
+    
     if (mRenderData.rdViewElevation > 89.0) {
       mRenderData.rdViewElevation = 89.0;
     }
@@ -879,20 +840,17 @@ void OGLRenderer::handleMousePositionEvents(double xPos, double yPos) {
     }
   }
 
-  /* save old values*/
+  
   mMouseXPos = static_cast<int>(xPos);
   mMouseYPos = static_cast<int>(yPos);
 }
 
 void OGLRenderer::addPhysicsToEnty(std::shared_ptr<GltfInstance> entyInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 spawnPos) {
-    // РЕАЛЬНЫЕ РАЗМЕРЫ: Радиус 0.3м, Высота цилиндра 1.2м. 
-    // Итого: 1.8 + 0.3 + 0.3 = 2.4 метра общей высоты!
-    btCollisionShape* colShape = new btCapsuleShape(0.3f, 1.8f);
+            btCollisionShape* colShape = new btCapsuleShape(0.3f, 1.8f);
 
     btTransform startTransform;
     startTransform.setIdentity();
-    // Спавним на 10 метров вверх
-    startTransform.setOrigin(btVector3(spawnPos.x, spawnPos.y + 5.0f, spawnPos.z));
+        startTransform.setOrigin(btVector3(spawnPos.x, spawnPos.y + 5.0f, spawnPos.z));
 
     btScalar mass(70.0f);
     btVector3 localInertia(0, 0, 0);
@@ -908,14 +866,11 @@ void OGLRenderer::addPhysicsToEnty(std::shared_ptr<GltfInstance> entyInstance, b
     entyInstance->setRigidBody(body);
 }
 void OGLRenderer::addPhysicsToEnemy(std::shared_ptr<GltfInstance> entyInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 spawnPos) {
-    // РЕАЛЬНЫЕ РАЗМЕРЫ: Радиус 0.3м, Высота цилиндра 1.2м. 
-    // Итого: 1.8 + 0.3 + 0.3 = 2.4 метра общей высоты!
-    btCollisionShape* colShape = new btCapsuleShape(0.3f, 1.8f);
+            btCollisionShape* colShape = new btCapsuleShape(0.3f, 1.8f);
 
     btTransform startTransform;
     startTransform.setIdentity();
-    // Спавним на 10 метров вверх
-    startTransform.setOrigin(btVector3(spawnPos.x, spawnPos.y + 5.0f, spawnPos.z));
+        startTransform.setOrigin(btVector3(spawnPos.x, spawnPos.y + 5.0f, spawnPos.z));
 
     btScalar mass(700.0f);
     btVector3 localInertia(0, 0, 0);
@@ -962,37 +917,26 @@ void OGLRenderer::addBossBismark(std::shared_ptr<GltfModel> model, int x, int y,
     mEnemies.push_back(std::move(bossAgent));
 }
 void OGLRenderer::addPhysicsToStonehenge(std::shared_ptr<GltfInstance> stonehengeInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 pos, glm::vec3 rot) {
-    // Получаем ИДЕАЛЬНО точный физический шейп из glTF
-    btCollisionShape* groundShape = stonehengeInstance->getModel()->getPhysicsShape();
+        btCollisionShape* groundShape = stonehengeInstance->getModel()->getPhysicsShape();
 
     btTransform groundTransform;
     groundTransform.setIdentity();
 
-    // ВНИМАНИЕ: Я убрал смещение pos.y - 0.5f, потому что теперь коллизия 
-    // идеально совпадает с визуальной сеткой.
-    groundTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
+            groundTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
 
-    // 3. МАТЕМАТИКА ПОВОРОТА ДЛЯ BULLET
-    // Создаем кватернион Bullet и переводим твои градусы из Медиатора в радианы.
-    // Порядок углов в Bullet: Yaw (Y), Pitch (X), Roll (Z)
-    btQuaternion btRot;
+                btQuaternion btRot;
     btRot.setEuler(
-        glm::radians(rot.y), // Вращение вокруг Y
-        glm::radians(rot.x), // Вращение вокруг X
-        glm::radians(rot.z)  // Вращение вокруг Z
-    );
+        glm::radians(rot.y),         glm::radians(rot.x),         glm::radians(rot.z)      );
     groundTransform.setRotation(btRot);
 
-    // Для статичных объектов масса ВСЕГДА = 0.
-    btScalar mass(0.0f);
+        btScalar mass(0.0f);
     btVector3 localInertia(0, 0, 0);
 
     btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
     btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, groundShape, localInertia);
     btRigidBody* body = new btRigidBody(rbInfo);
 
-    // Делаем камни шероховатыми
-    body->setFriction(0.8f);
+        body->setFriction(0.8f);
 
     dynamicsWorld->addRigidBody(body);
     stonehengeInstance->setRigidBody(body);
@@ -1023,7 +967,7 @@ void OGLRenderer::handleMovementKeys() {
     mRenderData.rdMoveUp -= 1;
   }
 
-  /* speed up movement with shift */
+  
   if ((glfwGetKey(mRenderData.rdWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) ||
       (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS)) {
     mRenderData.rdMoveForward *= 4;
@@ -1033,10 +977,7 @@ void OGLRenderer::handleMovementKeys() {
 }
 
 void OGLRenderer::draw() {
-    // ============================================================
-    // 1. WINDOW / TICK SETUP
-    // ============================================================
-    while (mRenderData.rdWidth == 0 || mRenderData.rdHeight == 0) {
+                while (mRenderData.rdWidth == 0 || mRenderData.rdHeight == 0) {
         glfwGetFramebufferSize(mRenderData.rdWindow, &mRenderData.rdWidth, &mRenderData.rdHeight);
         glfwWaitEvents();
     }
@@ -1049,10 +990,7 @@ void OGLRenderer::draw() {
     mRenderData.rdFrameTime = mFrameTimer.stop();
     mFrameTimer.start();
 
-    // ============================================================
-    // 2. FADE / LOADING STATE UPDATES
-    // ============================================================
-    switch (mFadeState) {
+                switch (mFadeState) {
     case FadeState::FADE_OUT:
         mFadeAlpha += deltaTime / FADE_DURATION;
         if (mFadeAlpha >= 1.0f) {
@@ -1091,9 +1029,7 @@ void OGLRenderer::draw() {
     if (mRenderData.rdPlayerIsDead && !mShowDeathScreen && !mRespawnRequested) {
         mShowDeathScreen = true;
         mDeathFadeAlpha = 0.0f;
-        mGameState = GameState::DEATH;   // <-- добавили
-        // Полоса босса не должна переживать смерть игрока
-        mActiveBossEnemy = nullptr;
+        mGameState = GameState::DEATH;                   mActiveBossEnemy = nullptr;
         mBossBarVisibleAlpha = 0.0f;
         mBossBarDisplayHealth = 0.0f;
 
@@ -1104,13 +1040,11 @@ void OGLRenderer::draw() {
     mRespawnGlowPulse += deltaTime;
 
     if (mShowDeathScreen && !mRespawnRequested) {
-        // Fade-in: 0.0 -> 0.85
-        mDeathFadeAlpha += deltaTime / DEATH_FADE_DURATION;
+                mDeathFadeAlpha += deltaTime / DEATH_FADE_DURATION;
         if (mDeathFadeAlpha > DEATH_FADE_MAX) mDeathFadeAlpha = DEATH_FADE_MAX;
     }
     else if (mRespawnRequested) {
-        // Fade-out чуть быстрее, чем fade-in
-        mDeathFadeAlpha -= deltaTime / (DEATH_FADE_DURATION * 0.6f);
+                mDeathFadeAlpha -= deltaTime / (DEATH_FADE_DURATION * 0.6f);
         if (mDeathFadeAlpha <= 0.0f) {
             mDeathFadeAlpha = 0.0f;
             mShowDeathScreen = false;
@@ -1118,10 +1052,7 @@ void OGLRenderer::draw() {
             ResetPlayerAfterDeath();
         }
     }
-    // ============================================================
-    // 3. STATE-SPECIFIC UPDATES
-    // ============================================================
-    bool pendingFadeOut = false;
+                bool pendingFadeOut = false;
 
     if (mGameState == GameState::MAIN_MENU) {
         MenuAction action = mMenuController->update(
@@ -1139,22 +1070,15 @@ void OGLRenderer::draw() {
         }
     }
     else if (mGameState == GameState::LOADING) {
-        // Во время загрузки физика и ввод не обновляются
-        gAudio.playMusic("assets/audio/ambient.MP3", true);
+                gAudio.playMusic("assets/audio/ambient.MP3", true);
     }
     else if (mGameState == GameState::DEATH) {
-        // Мир заморожен: враги и ввод игрока не трогаем вообще.
-        // Физику шагаем, чтобы труп корректно доупал под гравитацией (updatePlayerCharacter
-        // сам фиксирует linearFactor на Y-only и держит кадр анимации смерти).
-        if (mDynamicsWorld) mDynamicsWorld->stepSimulation(deltaTime, 10);
+                                if (mDynamicsWorld) mDynamicsWorld->stepSimulation(deltaTime, 10);
         for (auto& instance : mGltfInstances) instance->syncPhysics();
         updatePlayerCharacter(deltaTime);
-        // handleMovementKeys() и цикл for(enemy: mEnemies) сюда СОЗНАТЕЛЬНО не входят —
-        // это и есть "заморозка ввода и логики мобов" из пункта 1.
-    }
+                    }
     else {
-        // --- GAMEPLAY ---
-        if (mDynamicsWorld) mDynamicsWorld->stepSimulation(deltaTime, 10);
+                if (mDynamicsWorld) mDynamicsWorld->stepSimulation(deltaTime, 10);
         for (auto& instance : mGltfInstances) instance->syncPhysics();
 
         handleMovementKeys();
@@ -1168,11 +1092,7 @@ void OGLRenderer::draw() {
             entyTrans.getOrigin().z()
         );
         for (auto& enemy : mEnemies) enemy->update(deltaTime, entyPos);
-        updateAgness(deltaTime, entyPos, mRenderData); // <-- добавить сюда
-        // --- Открытие арены Бисмарка после его смерти ---
-        // Флаг mBismarkGateCollisionActive проверяется ПЕРВЫМ — значит removeRigidBody()
-        // вызовется ровно один раз в момент смерти босса, а не каждый кадр, пока он мёртв.
-        if (mBismarkGateCollisionActive && mBismarkBossPtr && mBismarkBossPtr->isDead()) {
+        updateAgness(deltaTime, entyPos, mRenderData);                                 if (mBismarkGateCollisionActive && mBismarkBossPtr && mBismarkBossPtr->isDead()) {
             btRigidBody* gateBody = mGltfInstances.at(10)->getRigidBody();
             if (gateBody && mDynamicsWorld) {
                 mDynamicsWorld->removeRigidBody(gateBody);
@@ -1180,33 +1100,23 @@ void OGLRenderer::draw() {
             mBismarkGateCollisionActive = false;
             Logger::log(1, "OGLRenderer: Bismark defeated — gate collision removed\n");
         }
-        // --- Ищем активного босса для health bar ---
-        Enemy* foundBoss = nullptr;
+                Enemy* foundBoss = nullptr;
         for (auto& enemy : mEnemies) {
             if (enemy->isBoss() && enemy->isEngaged() && !enemy->isDead()) {
                 foundBoss = enemy.get();
-                break; // берём первого найденного — обычно на арене один босс за раз
-            }
+                break;             }
         }
 
         if (foundBoss != mActiveBossEnemy) {
-            // Новый босс стал активным (или прежний умер/исчез) — сбрасываем "хвост" бара,
-            // чтобы не тянулся с прошлого боя.
-            if (mActiveBossEnemy && !foundBoss) {
-                // вышли из боя (босс пропал/умер/потерян из виду)
-                gAudio.stopMusic();
-                gAudio.playMusic("assets/audio/ambient.MP3", true); // фоновая тема, если есть
-            }
+                                    if (mActiveBossEnemy && !foundBoss) {
+                                gAudio.stopMusic();
+                gAudio.playMusic("assets/audio/ambient.MP3", true);             }
             else if (!mActiveBossEnemy && foundBoss) {
-                // зашли в бой с боссом
-                gAudio.stopMusic();
+                                gAudio.stopMusic();
                 foundBoss->playmusic();
-                // если у Enemy пока нет такого метода — временно можно захардкодить
-                // gAudio.playMusic("assets/audio/boss_battle.MP3", true);
-            }
+                                            }
             else if (mActiveBossEnemy && foundBoss && mActiveBossEnemy != foundBoss) {
-                // редкий случай: один босс сменился другим без паузы между боями
-                gAudio.stopMusic();
+                                gAudio.stopMusic();
                 foundBoss->playmusic();
             }
             mActiveBossEnemy = foundBoss;
@@ -1224,21 +1134,15 @@ void OGLRenderer::draw() {
             actualRatio = std::clamp(actualRatio, 0.0f, 1.0f);
 
             if (actualRatio < mBossBarDisplayHealth) {
-                // Получили урон: белая полоса ЕЩЁ секунду держит старое значение,
-                // затем плавно "стекает" вниз до актуального — классический chip damage.
-                mBossBarDisplayHealth -= deltaTime * 0.5f;
+                                                mBossBarDisplayHealth -= deltaTime * 0.5f;
                 if (mBossBarDisplayHealth < actualRatio) mBossBarDisplayHealth = actualRatio;
             }
             else {
-                mBossBarDisplayHealth = actualRatio; // лечение/отсутствие урона — сразу синхронизируем
-            }
+                mBossBarDisplayHealth = actualRatio;             }
         }
     }
 
-    // ============================================================
-    // 4. GRAPHICS SETTINGS (always)
-    // ============================================================
-    static int lastTextureQuality = 0;
+                static int lastTextureQuality = 0;
     if (mRenderData.rdTextureQuality != lastTextureQuality) {
         lastTextureQuality = mRenderData.rdTextureQuality;
         for (auto& model : mGltfModels) {
@@ -1258,10 +1162,7 @@ void OGLRenderer::draw() {
         Logger::log(1, "Graphics settings changed: MSAA set to index %d\n", mRenderData.rdMSAAIndex);
     }
 
-    // ============================================================
-    // 5. FRAMEBUFFER BIND + CLEAR (always)
-    // ============================================================
-    bool useMSAA = (mRenderData.rdMSAAIndex > 0);
+                bool useMSAA = (mRenderData.rdMSAAIndex > 0);
     if (useMSAA) {
         mMSFramebuffer.bind();
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -1278,20 +1179,14 @@ void OGLRenderer::draw() {
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // ============================================================
-    // 6. PROJECTION MATRIX (always)
-    // ============================================================
-    mMatrixGenerateTimer.start();
+                mMatrixGenerateTimer.start();
     mProjectionMatrix = glm::perspective(
         glm::radians(static_cast<float>(mRenderData.rdFieldOfView)),
         static_cast<float>(mRenderData.rdWidth) / static_cast<float>(mRenderData.rdHeight),
         0.01f, 500.0f
     );
 
-    // ============================================================
-    // 7A. MAIN MENU RENDER
-    // ============================================================
-    int selectedInstance = mRenderData.rdCurrentSelectedInstance;
+                int selectedInstance = mRenderData.rdCurrentSelectedInstance;
 
     if (mGameState == GameState::MAIN_MENU) {
         mViewMatrix = mMenuController->getCameraViewMatrix();
@@ -1320,16 +1215,14 @@ void OGLRenderer::draw() {
         mRenderData.rdUploadToUBOTime = 0.0f;
         mRenderData.rdUploadToVBOTime = 0.0f;
 
-        // IBL Карты
-        glActiveTexture(GL_TEXTURE5);
+                glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_CUBE_MAP, mSkyBox.getIrradianceMap());
         glActiveTexture(GL_TEXTURE6);
         glBindTexture(GL_TEXTURE_CUBE_MAP, mSkyBox.getPrefilterMap());
         glActiveTexture(GL_TEXTURE7);
         glBindTexture(GL_TEXTURE_2D, mSkyBox.getBRDFLUTMap());
 
-        // --- ТОЧНЫЙ ВЫБОР ШЕЙДЕРА (Исправление ошибки Клода) ---
-        bool isDualQuat = (njSet.msVertexSkinningMode == skinningMode::dualQuat);
+                bool isDualQuat = (njSet.msVertexSkinningMode == skinningMode::dualQuat);
         bool packed = njInst->getModel()->mHasPackedMap;
 
         Shader* activeShader = nullptr;
@@ -1388,9 +1281,7 @@ void OGLRenderer::draw() {
             if (sh.getUniformLocation("u_HasPackedMap"))    sh.setUniformValue(njInst->getModel()->mHasPackedMap ? 1 : 0);
             if (sh.getUniformLocation("u_HasCoatRoughMap")) sh.setUniformValue(njInst->getModel()->mHasCoatRoughMap ? 1 : 0);
             if (sh.getUniformLocation("u_HasEmitMap"))      sh.setUniformValue(njInst->getModel()->mHasEmitMap ? 1 : 0);
-            // --- НОВЫЙ ЮНИФОРМ УПРАВЛЕНИЯ СВЕЧЕНИЕМ ---
-            // Если тумблер выключен — передаем 0.0f, если включен — передаем желаемую яркость (например, 3.0f или переменную из UI)
-            float emitIntensity = UserInterface::showEmit ? 3.0f : 0.0f;
+                                    float emitIntensity = UserInterface::showEmit ? 3.0f : 0.0f;
 
             if (sh.getUniformLocation("u_EmissionMultiplier"))
                 sh.setUniformValue(emitIntensity);
@@ -1409,20 +1300,14 @@ void OGLRenderer::draw() {
             auto boxInstance = mGltfInstances.at(9);
             boxInstance->getModel()->draw();
         }
-        // ============================================================
-        // 7B. LOADING STATE RENDER
-        // ============================================================
-    }
+                            }
     else if (mGameState == GameState::LOADING) {
         mViewMatrix = glm::mat4(1.0f);
         std::vector<glm::mat4> matrixData = { mViewMatrix, mProjectionMatrix };
         mUniformBuffer.uploadUboData(matrixData, 0);
         mRenderData.rdMatrixGenerateTime = mMatrixGenerateTimer.stop();
 
-        // ============================================================
-        // 7C. GAMEPLAY RENDER
-        // ============================================================
-    }
+                            }
     else {
         glm::vec3 playerPos = mGltfInstances.at(1)->getWorldPosition();
         playerPos.y += 0.8f;
@@ -1435,58 +1320,15 @@ void OGLRenderer::draw() {
                 mIKTimer.start();
                 instance->solveIK();
                 mRenderData.rdIKTime += static_cast<float>(mIKTimer.stop());
-                // Джигл-физика груди — только для Энти (instance #1)
-                if (instance == mGltfInstances.at(1)) {
+                                if (instance == mGltfInstances.at(1)) {
                     updateBreastJiggle(mLeftBreastJiggle, deltaTime);
                     updateBreastJiggle(mRightBreastJiggle, deltaTime);
-                    instance->refreshJointMatrices();                      // <-- НОВОЕ: пересобрать кэш для GPU
-                }
+                    instance->refreshJointMatrices();                                      }
             }
         }
 
         glm::vec3 modelWorldPos = mGltfInstances.at(selectedInstance)->getWorldPosition();
         glm::quat modelWorldRot = mGltfInstances.at(selectedInstance)->getWorldRotation();
-
-        mLineMesh->vertices.clear();
-        mSkeletonLineIndexCount = 0;
-        for (const auto& instance : mGltfInstances) {
-            ModelSettings settings = instance->getInstanceSettings();
-            if (settings.msDrawSkeleton && instance->getJointMatrixSize() > 0) {
-                std::shared_ptr<OGLMesh> mesh = instance->getSkeleton();
-                mSkeletonLineIndexCount += mesh->vertices.size();
-                mLineMesh->vertices.insert(mLineMesh->vertices.begin(),
-                    mesh->vertices.begin(), mesh->vertices.end());
-            }
-        }
-
-        mCoordArrowsLineIndexCount = 0;
-        {
-            if (mGltfInstances.at(selectedInstance)->getJointMatrixSize() > 0) {
-                ModelSettings ikSettings = mGltfInstances.at(selectedInstance)->getInstanceSettings();
-                if (ikSettings.msIkMode == ikMode::ccd || ikSettings.msIkMode == ikMode::fabrik) {
-                    mCoordArrowsMesh = mCoordArrowsModel.getVertexData();
-                    mCoordArrowsLineIndexCount += mCoordArrowsMesh.vertices.size();
-                    std::for_each(mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end(),
-                        [=](auto& n) {
-                            n.color /= 2.0f;
-                            n.position = modelWorldRot * n.position;
-                            n.position += ikSettings.msIkTargetWorldPos;
-                        });
-                    mLineMesh->vertices.insert(mLineMesh->vertices.end(),
-                        mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end());
-                }
-            }
-        }
-        mCoordArrowsMesh = mCoordArrowsModel.getVertexData();
-        mCoordArrowsLineIndexCount += mCoordArrowsMesh.vertices.size();
-        std::for_each(mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end(),
-            [=](auto& n) {
-                n.color /= 2.0f;
-                n.position = modelWorldRot * n.position;
-                n.position += modelWorldPos;
-            });
-        mLineMesh->vertices.insert(mLineMesh->vertices.end(),
-            mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end());
 
         mRenderData.rdMatrixGenerateTime = mMatrixGenerateTimer.stop();
 
@@ -1537,16 +1379,13 @@ void OGLRenderer::draw() {
         mRenderData.rdUploadToUBOTime = mUploadToUBOTimer.stop();
 
         mUploadToVBOTimer.start();
-        uploadData(*mLineMesh);
         mRenderData.rdUploadToVBOTime = mUploadToVBOTimer.stop();
 
-        // IBL
-        glActiveTexture(GL_TEXTURE5); glBindTexture(GL_TEXTURE_CUBE_MAP, mSkyBox.getIrradianceMap());
+                glActiveTexture(GL_TEXTURE5); glBindTexture(GL_TEXTURE_CUBE_MAP, mSkyBox.getIrradianceMap());
         glActiveTexture(GL_TEXTURE6); glBindTexture(GL_TEXTURE_CUBE_MAP, mSkyBox.getPrefilterMap());
         glActiveTexture(GL_TEXTURE7); glBindTexture(GL_TEXTURE_2D, mSkyBox.getBRDFLUTMap());
 
-        // --- Статика ---
-        mStaticShader.use();
+                mStaticShader.use();
         if (mStaticShader.getUniformLocation("u_SunDirection"))   mStaticShader.setUniformValue(mRenderData.rdSunDirection);
         if (mStaticShader.getUniformLocation("u_SunColor"))       mStaticShader.setUniformValue(mRenderData.rdSunColor);
         if (mStaticShader.getUniformLocation("u_SunIntensity"))   mStaticShader.setUniformValue(mRenderData.rdSunIntensity);
@@ -1573,13 +1412,18 @@ void OGLRenderer::draw() {
             instance->getModel()->draw();
         }
 
-        // --- Matrix-skinned ---
-        unsigned int matrixPos = 0;
+                unsigned int matrixPos = 0;
         int instanceCounter = 0;
         for (const auto& instance : mGltfMatrixInstances) {
             if (instanceCounter == 0) {
-                mGltfGPUShaderToy.use();
-                GltfGPUShaderToy(matrixPos);
+                if (mRenderData.rdEntyAnim == 0) {
+                    mGltfGPUShaderToy.use();
+                    GltfGPUShaderToy(matrixPos);
+                }
+                else {
+                    mGltfGPUShader.use();
+                    if (mGltfGPUShader.getUniformLocation("aModelStride")) mGltfGPUShader.setUniformValue((int)matrixPos);
+                }
             }
             else if (instanceCounter == 14) {
                 GltfGPUShaderToyChannelPack(matrixPos, instance);
@@ -1593,8 +1437,7 @@ void OGLRenderer::draw() {
             instanceCounter++;
         }
 
-        // --- DQ-skinned ---
-        unsigned int dqPos = 0;
+                unsigned int dqPos = 0;
         for (const auto& instance : mGltfDQInstances) {
             if (instance->getModel()->mHasPackedMap) {
                 mGltfGPUDualQuatChannelShader.use();
@@ -1638,12 +1481,8 @@ void OGLRenderer::draw() {
             instance->getModel()->draw();
             dqPos += instance->getJointDualQuatsSize();
         }
-    } // end GAMEPLAY branch
-
-    // ============================================================
-    // 8. SKYBOX
-    // ============================================================
-    
+    } 
+                
     if (mGameState != GameState::LOADING) {
         mAccumulatedTime += mRenderData.rdFrameTime;
         float cameraYaw = std::atan2(mViewMatrix[2][0], mViewMatrix[2][2]);
@@ -1651,10 +1490,7 @@ void OGLRenderer::draw() {
         mSkyBox.draw(skyboxView, mProjectionMatrix, cameraYaw, mAccumulatedTime);
     }
 
-    // ============================================================
-    // 9. ЛИНИИ / СКЕЛЕТ (только в геймплее)
-    // ============================================================
-    if (mGameState == GameState::GAMEPLAY && mBossBarVisibleAlpha > 0.01f && mActiveBossEnemy) {
+                if (mGameState == GameState::GAMEPLAY && mBossBarVisibleAlpha > 0.01f && mActiveBossEnemy) {
         if (mCoordArrowsLineIndexCount > 0) {
             mLineShader.use();
             mVertexBuffer.bindAndDraw(GL_LINES, mSkeletonLineIndexCount, mCoordArrowsLineIndexCount);
@@ -1667,20 +1503,14 @@ void OGLRenderer::draw() {
         }
     }
 
-    // ============================================================
-    // 10. MSAA RESOLVE
-    // ============================================================
-    if (useMSAA) {
+                if (useMSAA) {
         mMSFramebuffer.unbind();
         mMSFramebuffer.resolveTo(mFramebuffer);
     }
     else {
         mFramebuffer.unbind();
     }
-    // ============================================================
-    // 11. BLOOM PASSES (сцена) — без изменений до composite
-    // ============================================================
-    glDisable(GL_DEPTH_TEST);
+                glDisable(GL_DEPTH_TEST);
 
     mBloomBlurShader.use();
     GLuint blurProg = mBloomBlurShader.getHandle();
@@ -1702,8 +1532,7 @@ void OGLRenderer::draw() {
     }
     int lastBlur = horizontal ? 1 : 0;
 
-    // --- КУДА льём composite: на экран, либо в захват-FBO для Death Screen ---
-    if (mShowDeathScreen) {
+        if (mShowDeathScreen) {
         mDeathCaptureFBO.bind();
         glViewport(0, 0, mRenderData.rdWidth, mRenderData.rdHeight);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -1726,9 +1555,7 @@ void OGLRenderer::draw() {
     if (mShowDeathScreen) {
         mDeathCaptureFBO.unbind();
 
-        // ---- 11B. DEATH BLUR PASS: дополнительный гауссов блюр захваченного кадра ----
-        // Переиспользуем mBlurFBO — на этом этапе кадра они уже свободны.
-        int deathBlurPasses = 5;
+                        int deathBlurPasses = 5;
         bool dHorizontal = true, dFirst = true;
         for (int i = 0; i < deathBlurPasses; ++i) {
             int wIdx = dHorizontal ? 0 : 1, rIdx = dHorizontal ? 1 : 0;
@@ -1745,8 +1572,7 @@ void OGLRenderer::draw() {
         }
         int lastDeathBlur = dHorizontal ? 1 : 0;
 
-        // ---- Вывод размытого кадра на реальный экран ----
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, mRenderData.rdWidth, mRenderData.rdHeight);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -1755,8 +1581,7 @@ void OGLRenderer::draw() {
         glUniform1i(glGetUniformLocation(compProg, "u_Scene"), 0);
         glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, mBlurFBO[lastDeathBlur].getColorTex());
         glUniform1i(glGetUniformLocation(compProg, "u_BloomBlur"), 1);
-        glUniform1f(glGetUniformLocation(compProg, "u_BloomStrength"), 0.0f); // без доп. bloom, просто blit
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glUniform1f(glGetUniformLocation(compProg, "u_BloomStrength"), 0.0f);         glDrawArrays(GL_TRIANGLES, 0, 3);
 
 
         
@@ -1766,10 +1591,7 @@ void OGLRenderer::draw() {
     glEnable(GL_DEPTH_TEST);
     glActiveTexture(GL_TEXTURE0);
 
-    // ============================================================
-    // 12. IMGUI & OVERLAY RENDER
-    // ============================================================
-    mUIGenerateTimer.start();
+                mUIGenerateTimer.start();
 
     if (mGameState == GameState::MAIN_MENU) {
         ModelSettings dummy{};
@@ -1798,10 +1620,7 @@ void OGLRenderer::draw() {
             float time = static_cast<float>(ImGui::GetTime());
             float deltaTime = ImGui::GetIO().DeltaTime;
 
-            // =========================================================================
-            // 0. СТРУКТУРЫ УГЛЕЙ И ТЕКСТА УРОНА (Dark Souls Ember System)
-            // =========================================================================
-            struct EmberParticle {
+                                                struct EmberParticle {
                 ImVec2 pos;
                 ImVec2 vel;
                 float  life;
@@ -1826,34 +1645,26 @@ void OGLRenderer::draw() {
             static std::vector<DamagePopup>   sDamagePopups;
 
             float realHp = std::clamp(mActiveBossEnemy->getHealth() / mActiveBossEnemy->getMaxHealth(), 0.0f, 1.0f);
-            bool isLordOfCinderPhase = (realHp <= 0.50f); // Второй этап босса
-
-            // Скорость задержки индикатора полученного урона (желтая полоса задержки)
-            sSmoothedHp = ImLerp(sSmoothedHp, realHp, deltaTime * 12.0f);
+            bool isLordOfCinderPhase = (realHp <= 0.50f); 
+                        sSmoothedHp = ImLerp(sSmoothedHp, realHp, deltaTime * 12.0f);
             sChipHp = ImLerp(sChipHp, realHp, deltaTime * 1.5f);
 
-            // =========================================================================
-            // 1. ДЕТЕКЦИЯ УРОНА И СПАВН УГЛЕЙ (Embers / Ashes)
-            // =========================================================================
-            float deltaHp = sLastHp - realHp;
+                                                float deltaHp = sLastHp - realHp;
             if (deltaHp > 0.0001f) {
-                sShakeAmount = std::min(sShakeAmount + deltaHp * 25.0f, 8.0f); // Едва заметная встряска
-
+                sShakeAmount = std::min(sShakeAmount + deltaHp * 25.0f, 8.0f); 
                 float barWidthTemp = W * 0.42f;
                 float barMinXTemp = (W * 0.5f) - (barWidthTemp * 0.5f);
                 float impactX = barMinXTemp + barWidthTemp * realHp;
                 float barYTemp = H - 70.0f;
 
-                // Всплывающие цифры урона
-                DamagePopup popup;
+                                DamagePopup popup;
                 popup.pos = ImVec2(impactX + ((rand() % 20) - 10), barYTemp - 26.0f);
                 popup.damage = deltaHp * mActiveBossEnemy->getMaxHealth();
                 popup.maxLife = 0.9f;
                 popup.life = popup.maxLife;
                 sDamagePopups.push_back(popup);
 
-                // Спавн горящих углей при попадании
-                int particleCount = static_cast<int>(deltaHp * 250.0f) + 8;
+                                int particleCount = static_cast<int>(deltaHp * 250.0f) + 8;
                 particleCount = std::min(particleCount, 45);
 
                 for (int i = 0; i < particleCount; ++i) {
@@ -1876,15 +1687,13 @@ void OGLRenderer::draw() {
             }
             sLastHp = realHp;
 
-            // Затухание встряски
-            sShakeAmount = ImLerp(sShakeAmount, 0.0f, deltaTime * 10.0f);
+                        sShakeAmount = ImLerp(sShakeAmount, 0.0f, deltaTime * 10.0f);
             ImVec2 shakeOffset(
                 ((rand() % 100) / 100.0f - 0.5f) * sShakeAmount,
                 ((rand() % 100) / 100.0f - 0.5f) * sShakeAmount
             );
 
-            // Фоновое тление (2-я фаза)
-            if (isLordOfCinderPhase && sEmbers.size() < 60 && (rand() % 4 == 0)) {
+                        if (isLordOfCinderPhase && sEmbers.size() < 60 && (rand() % 4 == 0)) {
                 EmberParticle p;
                 float barWidthTemp = W * 0.42f;
                 float barMinXTemp = (W * 0.5f) - (barWidthTemp * 0.5f);
@@ -1898,8 +1707,7 @@ void OGLRenderer::draw() {
                 sEmbers.push_back(p);
             }
 
-            // Физика углей
-            for (size_t i = 0; i < sEmbers.size();) {
+                        for (size_t i = 0; i < sEmbers.size();) {
                 sEmbers[i].life -= deltaTime;
                 if (sEmbers[i].life <= 0.0f) {
                     sEmbers[i] = sEmbers.back();
@@ -1912,8 +1720,7 @@ void OGLRenderer::draw() {
                 }
             }
 
-            // Обновление урона
-            for (size_t i = 0; i < sDamagePopups.size();) {
+                        for (size_t i = 0; i < sDamagePopups.size();) {
                 sDamagePopups[i].life -= deltaTime;
                 if (sDamagePopups[i].life <= 0.0f) {
                     sDamagePopups[i] = sDamagePopups.back();
@@ -1925,37 +1732,24 @@ void OGLRenderer::draw() {
                 }
             }
 
-            // =========================================================================
-            // 2. ГЕОМЕТРИЯ HUD (Увеличенная толщина + Детализация)
-            // =========================================================================
-            float alpha = mBossBarVisibleAlpha;
+                                                float alpha = mBossBarVisibleAlpha;
             int a = static_cast<int>(alpha * 255.0f);
 
-            float barW = W * 0.42f; // Чуть шире для баланса
-            float barH = 14.0f;     // Увеличено с 8.0f до 14.0f
-            float cx = (W * 0.5f) + shakeOffset.x;
+            float barW = W * 0.42f;             float barH = 14.0f;                 float cx = (W * 0.5f) + shakeOffset.x;
             float barY = (H - 70.0f) + shakeOffset.y;
 
             ImVec2 barMin(cx - barW * 0.5f, barY);
             ImVec2 barMax(cx + barW * 0.5f, barY + barH);
 
-            // =========================================================================
-            // 3. ПОДЛОЖКА И РАМКА
-            // =========================================================================
-            // Внешняя тень
-            dl->AddRectFilled(
+                                                            dl->AddRectFilled(
                 ImVec2(barMin.x - 4.0f, barMin.y - 4.0f),
                 ImVec2(barMax.x + 4.0f, barMax.y + 4.0f),
                 IM_COL32(5, 5, 5, static_cast<int>(a * 0.9f))
             );
 
-            // Внутренний темный фон
-            dl->AddRectFilled(barMin, barMax, IM_COL32(18, 15, 15, a));
+                        dl->AddRectFilled(barMin, barMax, IM_COL32(18, 15, 15, a));
 
-            // =========================================================================
-            // 4. ОТРЕЗОК ЧИП-УРОНА (Phantom Yellow Damage Bar)
-            // =========================================================================
-            float chipWidth = barW * sChipHp;
+                                                float chipWidth = barW * sChipHp;
             float realWidth = barW * sSmoothedHp;
 
             if (chipWidth > realWidth + 0.5f) {
@@ -1971,10 +1765,7 @@ void OGLRenderer::draw() {
                 );
             }
 
-            // =========================================================================
-            // 5. ОСНОВНАЯ ПОЛОСА ЗДОРОВЬЯ (Crimson Red / Ember Flame)
-            // =========================================================================
-            if (realWidth > 0.5f) {
+                                                if (realWidth > 0.5f) {
                 ImVec2 hpMax(barMin.x + realWidth, barMax.y);
 
                 ImU32 colTop = isLordOfCinderPhase ? IM_COL32(235, 45, 20, a) : IM_COL32(185, 25, 22, a);
@@ -1982,48 +1773,34 @@ void OGLRenderer::draw() {
 
                 dl->AddRectFilledMultiColor(barMin, hpMax, colTop, colTop, colBot, colBot);
 
-                // Верхний внутренний объемный блик
-                dl->AddLine(
+                                dl->AddLine(
                     ImVec2(barMin.x, barMin.y + 1.5f),
                     ImVec2(hpMax.x, barMin.y + 1.5f),
                     IM_COL32(255, 170, 130, static_cast<int>(a * 0.45f)), 1.5f
                 );
             }
 
-            // Двойная готическая рамка (Старое золото/Латунь)
-            ImU32 frameBorderCol = IM_COL32(140, 115, 75, static_cast<int>(a * 0.85f));
+                        ImU32 frameBorderCol = IM_COL32(140, 115, 75, static_cast<int>(a * 0.85f));
             ImU32 innerBorderCol = IM_COL32(40, 32, 22, static_cast<int>(a * 0.6f));
 
             dl->AddRect(barMin, barMax, frameBorderCol, 0.0f, 0, 1.5f);
             dl->AddRect(ImVec2(barMin.x - 2.0f, barMin.y - 2.0f), ImVec2(barMax.x + 2.0f, barMax.y + 2.0f), innerBorderCol, 0.0f, 0, 1.0f);
 
-            // =========================================================================
-            // 6. РЕНДЕР ЧАСТИЦ ПЕПЛА / УГЛЕЙ
-            // =========================================================================
-            for (const auto& p : sEmbers) {
+                                                for (const auto& p : sEmbers) {
                 float pAlpha = (p.life / p.maxLife) * alpha;
                 ImU32 c = (p.color & 0x00FFFFFF) | (static_cast<int>(pAlpha * 255.0f) << 24);
                 dl->AddCircleFilled(p.pos, p.size, c, 6);
             }
 
-            // =========================================================================
-            // 7. ИМЯ БОССА (Слева над полосой, Elden Ring / DS Style)
-            // =========================================================================
-            std::string bossName = mActiveBossEnemy->getBossName();
-            // Имя привязано к левому краю полосы (barMin.x) с небольшим отступом
-            ImVec2 namePos(barMin.x + 2.0f, barMin.y - 24.0f);
+                                                std::string bossName = mActiveBossEnemy->getBossName();
+                        ImVec2 namePos(barMin.x + 2.0f, barMin.y - 24.0f);
 
-            // Мягкая двойная тень под текстом для чёткости
-            dl->AddText(ImVec2(namePos.x + 1.5f, namePos.y + 1.5f), IM_COL32(0, 0, 0, static_cast<int>(a * 0.95f)), bossName.c_str());
+                        dl->AddText(ImVec2(namePos.x + 1.5f, namePos.y + 1.5f), IM_COL32(0, 0, 0, static_cast<int>(a * 0.95f)), bossName.c_str());
 
-            // Текст имени (Бледно-золотой / Слоновая кость)
-            ImU32 nameColor = IM_COL32(230, 220, 195, a);
+                        ImU32 nameColor = IM_COL32(230, 220, 195, a);
             dl->AddText(namePos, nameColor, bossName.c_str());
 
-            // =========================================================================
-            // 8. ВСПЛЫВАЮЩИЙ УРОН (DAMAGE POPUPS)
-            // =========================================================================
-            for (const auto& popup : sDamagePopups) {
+                                                for (const auto& popup : sDamagePopups) {
                 float pAlpha = (popup.life / popup.maxLife) * alpha;
                 char dmgBuf[16];
                 snprintf(dmgBuf, sizeof(dmgBuf), "%.0f", popup.damage);
@@ -2033,13 +1810,9 @@ void OGLRenderer::draw() {
                 dl->AddText(popup.pos, dmgCol, dmgBuf);
             }
 
-            // =========================================================================
-            // 9. ДЕКОРАТИВНЫЕ РОМБОВИДНЫЕ НАКОНЕЧНИКИ (Elden Ring Ornament)
-            // =========================================================================
-            float midY = barY + barH * 0.5f;
+                                                float midY = barY + barH * 0.5f;
 
-            // Левый ромб
-            ImVec2 leftDiamond[4] = {
+                        ImVec2 leftDiamond[4] = {
                 ImVec2(barMin.x - 10.0f, midY),
                 ImVec2(barMin.x - 5.0f, midY - 4.0f),
                 ImVec2(barMin.x, midY),
@@ -2047,8 +1820,7 @@ void OGLRenderer::draw() {
             };
             dl->AddConvexPolyFilled(leftDiamond, 4, frameBorderCol);
 
-            // Правый ромб
-            ImVec2 rightDiamond[4] = {
+                        ImVec2 rightDiamond[4] = {
                 ImVec2(barMax.x, midY),
                 ImVec2(barMax.x + 5.0f, midY - 4.0f),
                 ImVec2(barMax.x + 10.0f, midY),
@@ -2060,16 +1832,14 @@ void OGLRenderer::draw() {
         mGltfInstances.at(selectedInstance)->checkForUpdates();
     }
 
-    // --- DEATH SCREEN OVERLAY (darken + respawn button) --- ВОТ СЮДА, после createFrame()!
-    if (mDeathFadeAlpha > 0.001f) {
+        if (mDeathFadeAlpha > 0.001f) {
         ImDrawList* dl = ImGui::GetBackgroundDrawList();
         ImVec2 displaySize = ImGui::GetIO().DisplaySize;
         float W = displaySize.x;
         float H = displaySize.y;
         float alphaProgress = mDeathFadeAlpha / DEATH_FADE_MAX;
 
-        // 1. ЧЕРНЫЙ ФОН
-        ImU32 colBG = IM_COL32(5, 5, 10, static_cast<int>(245.0f * alphaProgress));
+                ImU32 colBG = IM_COL32(5, 5, 10, static_cast<int>(245.0f * alphaProgress));
         dl->AddRectFilled(ImVec2(0, 0), ImVec2(W, H), colBG);
 
         if (alphaProgress > 0.2f) {
@@ -2077,21 +1847,15 @@ void OGLRenderer::draw() {
             float uiAlpha = (alphaProgress - 0.2f) / 0.8f;
             
             static float fadeInTimer = 0.0f;
-            float fadeInDuration = 1.0f; // Время появления в секундах
-
-            // Накапливаем дельту времени
-            fadeInTimer += ImGui::GetIO().DeltaTime;
+            float fadeInDuration = 1.0f; 
+                        fadeInTimer += ImGui::GetIO().DeltaTime;
             if (fadeInTimer > fadeInDuration) fadeInTimer = fadeInDuration;
 
-            // Плавное распределение (Ease-Out) для анимации
-            float progress = fadeInTimer / fadeInDuration;
-            float easeAlpha = progress * (2.0f - progress); // Мягкий старт и замедление в конце
+                        float progress = fadeInTimer / fadeInDuration;
+            float easeAlpha = progress * (2.0f - progress); 
+                        float finalAlpha = uiAlpha * easeAlpha;
 
-            // Итоговый alpha для всех элементов экрана
-            float finalAlpha = uiAlpha * easeAlpha;
-
-            // Анимированный пульс для неонового свечения (слегка "дышит")
-            float time = static_cast<float>(ImGui::GetTime());
+                        float time = static_cast<float>(ImGui::GetTime());
             float glowPulse = 0.85f + 0.15f * sinf(time * 3.0f);
             bool hasCustomFont = (ImGui::GetIO().Fonts->Fonts.Size > 1);
             if (hasCustomFont) ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[1]);
@@ -2099,8 +1863,7 @@ void OGLRenderer::draw() {
             const char* title = "YOU DIED";
             float fontSize = 120.0f;
 
-            // При появлении заголовок слегка уменьшается от 1.8 до 1.6 (эффект приближения)
-            float dynamicScaleY = 1.6f + (1.0f - easeAlpha) * 0.2f;
+                        float dynamicScaleY = 1.6f + (1.0f - easeAlpha) * 0.2f;
 
             ImVec2 tSize = ImGui::GetFont()->CalcTextSizeA(fontSize, FLT_MAX, 0.0f, title);
             tSize.y *= dynamicScaleY;
@@ -2109,8 +1872,7 @@ void OGLRenderer::draw() {
 
             int vtxStart = dl->VtxBuffer.Size;
 
-            // --- Слой A: Неоновое свечение с пульсацией ---
-            for (int i = 1; i <= 6; ++i) {
+                        for (int i = 1; i <= 6; ++i) {
                 float offset = static_cast<float>(i) * 1.5f;
                 int alpha = static_cast<int>((70 - (i * 10)) * finalAlpha * glowPulse);
                 if (alpha <= 0) break;
@@ -2122,8 +1884,7 @@ void OGLRenderer::draw() {
                 dl->AddText(ImGui::GetFont(), fontSize, ImVec2(tPos.x, tPos.y + offset), glowCol, title);
             }
 
-            // --- Слой B: Основной текст ---
-            dl->AddText(ImGui::GetFont(), fontSize, tPos, IM_COL32(240, 250, 255, static_cast<int>(255 * finalAlpha)), title);
+                        dl->AddText(ImGui::GetFont(), fontSize, tPos, IM_COL32(240, 250, 255, static_cast<int>(255 * finalAlpha)), title);
 
             int vtxEnd = dl->VtxBuffer.Size;
 
@@ -2133,16 +1894,14 @@ void OGLRenderer::draw() {
             }
 
             if (hasCustomFont) ImGui::PopFont();
-            // --- Мелкий подзаголовок "You are dead" ---
-            const char* subTitle = "You are dead";
+                        const char* subTitle = "You are dead";
             float subFontSize = ImGui::GetFontSize() * 0.9f;
             ImVec2 subSize = ImGui::GetFont()->CalcTextSizeA(subFontSize, FLT_MAX, 0.0f, subTitle);
             ImVec2 subPos = ImVec2((W - subSize.x) * 0.5f, tPos.y + tSize.y + 10.0f);
             dl->AddText(ImGui::GetFont(), subFontSize, subPos, IM_COL32(150, 200, 255, static_cast<int>(180 * uiAlpha)), subTitle);
 
 
-            // --- 3. КНОПКА ВОЗРОЖДЕНИЯ (УЛЬТРА-СОЧНЫЙ НЕОН) ---
-            float iconSize = 36.0f;
+                        float iconSize = 36.0f;
             ImVec2 iconPos((W - iconSize) * 0.5f, H * 0.72f);
             ImVec2 iconCenter(iconPos.x + iconSize * 0.5f, iconPos.y + iconSize * 0.5f);
 
@@ -2153,11 +1912,7 @@ void OGLRenderer::draw() {
             float alphaMult = isHovered ? 1.4f : 1.0f;
             
 
-            // -------------------------------------------------------------
-            // 1. МНОГОСЛОЙНОЕ ГЛУБОКОЕ СВЕЧЕНИЕ ФОНА (ULTRA DEEP BLOOM)
-            // -------------------------------------------------------------
-            // Внешний ультрамариновый ореол (большой)
-            float glowSize1 = 90.0f;
+                                                            float glowSize1 = 90.0f;
             ImU32 colCenter1 = IM_COL32(0, 80, 255, static_cast<int>(130 * uiAlpha * alphaMult));
             ImU32 colEdge1 = IM_COL32(0, 40, 200, 0);
 
@@ -2166,8 +1921,7 @@ void OGLRenderer::draw() {
             dl->AddRectFilledMultiColor(ImVec2(iconCenter.x - glowSize1, iconCenter.y), ImVec2(iconCenter.x, iconCenter.y + glowSize1), colEdge1, colCenter1, colEdge1, colEdge1);
             dl->AddRectFilledMultiColor(iconCenter, ImVec2(iconCenter.x + glowSize1, iconCenter.y + glowSize1), colCenter1, colEdge1, colEdge1, colEdge1);
 
-            // Внутренний ярко-голубой ядреный ореол (меньше, но ярче)
-            float glowSize2 = 45.0f;
+                        float glowSize2 = 45.0f;
             ImU32 colCenter2 = IM_COL32(0, 230, 255, static_cast<int>(200 * uiAlpha * alphaMult));
             ImU32 colEdge2 = IM_COL32(0, 180, 255, 0);
 
@@ -2177,10 +1931,7 @@ void OGLRenderer::draw() {
             dl->AddRectFilledMultiColor(iconCenter, ImVec2(iconCenter.x + glowSize2, iconCenter.y + glowSize2), colCenter2, colEdge2, colEdge2, colEdge2);
 
 
-            // -------------------------------------------------------------
-            // 2. ВРАЩАЮЩИЕСЯ ЗАСЕЧКИ С ЯРКИМ СЕРДЕЧНИКОМ
-            // -------------------------------------------------------------
-            float ringRadius = 42.0f;
+                                                float ringRadius = 42.0f;
             int numTicks = 24;
             float angleOffset = time * 1.2f;
 
@@ -2195,17 +1946,12 @@ void OGLRenderer::draw() {
                 float wave = (sinf(angle * 3.0f + time * 4.0f) + 1.0f) * 0.5f;
                 int aVal = static_cast<int>((120 + wave * 135) * uiAlpha);
 
-                // Подложка свечения засечки (толстая и синяя)
-                dl->AddLine(pInner, pOuter, IM_COL32(0, 140, 255, aVal), 3.5f);
-                // Яркое циан-ядро засечки (тонкое)
-                dl->AddLine(pInner, pOuter, IM_COL32(180, 255, 255, aVal), 1.2f);
+                                dl->AddLine(pInner, pOuter, IM_COL32(0, 140, 255, aVal), 3.5f);
+                                dl->AddLine(pInner, pOuter, IM_COL32(180, 255, 255, aVal), 1.2f);
             }
 
 
-            // -------------------------------------------------------------
-            // 3. СОЧНАЯ ВНЕШНЯЯ НЕОНОВАЯ ГРАНЬ (DOUBLE PASS ARC)
-            // -------------------------------------------------------------
-            int arcSegments = 3;
+                                                int arcSegments = 3;
             float arcLength = (2.0f * 3.14159265f) / arcSegments;
             float arcOffset = -time * 0.9f;
 
@@ -2213,30 +1959,23 @@ void OGLRenderer::draw() {
                 float startA = arcOffset + i * arcLength;
                 float endA = startA + arcLength * 0.65f;
 
-                // Слой 1: Широкое внешнее размытие (Deep Blue Glow)
-                dl->PathClear();
+                                dl->PathClear();
                 dl->PathArcTo(iconCenter, ringRadius + 9.0f, startA, endA, 20);
                 dl->PathStroke(IM_COL32(0, 100, 255, static_cast<int>(180 * uiAlpha)), 0, 7.0f);
 
-                // Слой 2: Насыщенный Neon Cyan
-                dl->PathClear();
+                                dl->PathClear();
                 dl->PathArcTo(iconCenter, ringRadius + 9.0f, startA, endA, 20);
                 dl->PathStroke(IM_COL32(0, 240, 255, static_cast<int>(255 * uiAlpha)), 0, 3.0f);
 
-                // Слой 3: Горящий белый центр (дает эффект раскаленного неона)
-                dl->PathClear();
+                                dl->PathClear();
                 dl->PathArcTo(iconCenter, ringRadius + 9.0f, startA, endA, 20);
                 dl->PathStroke(IM_COL32(230, 255, 255, static_cast<int>(255 * uiAlpha)), 0, 1.0f);
             }
 
 
-            // -------------------------------------------------------------
-            // 4. ОПТИЧЕСКИЙ БЛИК (LENS FLARE С БЕЛОЙ ВСПЫШКОЙ)
-            // -------------------------------------------------------------
-            float flareWidth = 200.0f;
+                                                float flareWidth = 200.0f;
 
-            // Синий шлейф блика
-            dl->AddRectFilledMultiColor(
+                        dl->AddRectFilledMultiColor(
                 ImVec2(iconCenter.x - flareWidth, iconCenter.y - 3.0f), ImVec2(iconCenter.x, iconCenter.y + 3.0f),
                 IM_COL32(0, 100, 255, 0), IM_COL32(0, 220, 255, static_cast<int>(220 * uiAlpha)),
                 IM_COL32(0, 220, 255, static_cast<int>(220 * uiAlpha)), IM_COL32(0, 100, 255, 0));
@@ -2246,46 +1985,34 @@ void OGLRenderer::draw() {
                 IM_COL32(0, 220, 255, static_cast<int>(220 * uiAlpha)), IM_COL32(0, 100, 255, 0),
                 IM_COL32(0, 100, 255, 0), IM_COL32(0, 220, 255, static_cast<int>(220 * uiAlpha)));
 
-            // Ослепительно белая лазерная нить
-            dl->AddLine(
+                        dl->AddLine(
                 ImVec2(iconCenter.x - flareWidth * 0.6f, iconCenter.y),
                 ImVec2(iconCenter.x + flareWidth * 0.6f, iconCenter.y),
                 IM_COL32(255, 255, 255, static_cast<int>(255 * uiAlpha)), 1.5f);
 
 
-            // -------------------------------------------------------------
-            // 5. ИКОНКА КНОПКИ (УЛЬТРА-КОНТРАСТ)
-            // -------------------------------------------------------------
-            float outerRingRadius = 18.0f;
+                                                float outerRingRadius = 18.0f;
             float innerSquareSize = 9.0f;
 
-            // Сочное свечение прямо вокруг белого круга
-            dl->AddCircle(iconCenter, outerRingRadius + 4.0f, IM_COL32(0, 220, 255, static_cast<int>(255 * uiAlpha)), 32, 3.5f);
+                        dl->AddCircle(iconCenter, outerRingRadius + 4.0f, IM_COL32(0, 220, 255, static_cast<int>(255 * uiAlpha)), 32, 3.5f);
             dl->AddCircle(iconCenter, outerRingRadius + 1.5f, IM_COL32(220, 255, 255, static_cast<int>(255 * uiAlpha)), 32, 1.5f);
 
-            // Чисто белая плашка
-            dl->AddCircleFilled(iconCenter, outerRingRadius, IM_COL32(255, 255, 255, static_cast<int>(255 * uiAlpha)), 32);
+                        dl->AddCircleFilled(iconCenter, outerRingRadius, IM_COL32(255, 255, 255, static_cast<int>(255 * uiAlpha)), 32);
 
-            // Контрастный глубокий квадрат
-            ImVec2 sqMin(iconCenter.x - innerSquareSize * 0.5f, iconCenter.y - innerSquareSize * 0.5f);
+                        ImVec2 sqMin(iconCenter.x - innerSquareSize * 0.5f, iconCenter.y - innerSquareSize * 0.5f);
             ImVec2 sqMax(iconCenter.x + innerSquareSize * 0.5f, iconCenter.y + innerSquareSize * 0.5f);
             dl->AddRect(sqMin, sqMax, IM_COL32(10, 15, 25, static_cast<int>(255 * uiAlpha)), 0.0f, 0, 2.5f);
 
 
-            // -------------------------------------------------------------
-            // 6. ТЕКСТ "Revive"
-            // -------------------------------------------------------------
-            const char* btnText = "Revive";
+                                                const char* btnText = "Revive";
             float btnTextSize = ImGui::GetFontSize() * 1.0f;
             ImVec2 bSize = ImGui::GetFont()->CalcTextSizeA(btnTextSize, FLT_MAX, 0.0f, btnText);
 
-            // Тень под текстом для читаемости
-            dl->AddText(ImGui::GetFont(), btnTextSize,
+                        dl->AddText(ImGui::GetFont(), btnTextSize,
                 ImVec2(iconCenter.x - bSize.x * 0.5f + 1.0f, iconCenter.y + ringRadius + 18.0f + 1.0f),
                 IM_COL32(0, 0, 0, static_cast<int>(200 * uiAlpha)), btnText);
 
-            // Неоново-голубой текст
-            dl->AddText(ImGui::GetFont(), btnTextSize,
+                        dl->AddText(ImGui::GetFont(), btnTextSize,
                 ImVec2(iconCenter.x - bSize.x * 0.5f, iconCenter.y + ringRadius + 18.0f),
                 IM_COL32(180, 240, 255, static_cast<int>(255 * uiAlpha)), btnText);
 
@@ -2295,8 +2022,7 @@ void OGLRenderer::draw() {
         }
     }
 
-    // --- OVERLAY FADE & LOADING ---
-    if (mFadeAlpha > 0.001f) {
+        if (mFadeAlpha > 0.001f) {
         ImDrawList* dl = ImGui::GetForegroundDrawList();
         float W = static_cast<float>(mRenderData.rdWidth);
         float H = static_cast<float>(mRenderData.rdHeight);
@@ -2341,23 +2067,20 @@ void OGLRenderer::draw() {
     mUserInterface.render();
     mRenderData.rdUIDrawTime = mUIDrawTimer.stop();
 
-    // ============================================================
-    // 13. PENDING TRANSITION START
-    // ============================================================
-    if (pendingFadeOut) {
+                if (pendingFadeOut) {
         mFadeState = FadeState::FADE_OUT;
         mFadeAlpha = 0.0f;
         Logger::log(1, "OGLRenderer: Menu action received, starting fade to black\n");
     }
 
     mLastTickTime = tickTime;
+
 }
 void OGLRenderer::ResetPlayerAfterDeath() {
     auto& enty = mGltfInstances.at(1);
     btRigidBody* body = enty->getRigidBody();
 
-    // TODO: замените на реальную точку спавна, если она у вас хранится отдельно
-    btTransform spawnTrans;
+        btTransform spawnTrans;
     spawnTrans.setIdentity();
     spawnTrans.setOrigin(btVector3(0.0f, 2.0f, 0.0f));
 
@@ -2365,11 +2088,9 @@ void OGLRenderer::ResetPlayerAfterDeath() {
     body->getMotionState()->setWorldTransform(spawnTrans);
     body->setLinearVelocity(btVector3(0, 0, 0));
     body->setAngularVelocity(btVector3(0, 0, 0));
-    body->setLinearFactor(btVector3(1.0f, 1.0f, 1.0f));   // возвращаем полную физику
-    body->activate(true);
+    body->setLinearFactor(btVector3(1.0f, 1.0f, 1.0f));       body->activate(true);
 
-    // TODO: замените 100.0f на вашу реальную rdPlayerMaxHP, если она есть
-    mRenderData.rdPlayerHP = 100.0f;
+        mRenderData.rdPlayerHP = 100.0f;
     mRenderData.rdPlayerIsDead = false;
 
     ModelSettings settings = enty->getInstanceSettings();
@@ -2387,12 +2108,9 @@ void OGLRenderer::ResetPlayerAfterDeath() {
     Logger::log(1, "OGLRenderer: Player respawned\n");
 }
 void OGLRenderer::updatePlayerCharacter(float deltaTime) {
-    // --- HIT STOP LOCK ---
-    // Если идет стоп-кадр от попадания, мы НЕ продвигаем физику и таймеры
-    if (mRenderData.rdHitStopTimer > 0.0f) {
+            if (mRenderData.rdHitStopTimer > 0.0f) {
         mRenderData.rdHitStopTimer -= deltaTime;
-        return; // Пропускаем весь апдейт персонажа, пока идет микро-пауза!
-    }
+        return;     }
     auto& enty = mGltfInstances.at(1);
     if (!enty->getRigidBody()) return;
 
@@ -2402,97 +2120,71 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
         static float deathTimer = 0.0f;
         float deathDuration = enty->getAnimationEndTime(EntyAnim::Death);
 
-        // Мотаем время, пока не дойдем до конца анимации смерти
-        if (deathTimer < deathDuration) {
+                if (deathTimer < deathDuration) {
             deathTimer += deltaTime;
         }
 
         ModelSettings settings = enty->getInstanceSettings();
 
-        // Насильно ставим анимацию смерти
-        if (settings.msAnimClip != EntyAnim::Death) {
+                if (settings.msAnimClip != EntyAnim::Death) {
             settings.msAnimClip = EntyAnim::Death;
             settings.msCrossBlendDestAnimClip = EntyAnim::Death;
             settings.msBlendingMode = blendMode::crossfade;
             settings.msAnimCrossBlendFactor = 1.0f;
         }
 
-        settings.msPlayAnimation = false; // Ручное управление временем
-        // Останавливаем кадр ровно в конце, чтобы труп не зацикливался и не дергался
-        settings.msAnimTimePosition = std::min(deathTimer, deathDuration - 0.01f);
+        settings.msPlayAnimation = false;                 settings.msAnimTimePosition = std::min(deathTimer, deathDuration - 0.01f);
 
         enty->setInstanceSettings(settings);
         enty->checkForUpdates();
 
-        // ФИЗИКА: Разрешаем падать только вниз (ось Y). 
-        // Отключаем перемещение по X и Z, чтобы враги не могли толкать труп как мячик!
-        body->setLinearFactor(btVector3(0.0f, 1.0f, 0.0f));
+                        body->setLinearFactor(btVector3(0.0f, 1.0f, 0.0f));
         body->setAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
 
-        return; // ВЫХОДИМ ИЗ ФУНКЦИИ! Мертвые не бегают, не бьют и не реагируют на WASD.
-    }
+        return;     }
     body->setAngularFactor(btVector3(0, 1, 0));
 
-    // --- 0. ТАЙМЕРЫ СПЕЦ-ДЕЙСТВИЙ ---
-    static float dashDurationTimer = 0.0f;
+        static float dashDurationTimer = 0.0f;
     static float dashCooldownTimer = 0.0f;
 
-    // НОВОЕ: Таймеры жесткой фиксации для атак (Action Lock)
-    static float attackDurationTimer = 0.0f; // Сколько еще будет длиться удар
-    static int currentAttackAnim = EntyAnim::Idle; // Какой именно удар мы сейчас бьем
-    static float attackTimeAccumulator = 0.0f; // Наше ручное время анимации с нуля
-    static bool hasDealtDamage = false;
+        static float attackDurationTimer = 0.0f;     static int currentAttackAnim = EntyAnim::Idle;     static float attackTimeAccumulator = 0.0f;     static bool hasDealtDamage = false;
 
     if (dashDurationTimer > 0.0f) dashDurationTimer -= deltaTime;
     if (dashCooldownTimer > 0.0f) dashCooldownTimer -= deltaTime;
 
     if (attackDurationTimer > 0.0f) {
         attackDurationTimer -= deltaTime;
-        attackTimeAccumulator += deltaTime; // Мотаем время анимации вперед!
-
-        // МЕСТО №1: СЮДА КЛАДЕМ ПРОВЕРКУ ТАЙМИНГА УДАРОВ
-        // Каждый кадр, пока тикает таймер атаки, проверяем, не настал ли момент удара
-        // =========================================================================
-        if (currentAttackAnim == EntyAnim::KICK) {
-            // Если анимация дошла до кадра 29 (0.483 секунды) и урон еще НЕ был нанесен
-            if (attackTimeAccumulator >= 0.483f && !hasDealtDamage) {
+        attackTimeAccumulator += deltaTime; 
+                                if (currentAttackAnim == EntyAnim::KICK) {
+                        if (attackTimeAccumulator >= 0.483f && !hasDealtDamage) {
                 std::cout << "[BOOM] Нога Энти вылетела! Запускаем хитчек!" << std::endl;
 
-                // Вызываем функцию урона (мы её добавим в класс OGLRenderer)
-                CheckPlayerMeleeHit(2.2f, 70.0f);
+                                CheckPlayerMeleeHit(2.2f, 50.0f);
 
-                hasDealtDamage = true; // Фиксируем, что в этом ударе урон уже просчитан
-            }
+                hasDealtDamage = true;             }
         }
         if (currentAttackAnim == EntyAnim::Boxing) {
-            // Если анимация дошла до кадра 29 (0.483 секунды) и урон еще НЕ был нанесен
-            if (attackTimeAccumulator >= 0.433f && !hasDealtDamage) {
+                        if (attackTimeAccumulator >= 0.433f && !hasDealtDamage) {
                 std::cout << "[BOOM] Рука Энти вылетела! Запускаем хитчек!" << std::endl;
 
-                // Вызываем функцию урона (мы её добавим в класс OGLRenderer)
-                CheckPlayerMeleeHit(2.2f, 700.0f);
+                                CheckPlayerMeleeHit(2.2f, 80.0f);
 
-                hasDealtDamage = true; // Фиксируем, что в этом ударе урон уже просчитан
-            }
+                hasDealtDamage = true;             }
         }
         if (currentAttackAnim == EntyAnim::FlyKick) {
-            // Если анимация дошла до кадра 29 (0.483 секунды) и урон еще НЕ был нанесен
-            if (attackTimeAccumulator >= 0.333f && !hasDealtDamage) {
+                        if (attackTimeAccumulator >= 0.333f && !hasDealtDamage) {
                 std::cout << "[BOOM] Рука Энти вылетела! Запускаем хитчек!" << std::endl;
 
-                // Вызываем функцию урона (мы её добавим в класс OGLRenderer)
-                CheckPlayerMeleeHit(12.0f, 15.0f);
+                                CheckPlayerMeleeHit(12.0f, 20.0f);
 
-                hasDealtDamage = true; // Фиксируем, что в этом ударе урон уже просчитан
-            }
+                hasDealtDamage = true;             }
         }
         if (currentAttackAnim == EntyAnim::DoubleJumpKick) {
             if (attackTimeAccumulator >= 1.833f && !hasDealtDamage) {
                 std::cout << "[BOOM] Рука Энти вылетела! Запускаем хитчек!" << std::endl;
 
-                float baseDamage = 80.0f;
-                bool isCrit = critDist(rngMeleeCrit) < 0.8f; // 80% шанс
-                float finalDamage = isCrit ? baseDamage * 2.0f : baseDamage;
+                float baseDamage = 100.0f;
+                bool isCrit = critDist(rngMeleeCrit) < 0.8f;                 float finalDamage = isCrit ? baseDamage * 2.0f : baseDamage;
 
                 if (isCrit) {
                     std::cout << "[CRIT] Двойной урон!" << std::endl;
@@ -2505,8 +2197,7 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
     }
     
 
-    // --- 1. ЧИТАЕМ КНОПКИ ДЛЯ АНИМАЦИЙ ---
-    bool keyC = glfwGetKey(mRenderData.rdWindow, GLFW_KEY_C) == GLFW_PRESS;
+        bool keyC = glfwGetKey(mRenderData.rdWindow, GLFW_KEY_C) == GLFW_PRESS;
     bool keyG = glfwGetKey(mRenderData.rdWindow, GLFW_KEY_G) == GLFW_PRESS;
     bool keyE = glfwGetKey(mRenderData.rdWindow, GLFW_KEY_E) == GLFW_PRESS;
     bool keyZ = glfwGetKey(mRenderData.rdWindow, GLFW_KEY_Z) == GLFW_PRESS;
@@ -2516,7 +2207,7 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
     bool keyF = glfwGetKey(mRenderData.rdWindow, GLFW_KEY_F) == GLFW_PRESS;
 
     bool isSprinting = (std::abs(mRenderData.rdMoveForward) > 1 || std::abs(mRenderData.rdMoveRight) > 1);
-    float maxSpeed = isSprinting ? 60.0f : 5.0f;
+    float maxSpeed = isSprinting ? 15.0f : 5.0f;
 
     ModelSettings settings = enty->getInstanceSettings();
     bool settingsChanged = false;
@@ -2532,8 +2223,7 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
     btVector3 currentVel = body->getLinearVelocity();
 
 
-    // --- 2. ПРАВИЛЬНАЯ ПРОВЕРКА ЗЕМЛИ ---
-    bool isOnGround = false;
+        bool isOnGround = false;
     btTransform currentTransform;
     body->getMotionState()->getWorldTransform(currentTransform);
     btVector3 rayStart = currentTransform.getOrigin();
@@ -2547,19 +2237,16 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
     }
 
 
-    // --- 3. ЛОГИКА ЗАПУСКА ДЭША И АТАК ---
-    if (keyE && isOnGround && dashDurationTimer <= 0.0f && dashCooldownTimer <= 0.0f && attackDurationTimer <= 0.0f) {
+        if (keyE && isOnGround && dashDurationTimer <= 0.0f && dashCooldownTimer <= 0.0f && attackDurationTimer <= 0.0f) {
         dashDurationTimer = 0.3f;
         dashCooldownTimer = 1.5f;
     }
 
-    // НОВОЕ: Захватываем атаку, только если сейчас не бьем и не дэшим
-    if (isOnGround && attackDurationTimer <= 0.0f && dashDurationTimer <= 0.0f) {
+        if (isOnGround && attackDurationTimer <= 0.0f && dashDurationTimer <= 0.0f) {
         if (keyF) {
             currentAttackAnim = EntyAnim::FlyKick;
             attackDurationTimer = enty->getAnimationEndTime(currentAttackAnim);
-            attackTimeAccumulator = 0.0f; // Сбрасываем таймер в 0!
-
+            attackTimeAccumulator = 0.0f; 
             hasDealtDamage = false;
         }
         else if (mouseLMB) {
@@ -2589,8 +2276,7 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
         mEntyStunTimer += deltaTime;
         if (mEntyStunTimer >= mEntyStunDuration) {
             mIsEntyStunned = false;
-            // Возвращаем Энти в Idle
-            auto entySettings = enty->getInstanceSettings();
+                        auto entySettings = enty->getInstanceSettings();
             entySettings.msAnimClip = EntyAnim::Idle;
             entySettings.msPlayAnimation = true;
             enty->setInstanceSettings(entySettings);
@@ -2600,24 +2286,18 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
     for (auto& enemy : mEnemies) {
         if (!enemy) continue;
 
-        // Если Энти уже мертва - игнорируем урон
-        if (mRenderData.rdPlayerIsDead) continue;
+                if (mRenderData.rdPlayerIsDead) continue;
 
         if (enemy->consumeHitPlayerFlag() && !mIsEntyStunned) {
-            // 1. ОТНИМАЕМ ЗДОРОВЬЕ
-            mRenderData.rdPlayerHP -= 5.0f; // Урон от симбиота
-            if (mRenderData.rdPlayerHP <= 0.0f) mRenderData.rdPlayerHP = 0.0f;
-            // ВРУБАЕМ АНИМАЦИЮ ПОЛУЧЕНИЯ УРОНА
-            auto entySettings = enty->getInstanceSettings();
+                        mRenderData.rdPlayerHP -= 25.0f;             if (mRenderData.rdPlayerHP <= 0.0f) mRenderData.rdPlayerHP = 0.0f;
+                        auto entySettings = enty->getInstanceSettings();
             if (mRenderData.rdPlayerHP <= 0.0f) {
                 mRenderData.rdPlayerIsDead = true;
                 std::cout << "[GAME OVER] Энти погибла!" << std::endl;
 
-                break; // Выходим из цикла, дальше обновлять Энти не нужно
-            }
+                break;             }
             else {
-                entySettings.msAnimClip = EntyAnim::HitReaction; // 8
-                entySettings.msCrossBlendDestAnimClip = EntyAnim::HitReaction;
+                entySettings.msAnimClip = EntyAnim::HitReaction;                 entySettings.msCrossBlendDestAnimClip = EntyAnim::HitReaction;
                 entySettings.msBlendingMode = blendMode::crossfade;
                 entySettings.msAnimCrossBlendFactor = 1.0f;
                 entySettings.msAnimTimePosition = 0.0f;
@@ -2627,19 +2307,16 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
                 enty->setInstanceSettings(entySettings);
                 enty->checkForUpdates();
 
-                // Блокируем управление
-                mIsEntyStunned = true;
+                                mIsEntyStunned = true;
                 mEntyStunTimer = 0.0f;
 
-                // ИСПРАВЛЕНИЕ №3: Если Энти атаковала, прерываем её атаку при получении урона (стаггер)
-                attackDurationTimer = 0.0f;
+                                attackDurationTimer = 0.0f;
                 attackTimeAccumulator = 0.0f;
                 hasDealtDamage = false;
             }
         }
     }
-    // --- 4. ДЕРЕВО ПРИОРИТЕТОВ АНИМАЦИЙ ---
-    int currentTargetAnim = EntyAnim::Idle;
+        int currentTargetAnim = EntyAnim::Idle;
 
     if (mIsEntyStunned) {
         currentTargetAnim = EntyAnim::HitReaction;
@@ -2647,12 +2324,10 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
     else if (dashDurationTimer > 0.0f) {
         currentTargetAnim = EntyAnim::DashBack;
     }
-    // НОВОЕ: Если таймер атаки тикает, мы ЖЕСТКО держим эту анимацию
-    else if (attackDurationTimer > 0.0f) {
+        else if (attackDurationTimer > 0.0f) {
         currentTargetAnim = currentAttackAnim;
     }
-    // Дальше идут обычные прерываемые анимации
-    else if (!isOnGround) {
+        else if (!isOnGround) {
         currentTargetAnim = EntyAnim::Jump;
     }
     else if (keyZ) {
@@ -2669,11 +2344,9 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
     }
 
 
-    // --- 5. СПЕЦИАЛЬНЫЕ СОСТОЯНИЯ (БЛОКИРОВКА И ДЭШ) ---
-    bool isMovementBlocked = (
+        bool isMovementBlocked = (
         mIsEntyStunned ||
-        attackDurationTimer > 0.0f || // Блокируем ходьбу во время удара
-        currentTargetAnim == EntyAnim::Dance1 ||
+        attackDurationTimer > 0.0f ||         currentTargetAnim == EntyAnim::Dance1 ||
         currentTargetAnim == EntyAnim::DanceWin
         );
 
@@ -2684,8 +2357,7 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
     }
 
 
-    // --- 6. ФИЗИКА ДВИЖЕНИЯ ---
-    if (isDashing) {
+        if (isDashing) {
         btTransform trans;
         body->getMotionState()->getWorldTransform(trans);
 
@@ -2700,28 +2372,19 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
 
         body->setAngularVelocity(btVector3(0, 0, 0));
     }
-    // НОВОЕ: Физический рывок вперед для конкретных атак
-    else if (attackDurationTimer > 0.0f && (currentAttackAnim == EntyAnim::FlyKick || currentAttackAnim == EntyAnim::DoubleJumpKick)) {
+        else if (attackDurationTimer > 0.0f && (currentAttackAnim == EntyAnim::FlyKick || currentAttackAnim == EntyAnim::DoubleJumpKick)) {
         btTransform trans;
         body->getMotionState()->getWorldTransform(trans);
 
-        // Вектор "Вперед" для нашей модели
-        btVector3 forwardDir = quatRotate(trans.getRotation(), btVector3(0, 0, 1));
+                btVector3 forwardDir = quatRotate(trans.getRotation(), btVector3(0, 0, 1));
 
-        float attackMoveSpeed = 0.0f; // По умолчанию стоим на месте (замах или выход из удара)
-
-        // 1. Настройки для FLY KICK (удар в полете)
-        if (currentAttackAnim == EntyAnim::FlyKick) {
-            // Энти летит вперед только с 0.2 по 0.6 секунды анимации. 
-            // (Замени эти цифры на те моменты, когда в Блендере она реально летит)
-            if (attackTimeAccumulator > 0.0f && attackTimeAccumulator < 1.2f) {
-                attackMoveSpeed = 20.0f; // Очень быстрый рывок вперед
-            }
+        float attackMoveSpeed = 0.0f; 
+                if (currentAttackAnim == EntyAnim::FlyKick) {
+                                    if (attackTimeAccumulator > 0.0f && attackTimeAccumulator < 1.2f) {
+                attackMoveSpeed = 20.0f;             }
         }
-        // 2. Настройки для DOUBLE JUMP KICK (двойной удар)
-        else if (currentAttackAnim == EntyAnim::DoubleJumpKick) {
-            // Допустим, она делает первый шаг на 0.1с, а второй рывок на 0.5с
-            if (attackTimeAccumulator > 0.8f && attackTimeAccumulator < 2.4f) {
+                else if (currentAttackAnim == EntyAnim::DoubleJumpKick) {
+                        if (attackTimeAccumulator > 0.8f && attackTimeAccumulator < 2.4f) {
                 attackMoveSpeed = 5.0f;
             }
       
@@ -2733,8 +2396,7 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
         body->setLinearVelocity(finalVel);
         body->setAngularVelocity(btVector3(0, 0, 0));
     }
-    // Обычная ходьба и бег
-    else if (glm::length(moveDir) > 0.1f && !isMovementBlocked) {
+        else if (glm::length(moveDir) > 0.1f && !isMovementBlocked) {
         moveDir = glm::normalize(moveDir);
         float accel = 10.0f * deltaTime;
 
@@ -2755,8 +2417,7 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
 
         body->setAngularVelocity(btVector3(0, angleDiff * 12.0f, 0));
     }
-    // Обычное торможение (включая торможение при обычных атаках типа Boxing)
-    else {
+        else {
         float decel = 15.0f * deltaTime;
         btVector3 targetVel(0.0f, currentVel.y(), 0.0f);
         btVector3 finalVel = currentVel.lerp(targetVel, decel);
@@ -2765,8 +2426,7 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
     }
 
 
-    // --- 7. ФИЗИЧЕСКИЙ АКТ ПРЫЖКА ---
-    if (keySpace && !mWasSpacePressed && isOnGround && !isMovementBlocked && !isDashing) {
+        if (keySpace && !mWasSpacePressed && isOnGround && !isMovementBlocked && !isDashing) {
         float jumpForce = 340.0f;
         body->applyCentralImpulse(btVector3(0.0f, jumpForce, 0.0f));
         isOnGround = false;
@@ -2774,8 +2434,7 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
     mWasSpacePressed = keySpace;
 
 
-    // --- 8. МГНОВЕННОЕ ПЕРЕКЛЮЧЕНИЕ АНИМАЦИИ ---
-    if (currentTargetAnim != settings.msCrossBlendDestAnimClip) {
+        if (currentTargetAnim != settings.msCrossBlendDestAnimClip) {
         settings.msCrossBlendDestAnimClip = currentTargetAnim;
         settings.msAnimClip = currentTargetAnim;
 
@@ -2786,18 +2445,12 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
         settingsChanged = true;
     }
 
-    // --- 9. ОТПРАВКА ДАННЫХ В ДВИЖОК ---
-    bool forceManualUpdate = false;
+        bool forceManualUpdate = false;
 
-    // НОВОЕ: Перехватываем управление временем движка
-    if (attackDurationTimer > 0.0f) {
-        settings.msPlayAnimation = false; // Вырубаем глобальные часы
-        settings.msAnimTimePosition = attackTimeAccumulator; // Кормим время вручную!
-        forceManualUpdate = true; // Заставляем движок обновлять кости каждый кадр
-    }
+        if (attackDurationTimer > 0.0f) {
+        settings.msPlayAnimation = false;         settings.msAnimTimePosition = attackTimeAccumulator;         forceManualUpdate = true;     }
     else {
-        settings.msPlayAnimation = true; // Для бега, дэша и айдла возвращаем автовоспроизведение
-    }
+        settings.msPlayAnimation = true;     }
 
     if (settingsChanged || forceManualUpdate) {
         if (currentTargetAnim == EntyAnim::DashBack) {
@@ -2813,112 +2466,123 @@ void OGLRenderer::updatePlayerCharacter(float deltaTime) {
 }
 
 void OGLRenderer::CheckPlayerMeleeHit(float hitRadius, float damage) {
-    // 1. Получаем позицию Энти из Bullet Physics
-    btTransform playerTrans;
+        btTransform playerTrans;
     mGltfInstances.at(1)->getRigidBody()->getMotionState()->getWorldTransform(playerTrans);
     glm::vec3 playerPos(playerTrans.getOrigin().x(), playerTrans.getOrigin().y(), playerTrans.getOrigin().z());
 
-    // 2. Получаем вектор направления взгляда Энти (куда она смотрит) на плоскости (Y=0)
-    btVector3 btForward = quatRotate(playerTrans.getRotation(), btVector3(0, 0, 1));
+        btVector3 btForward = quatRotate(playerTrans.getRotation(), btVector3(0, 0, 1));
     glm::vec3 playerForward = glm::normalize(glm::vec3(btForward.x(), 0.0f, btForward.z()));
 
-    // 3. Проверяем каждого симбиота
-    for (auto& enemy : mEnemies) {
+        for (auto& enemy : mEnemies) {
         if (!enemy) continue;
 
-        // Получаем позицию врага
-        btTransform enemyTrans;
+                btTransform enemyTrans;
         enemy->getBody()->getMotionState()->getWorldTransform(enemyTrans);
         glm::vec3 enemyPos(enemyTrans.getOrigin().x(), enemyTrans.getOrigin().y(), enemyTrans.getOrigin().z());
 
-        // Считаем вектор от игрока к врагу
-        glm::vec3 dirToEnemy = enemyPos - playerPos;
+                glm::vec3 dirToEnemy = enemyPos - playerPos;
 
-        // ❗ ГЛАВНЫЙ ФИКС: Игнорируем разницу в высоте (Y) ❗
-        // Теперь наш хитбокс - это высокий цилиндр, а не круглый шар
-        dirToEnemy.y = 0.0f;
+                        dirToEnemy.y = 0.0f;
 
-        // Считаем 2D-дистанцию по полу
-        float distance = glm::length(dirToEnemy);
+                float distance = glm::length(dirToEnemy);
 
-        // ПРОВЕРКА А: Враг дотягивается?
-        if (distance <= hitRadius) {
+                if (distance <= hitRadius) {
             if (distance > 0.01f) dirToEnemy = glm::normalize(dirToEnemy);
 
-            // ПРОВЕРКА Б: Враг находится в секторе спереди?
-            float dotProduct = glm::dot(playerForward, dirToEnemy);
+                        float dotProduct = glm::dot(playerForward, dirToEnemy);
 
-            if (dotProduct > 0.5f) { // ~60 градусов сектор
-                std::cout << "[HIT] Попадание! Дистанция до врага: " << distance << std::endl;
+            if (dotProduct > 0.5f) {                 std::cout << "[HIT] Попадание! Дистанция до врага: " << distance << std::endl;
 
-                // Передаем урон
-                enemy->TakeDamage(damage);
+                                enemy->TakeDamage(damage);
                 if (enemy->isDead()) {
                     gAudio.playSound("assets/audio/death_punch.wav");
-                    // ==========================================
-                    //  ФАТАЛЬНОЕ ДОБИВАНИЕ (ЗУМ + ХИТСТОП)
-                    // ==========================================
-                    mRenderData.rdHitStopTimer = 0.15f;  // Замораживаем кадр на 150 мс
-                    mRenderData.rdShakeDuration = 0.15f; // Усиленная тряска
-                    mRenderData.rdShakeIntensity = 0.03f;
-                    mRenderData.rdZoomTimer = 0.25f;      // Зум плавно сработает только при смертельном ударе!
-                }
+                                                                                mRenderData.rdHitStopTimer = 0.15f;                      mRenderData.rdShakeDuration = 0.15f;                     mRenderData.rdShakeIntensity = 0.03f;
+                    mRenderData.rdZoomTimer = 0.25f;                      }
                 else {
                     gAudio.playSound("assets/audio/punch.MP3");
-                    // ==========================================
-                    //  ОБЫЧНЫЙ УДАР (БЕЗ ЗУМА)
-                    // ==========================================
-                    mRenderData.rdHitStopTimer = 0.06f;
+                                                                                mRenderData.rdHitStopTimer = 0.06f;
                     mRenderData.rdShakeDuration = 0.10f;
                     mRenderData.rdShakeIntensity = 0.04f;
-                    mRenderData.rdZoomTimer = 0.0f;      // Зум не включаем
-                }
+                    mRenderData.rdZoomTimer = 0.0f;                      }
             }
         }
     }
 }
 void OGLRenderer::cleanup() {
-
     if (mDynamicsWorld) {
-        // Удаляем все RigidBody из мира (опционально, но хороший тон)
         for (int i = mDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--) {
             btCollisionObject* obj = mDynamicsWorld->getCollisionObjectArray()[i];
             mDynamicsWorld->removeCollisionObject(obj);
-            delete obj;
+            // Не удаляй obj здесь вручную, если motion state/shape принадлежат instance'ам
+            // Лучше оставить удаление shapes/bodies на сторону GltfInstance
         }
         delete mDynamicsWorld;
         delete mSolver;
         delete mOverlappingPairCache;
         delete mDispatcher;
         delete mCollisionConfiguration;
+        mDynamicsWorld = nullptr;
     }
 
-    for (int i = 0; i < mGltfModels.size(); ++i) {
-        mGltfModels.at(i)->cleanup();
-        mGltfModels.at(i).reset();
+    // Безопасная очистка моделей
+    for (auto& model : mGltfModels) {
+        if (model) {
+            model->cleanup();
+            model.reset();
+        }
     }
+    mGltfModels.clear();
+
+    // Инстансы тоже нужно почистить (если они держат rigid body и т.д.)
+    for (auto& inst : mGltfInstances) {
+        if (inst) {
+            // если есть cleanup у instance — вызови
+            inst.reset();
+        }
+    }
+    mGltfInstances.clear();
+
     if (mMenuController) {
         mMenuController->cleanup();
+        mMenuController.reset();
     }
+
+    // NJ menu model
+    if (mNJMenuModel) {
+        mNJMenuModel->cleanup();
+        mNJMenuModel.reset();
+    }
+
     mGltfGPUDualQuatShader.cleanup();
     mGltfGPUShader.cleanup();
-    mUserInterface.cleanup();
+    mGltfGPUShaderToy.cleanup();
+    mGltfGPUShaderToyChannelPack.cleanup();
+    mGltfGPUDualQuatChannelShader.cleanup();
+    mStaticShader.cleanup();
     mLineShader.cleanup();
+    mBloomBlurShader.cleanup();
+    mBloomCompositeShader.cleanup();
+    mDeathGlowShader.cleanup();
+    mDeathGlowCompositeShader.cleanup();
+
+    mUserInterface.cleanup();
     mVertexBuffer.cleanup();
     mGltfShaderStorageBuffer.cleanup();
     mGltfDualQuatSSBuffer.cleanup();
     mUniformBuffer.cleanup();
+
     mFramebuffer.cleanup();
     mMSFramebuffer.cleanup();
     mBlurFBO[0].cleanup();
     mBlurFBO[1].cleanup();
-    mBloomBlurShader.cleanup();
-    mBloomCompositeShader.cleanup();
-    glDeleteVertexArrays(1, &mBloomVAO);
-    mSkyBox.cleanup();
     mDeathCaptureFBO.cleanup();
-    mDeathGlowShader.cleanup();
-    mDeathGlowCompositeShader.cleanup();
+
+    if (mBloomVAO != 0) {
+        glDeleteVertexArrays(1, &mBloomVAO);
+        mBloomVAO = 0;
+    }
+
+    mSkyBox.cleanup();
     gAudio.shutdown();
 }
 

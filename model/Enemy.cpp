@@ -8,8 +8,7 @@ Enemy::Enemy(std::shared_ptr<GltfInstance> model, btRigidBody* body,
     : mModel(model), mBody(body),
     mSpeed(speed), mDetectionRadius(detectionRadius), mFieldOfViewDegrees(fovDegrees),
     mHealth(maxHealth), mMaxHealth(maxHealth) {
-    // При спавне враг всегда появляется в состоянии "Ожидание"
-    changeState(std::make_unique<AIStateIdle>());
+        changeState(std::make_unique<AIStateIdle>());
 }
 
 Enemy::~Enemy() {}
@@ -27,29 +26,24 @@ void Enemy::resetToSpawn()
     initialTransform.setIdentity();
     initialTransform.setOrigin(btVector3(mSpawnPos.x, mSpawnPos.y, mSpawnPos.z));
 
-    // Телепортируем физическое тело Bullet
-    mBody->setWorldTransform(initialTransform);
+        mBody->setWorldTransform(initialTransform);
     if (mBody->getMotionState()) {
         mBody->getMotionState()->setWorldTransform(initialTransform);
     }
 
-    // Сбрасываем инерцию и силы
-    mBody->setLinearVelocity(btVector3(0, 0, 0));
+        mBody->setLinearVelocity(btVector3(0, 0, 0));
     mBody->setAngularVelocity(btVector3(0, 0, 0));
     mBody->clearForces();
 
-    // Возвращаем в Idle
-    changeState(std::make_unique<AIStateIdle>());
+        changeState(std::make_unique<AIStateIdle>());
 
     std::cout << "[ENEMY] Враг сброшен на спавн!" << std::endl;
 }
 
 void Enemy::update(float deltaTime, const glm::vec3& playerPos) {
-    mTargetPos = playerPos; // Обновляем инфу о том, где Энти
-
+    mTargetPos = playerPos; 
     if (mCurrentState) {
-        mCurrentState->update(this, deltaTime); // Мозг думает
-    }
+        mCurrentState->update(this, deltaTime);     }
 }
 
 void Enemy::changeState(std::unique_ptr<AIState> newState) {
@@ -114,8 +108,7 @@ bool Enemy::CanSeeTarget() const {
 }
 
 void Enemy::TakeDamage(float amount) {
-    if (isDead()) return; // Труп не реагирует на удары
-
+    if (isDead()) return; 
     float finalDamage = amount;
     if (isBlocking()) {
         finalDamage *= getBlockDamageMultiplier();
@@ -126,27 +119,21 @@ void Enemy::TakeDamage(float amount) {
     std::cout << "[ENEMY] Получено " << finalDamage << " урона! Осталось ХП: " << mHealth << std::endl;
 
     if (mHealth <= 0.0f) {
-        changeState(std::make_unique<AIStateDeath>()); // УБИЛИ!
-        return;
+        changeState(std::make_unique<AIStateDeath>());         return;
     }
 
     if (canBeStaggered()) {
-        changeState(std::make_unique<AIStateHitReaction>()); // ПРОСТО БОЛЬНО
-    }
-    // Если canBeStaggered() == false — это "poise": боссы без анимации реакции
-    // на урон просто продолжают текущее состояние (не прерываются ударом).
-}
+        changeState(std::make_unique<AIStateHitReaction>());     }
+        }
 
 int Enemy::getAnimIndex(EnemyAnimSlot slot) const {
-    // Базовая реализация — таблица анимаций Symbiote (5 клипов, как было раньше).
-    switch (slot) {
+        switch (slot) {
     case EnemyAnimSlot::Idle:        return 2;
     case EnemyAnimSlot::Move:        return 5;
     case EnemyAnimSlot::Attack1:     return 3;
     case EnemyAnimSlot::HitReaction: return 4;
     case EnemyAnimSlot::Death:       return 1;
-    default:                         return -1; // Attack2/Attack3/Block — не поддерживаются
-    }
+    default:                         return -1;     }
 }
 
 std::vector<EnemyAnimSlot> Enemy::getAvailableAttackSlots() const {
@@ -161,7 +148,5 @@ EnemyAnimSlot Enemy::chooseAttackSlot() const {
 }
 
 std::vector<HitWindow> Enemy::getHitWindows(EnemyAnimSlot /*attackSlot*/) const {
-    // Дефолт: одно окно урона в середине анимации (55%-70% длительности клипа) —
-    // ровно то же самое, что было хардкодом (75-85 кадров при 60 FPS ≈ эти доли).
-    return { HitWindow{0.55f, 0.70f, false} };
+            return { HitWindow{0.55f, 0.70f, false} };
 }

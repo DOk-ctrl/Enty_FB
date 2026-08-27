@@ -5,9 +5,9 @@
 bool Window::init(unsigned int width, unsigned int height, std::string title) {
 
   /* set a "hint" for the NEXT window created*/
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+ // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+ // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   mWindow = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
  
@@ -20,7 +20,7 @@ bool Window::init(unsigned int width, unsigned int height, std::string title) {
   GLFWimage images[1];
   int channels;
 
-  images[0].pixels = stbi_load(R"(C:\Dev\02_opengl_multiple_models\window\logo.png)", &images[0].width, &images[0].height, &channels, 4);
+  images[0].pixels = stbi_load("window/logo.png", &images[0].width, &images[0].height, &channels, 4);
 
   if (images[0].pixels) {
       glfwSetWindowIcon(mWindow, 1, images);
@@ -73,19 +73,20 @@ bool Window::init(unsigned int width, unsigned int height, std::string title) {
 
 
 void Window::mainLoop() {
-  /* force VSYNC */
-  glfwSwapInterval(1);
+    /* force VSYNC */
+    glfwSwapInterval(0);
 
-  while (!glfwWindowShouldClose(mWindow)) {
-    mRenderer->draw();
+    static int frameCounter = 0;
 
-    /* swap buffers */
-    glfwSwapBuffers(mWindow);
+    while (!glfwWindowShouldClose(mWindow)) {
+        frameCounter++;
 
-    /* poll events in a loop */
-    glfwPollEvents();
+        mRenderer->draw();
 
-  }
+        glfwSwapBuffers(mWindow);
+
+        glfwPollEvents();
+    }
 }
 
 void Window::cleanup() {

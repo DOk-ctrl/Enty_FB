@@ -22,7 +22,7 @@ class UserInterface {
     static void drawSettingsOverlay(OGLRenderData& renderData, bool& showSettings);
   private:
     float mFramesPerSecond = 0.0f;
-    /* averaging speed */
+
     float mAveragingAlpha = 0.96f;
     int styleOPT = 0;
     std::vector<float> mFPSValues{};

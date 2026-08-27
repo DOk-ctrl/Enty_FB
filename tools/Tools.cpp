@@ -10,17 +10,18 @@ std::string Tools::getFilenameExt(std::string filename) {
   return std::string();
 }
 
-const std::string SECRET_KEY = "GepaPetProject2026!";
+const std::string TEXTURE_KEY = "GepaPetProject2026";
+const std::string SHADER_KEY = "GepaPetProject2024";
+const std::string GLTF_KEY = "M0d3lS4feKey2026##";
 
-void Tools::processData(std::vector<char>& data) {
+void Tools::processData(std::vector<char>& data, const std::string& key) {
     for (size_t i = 0; i < data.size(); ++i) {
-        data[i] ^= SECRET_KEY[i % SECRET_KEY.length()];
+        data[i] ^= key[i % key.length()];
     }
 }
-
-void Tools::processData(std::vector<unsigned char>& data) {
+void Tools::processData(std::vector<unsigned char>& data, const std::string& key) {
     for (size_t i = 0; i < data.size(); ++i) {
-        data[i] ^= SECRET_KEY[i % SECRET_KEY.length()];
+        data[i] ^= key[i % key.length()];
     }
 }
 

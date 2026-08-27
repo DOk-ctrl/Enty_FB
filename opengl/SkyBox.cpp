@@ -7,10 +7,9 @@
 #include "SkyBox.h"
 #include "Logger.h"
 #include <stb_image.h>
+#include <Tools.h>
 
-/* ============================================================
- *  Geometry — unit cube, shared by all layers
- * ============================================================ */
+
 namespace {
     const float skyboxVertices[] = {
       -1.0f,  1.0f, -1.0f,  -1.0f, -1.0f, -1.0f,   1.0f, -1.0f, -1.0f,
@@ -33,17 +32,15 @@ namespace {
     };
 }
 
-/* ============================================================
- *  init()  — upload geometry + load shaders
- * ============================================================ */
+
 bool SkyBox::init() {
-    /* background shader (same as before, no extra uniforms) */
+    
     if (!mBgShader.loadShaders("shader/skybox.vert", "shader/skybox.frag")) {
         Logger::log(1, "%s error: could not load background skybox shaders\n", __FUNCTION__);
         return false;
     }
 
-    /* parallax layer shader */
+    
     if (!mLayerShader.loadShaders("shader/skybox_parallax.vert", "shader/skybox_parallax.frag")) {
         Logger::log(1, "%s error: could not load parallax skybox shaders\n", __FUNCTION__);
         return false;
@@ -67,89 +64,92 @@ bool SkyBox::init() {
  * ============================================================ */
 bool SkyBox::loadCrossToCubemap(const std::string& filename, GLuint& outTexture,
     bool forceRGBA, bool& outHasRealAlpha) {
+
+    // 0. Читаем зашифрованный файл в память и расшифровываем ОДИН раз
+    std::vector<char> fileData = Tools::loadFileToMemory(filename);
+    if (fileData.empty()) {
+        Logger::log(1, "%s error: could not read image to memory '%s'\n", __FUNCTION__, filename.c_str());
+        return false;
+    }
+    Tools::processData(fileData, TEXTURE_KEY);
+
     /* Detect actual channel count BEFORE loading (no pixel allocation).
      * If the PNG is RGB-only, forceRGBA fills alpha=255 → all pixels opaque.
      * The caller uses outHasRealAlpha=false to enable brightness-based keying. */
-        {
-            int iw = 0, ih = 0, ich = 0;
-            outHasRealAlpha = stbi_info(filename.c_str(), &iw, &ih, &ich) && (ich == 4);
-            Logger::log(1, "%s: '%s' real alpha: %s\n",
-                __FUNCTION__, filename.c_str(), outHasRealAlpha ? "yes" : "NO — brightness key will be applied");
-        }
+    {
+        int iw = 0, ih = 0, ich = 0;
+        outHasRealAlpha = stbi_info_from_memory(
+            reinterpret_cast<const stbi_uc*>(fileData.data()),
+            static_cast<int>(fileData.size()),
+            &iw, &ih, &ich) && (ich == 4);
+        Logger::log(1, "%s: '%s' real alpha: %s\n",
+            __FUNCTION__, filename.c_str(), outHasRealAlpha ? "yes" : "NO — brightness key will be applied");
+    }
 
-        int texWidth = 0, texHeight = 0, texChannels = 0;
-        stbi_set_flip_vertically_on_load(false);
+    int texWidth = 0, texHeight = 0, texChannels = 0;
+    stbi_set_flip_vertically_on_load(false);
+    int reqChannels = forceRGBA ? 4 : 0;
+    unsigned char* crossData = stbi_load_from_memory(
+        reinterpret_cast<const stbi_uc*>(fileData.data()),
+        static_cast<int>(fileData.size()),
+        &texWidth, &texHeight, &texChannels, reqChannels);
 
-        int reqChannels = forceRGBA ? 4 : 0;
-        unsigned char* crossData = stbi_load(filename.c_str(), &texWidth, &texHeight,
-            &texChannels, reqChannels);
-        if (!crossData) {
-            Logger::log(1, "%s error: could not load image '%s'\n", __FUNCTION__, filename.c_str());
-            return false;
-        }
-        if (forceRGBA) texChannels = 4;
-
-        int faceSize = texWidth / 4;
-        if (texHeight / 3 != faceSize) {
-            Logger::log(1, "%s error: '%s' is not a 4x3 cross image (%dx%d)\n",
-                __FUNCTION__, filename.c_str(), texWidth, texHeight);
-            stbi_image_free(crossData);
-            return false;
-        }
-
-        /* cross layout:
-         *        [ ][+Y][ ][ ]     row 0
-         *     [-X][+Z][+X][-Z]     row 1
-         *        [ ][-Y][ ][ ]     row 2   */
-        struct FacePos { int col, row; };
-        const FacePos facePositions[6] = {
-          { 2, 1 }, /* +X */
-          { 0, 1 }, /* -X */
-          { 1, 0 }, /* +Y */
-          { 1, 2 }, /* -Y */
-          { 1, 1 }, /* +Z */
-          { 3, 1 }  /* -Z */
-        };
-
-        std::vector<unsigned char> faceBuffer(static_cast<size_t>(faceSize) * faceSize * texChannels);
-        GLenum format = (texChannels == 4) ? GL_RGBA : GL_RGB;
-        // Указываем внутренний формат с поддержкой аппаратного sRGB-декодирования
-        GLenum internalFormat = (texChannels == 4) ? GL_SRGB_ALPHA : GL_SRGB8;
-
-        glGenTextures(1, &outTexture);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, outTexture);
-
-        for (int face = 0; face < 6; ++face) {
-            int startX = facePositions[face].col * faceSize;
-            int startY = facePositions[face].row * faceSize;
-
-            for (int row = 0; row < faceSize; ++row) {
-                const unsigned char* src = crossData +
-                    (static_cast<size_t>(startY + row) * texWidth + startX) * texChannels;
-                unsigned char* dst = faceBuffer.data() +
-                    static_cast<size_t>(row) * faceSize * texChannels;
-                std::memcpy(dst, src, static_cast<size_t>(faceSize) * texChannels);
-            }
-
-            // Заменяем первый format на internalFormat
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, internalFormat,
-                faceSize, faceSize, 0, format, GL_UNSIGNED_BYTE, faceBuffer.data());
-        }
-
+    if (!crossData) {
+        Logger::log(1, "%s error: could not load image '%s': %s\n",
+            __FUNCTION__, filename.c_str(), stbi_failure_reason());
+        return false;
+    }
+    if (forceRGBA) texChannels = 4;
+    int faceSize = texWidth / 4;
+    if (texHeight / 3 != faceSize) {
+        Logger::log(1, "%s error: '%s' is not a 4x3 cross image (%dx%d)\n",
+            __FUNCTION__, filename.c_str(), texWidth, texHeight);
         stbi_image_free(crossData);
+        return false;
+    }
+    /* cross layout:
+     *        [ ][+Y][ ][ ]     row 0
+     *     [-X][+Z][+X][-Z]     row 1
+     *        [ ][-Y][ ][ ]     row 2   */
+    struct FacePos { int col, row; };
+    const FacePos facePositions[6] = {
+      { 2, 1 },
+      { 0, 1 },
+      { 1, 0 },
+      { 1, 2 },
+      { 1, 1 },
+      { 3, 1 }
+    };
+    std::vector<unsigned char> faceBuffer(static_cast<size_t>(faceSize) * faceSize * texChannels);
+    GLenum format = (texChannels == 4) ? GL_RGBA : GL_RGB;
+    GLenum internalFormat = (texChannels == 4) ? GL_SRGB_ALPHA : GL_SRGB8;
+    glGenTextures(1, &outTexture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, outTexture);
+    for (int face = 0; face < 6; ++face) {
+        int startX = facePositions[face].col * faceSize;
+        int startY = facePositions[face].row * faceSize;
+        for (int row = 0; row < faceSize; ++row) {
+            const unsigned char* src = crossData +
+                (static_cast<size_t>(startY + row) * texWidth + startX) * texChannels;
+            unsigned char* dst = faceBuffer.data() +
+                static_cast<size_t>(row) * faceSize * texChannels;
+            std::memcpy(dst, src, static_cast<size_t>(faceSize) * texChannels);
+        }
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, internalFormat,
+            faceSize, faceSize, 0, format, GL_UNSIGNED_BYTE, faceBuffer.data());
+    }
+    stbi_image_free(crossData);
 
-        /* mipmaps needed by IBL prefilter pass (background layer only, but harmless elsewhere) */
-        glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-
-        Logger::log(1, "%s: loaded cubemap '%s' (face %dx%d, ch=%d)\n",
-            __FUNCTION__, filename.c_str(), faceSize, faceSize, texChannels);
-        return true;
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    Logger::log(1, "%s: loaded cubemap '%s' (face %dx%d, ch=%d)\n",
+        __FUNCTION__, filename.c_str(), faceSize, faceSize, texChannels);
+    return true;
 }
 
 /* ============================================================
@@ -220,7 +220,7 @@ void SkyBox::draw(glm::mat4 view, glm::mat4 projection, float cameraYaw, float t
         glBindTexture(GL_TEXTURE_CUBE_MAP, layer.texture);
 
         if (i == 0) {
-            /* ---- background: standard shader, no parallax ---- */
+            
             mBgShader.use();
             if (mBgShader.getUniformLocation("view"))       mBgShader.setUniformValue(view);
             if (mBgShader.getUniformLocation("projection")) mBgShader.setUniformValue(projection);
@@ -228,7 +228,7 @@ void SkyBox::draw(glm::mat4 view, glm::mat4 projection, float cameraYaw, float t
 
         }
         else {
-            /* ---- parallax layer ---- */
+            
 
             /* Parallax: small extra Y-rotation so this layer appears "closer"
              * than the background. Proportional to how far camera has rotated. */
@@ -317,7 +317,7 @@ bool SkyBox::generateIBLMaps() {
     glGetIntegerv(GL_VIEWPORT, prevViewport);
     glBindFramebuffer(GL_FRAMEBUFFER, mCaptureFBO);
 
-    /* --- 1. Irradiance --- */
+    
     glGenTextures(1, &mIrradianceMap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, mIrradianceMap);
     for (int i = 0; i < 6; ++i)
@@ -349,7 +349,7 @@ bool SkyBox::generateIBLMaps() {
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 
-    /* --- 2. Prefilter --- */
+    
     glGenTextures(1, &mPrefilterMap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, mPrefilterMap);
     for (int i = 0; i < 6; ++i)
@@ -385,7 +385,7 @@ bool SkyBox::generateIBLMaps() {
     }
     glBindVertexArray(0);
 
-    /* --- 3. BRDF LUT --- */
+    
     glGenTextures(1, &mBRDFLUTMap);
     glBindTexture(GL_TEXTURE_2D, mBRDFLUTMap);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, mBRDFMapSize, mBRDFMapSize, 0, GL_RG, GL_FLOAT, nullptr);

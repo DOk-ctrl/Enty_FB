@@ -6,7 +6,6 @@
 #include "GltfInstance.h"
 #include "EnemyConcept.hpp"
 
-// Объявляем базовый шаблон без концепта (простой typename T)
 template<typename T> class AIState;
 
 class Symbiote {
@@ -79,7 +78,6 @@ public:
     float getSpeed() const { return mSpeed; }
 };
 
-// Проверяем концепт ТОЛЬКО когда класс Symbiote ПОЛНОСТЬЮ ОБЪЯВЛЕН
 static_assert(EnemyConcept<Symbiote>, "Symbiote must satisfy EnemyConcept!");
 
 #include "AIStates.hpp"

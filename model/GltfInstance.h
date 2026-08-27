@@ -26,15 +26,7 @@ class GltfInstance {
 
     std::shared_ptr<OGLMesh> getSkeleton();
     void setSkeletonSplitNode(int nodeNum);
-    // Пересобрать кэш joint-матриц вручную (не через updateAnimation()) —
- // нужно, когда что-то меняет позу узлов ПОСЛЕ updateAnimation()/updateJointMatrices(),
- // например вторичная анимация (jiggle bones), IK-довески и т.п.
- //
- // ВАЖНО: вызываем updateNodeMatrices() (рекурсивный обход всего дерева),
- // а НЕ updateJointMatrices() напрямую — та обрабатывает только ОДИН переданный
- // узел без рекурсии в детей. Вызов updateJointMatrices(mRootNode) в прошлой
- // версии корраптил joint-матрицу случайного сустава вместо пересборки всего кэша.
-    void refreshJointMatrices() { updateNodeMatrices(mRootNode); }
+               void refreshJointMatrices() { updateNodeMatrices(mRootNode); }
     int getJointMatrixSize();
     int getJointDualQuatsSize();
     std::vector<glm::mat4> getJointMatrices();
@@ -58,8 +50,7 @@ class GltfInstance {
     void setRigidBody(btRigidBody* body) { mRigidBody = body; }
     btRigidBody* getRigidBody() { return mRigidBody; }
     float getAnimationEndTime(int animNum);
-    // Синхронизация данных
-    void syncPhysics();
+        void syncPhysics();
   private:
     void playAnimation(int animNum, float speedDivider, float blendFactor,
       replayDirection direction);
@@ -103,5 +94,4 @@ class GltfInstance {
     void solveIKByCCD(glm::vec3 target);
     void solveIKByFABRIK(glm::vec3 target);
 
-    btRigidBody* mRigidBody = nullptr; // Физическое тело для этого инстанса
-};
+    btRigidBody* mRigidBody = nullptr; };

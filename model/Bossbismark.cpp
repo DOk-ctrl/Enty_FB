@@ -5,9 +5,8 @@ BossBismark::BossBismark(std::shared_ptr<GltfInstance> model, btRigidBody* body)
         /* maxHealth        */ 600.0f,
         /* speed            */ 5.5f,
         /* detectionRadius  */ 60.0f,
-        /* fovDegrees       */ 5.0f) {
-    // Присваиваем унаследованной переменной mSpawnPos начальные координаты из Bullet Physics:
-    if (mBody) {
+        /* fovDegrees       */ 180.0f) {
+        if (mBody) {
         btTransform trans;
         mBody->getMotionState()->getWorldTransform(trans);
         mSpawnPos = glm::vec3(trans.getOrigin().x(), trans.getOrigin().y(), trans.getOrigin().z());
@@ -16,23 +15,14 @@ BossBismark::BossBismark(std::shared_ptr<GltfInstance> model, btRigidBody* body)
 
 int BossBismark::getAnimIndex(EnemyAnimSlot slot) const {
     switch (slot) {
-    case EnemyAnimSlot::Idle:        return 4; // Idle
-    case EnemyAnimSlot::Move:        return 7; // Walk
-    case EnemyAnimSlot::Attack1:     return 1; // deafault kick
-    case EnemyAnimSlot::Attack2:     return 3; // Flying Kick
-    case EnemyAnimSlot::Attack3:     return 5; // MMA Kick
-    case EnemyAnimSlot::HitReaction: return 6; // Reaction
-    case EnemyAnimSlot::Death:       return 2; // Dying
-    default:                         return -1; // Block не поддерживается
-    }
+    case EnemyAnimSlot::Idle:        return 4;     case EnemyAnimSlot::Move:        return 7;     case EnemyAnimSlot::Attack1:     return 1;     case EnemyAnimSlot::Attack2:     return 3;     case EnemyAnimSlot::Attack3:     return 5;     case EnemyAnimSlot::HitReaction: return 6;     case EnemyAnimSlot::Death:       return 2;     default:                         return -1;     }
 }
 bool BossBismark::shouldResetPosition() const {
     btTransform trans;
     mBody->getMotionState()->getWorldTransform(trans);
     float currentY = trans.getOrigin().y();
 
-    // Если Бисмарк заманили на лестницу/сбросили ниже 7.0
-    return (currentY < 7.0f);
+        return (currentY < 7.0f);
 }
 std::vector<EnemyAnimSlot> BossBismark::getAvailableAttackSlots() const {
     return { EnemyAnimSlot::Attack1, EnemyAnimSlot::Attack2, EnemyAnimSlot::Attack3 };
@@ -40,11 +30,11 @@ std::vector<EnemyAnimSlot> BossBismark::getAvailableAttackSlots() const {
 
 std::vector<HitWindow> BossBismark::getHitWindows(EnemyAnimSlot attackSlot) const {
     switch (attackSlot) {
-    case EnemyAnimSlot::Attack1: // default kick — быстрый одиночный удар
+    case EnemyAnimSlot::Attack1: 
         return { HitWindow{0.50f, 0.60f, false} };
-    case EnemyAnimSlot::Attack2: // Flying Kick — прыжок, удар в воздухе позже
+    case EnemyAnimSlot::Attack2: 
         return { HitWindow{0.30f, 0.60f, false} };
-    case EnemyAnimSlot::Attack3: // MMA Kick — размашистый удар
+    case EnemyAnimSlot::Attack3: 
         return { HitWindow{0.65f, 0.67f, false} };
     default:
         return { HitWindow{0.65f, 0.67f, false} };
@@ -53,42 +43,32 @@ std::vector<HitWindow> BossBismark::getHitWindows(EnemyAnimSlot attackSlot) cons
 
 void BossBismark::onAttackPhysicsUpdate(float attackTimeAccumulator, float deltaTime, EnemyAnimSlot currentAttackAnim)
 {
-    // Нам нужна физика только для Fly kick
-    if (currentAttackAnim != EnemyAnimSlot::Attack2) return;
+        if (currentAttackAnim != EnemyAnimSlot::Attack2) return;
 
     btTransform trans;
     mBody->getMotionState()->getWorldTransform(trans);
 
-    // Вектор "Вперед" для модели Конвея
-    btVector3 forwardDir = quatRotate(trans.getRotation(), btVector3(0, 0, 1));
+        btVector3 forwardDir = quatRotate(trans.getRotation(), btVector3(0, 0, 1));
     btVector3 backwardDir = -forwardDir;
 
     float moveSpeed = 0.0f;
     btVector3 targetDir = forwardDir;
 
-    // --- ТАЙМЛАЙН ДВИЖЕНИЯ В КОМБО ---
-    // Вся анимация длится примерно 250 кадров (4.16 сек)
-
+        
     if (attackTimeAccumulator > (5.0f / 60.0f) && attackTimeAccumulator < (40.0f / 60.0f)) {
-        moveSpeed = 10.0f; // Скорость отскока
-        targetDir = forwardDir;
+        moveSpeed = 10.0f;         targetDir = forwardDir;
     }
-    // 2. Рывок вперед (допустим, с 40 по 90 кадр, то есть 0.66с - 1.5с)
-    // Делаем скорость 15.0f, чтобы он пробежал бОльшую дистанцию и перекрыл отскок
-    else if (attackTimeAccumulator >= (40.0f / 60.0f) && attackTimeAccumulator < (60.0f / 60.0f)) {
+            else if (attackTimeAccumulator >= (40.0f / 60.0f) && attackTimeAccumulator < (60.0f / 60.0f)) {
         moveSpeed = 2.0f;
         targetDir = forwardDir;
     }
 
 
-    // Применяем физику (похоже на то, что ты делал для Энти)
-    btVector3 currentVel = mBody->getLinearVelocity();
+        btVector3 currentVel = mBody->getLinearVelocity();
     float accel = 30.0f * deltaTime;
 
-    // Меняем X и Z, оставляем Y как есть (гравитация)
-    btVector3 targetVel(targetDir.x() * moveSpeed, currentVel.y(), targetDir.z() * moveSpeed);
+        btVector3 targetVel(targetDir.x() * moveSpeed, currentVel.y(), targetDir.z() * moveSpeed);
     btVector3 finalVel = currentVel.lerp(targetVel, accel);
 
     mBody->setLinearVelocity(finalVel);
-    mBody->setAngularVelocity(btVector3(0, 0, 0)); // Блокируем вращение, чтобы Конвей не завалился
-}
+    mBody->setAngularVelocity(btVector3(0, 0, 0)); }

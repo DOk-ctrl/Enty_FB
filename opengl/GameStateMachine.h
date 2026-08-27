@@ -1,27 +1,17 @@
 #pragma once
 #include <functional>
 
-/* ============================================================
- *  Game State Machine
- *
- *  Простой менеджер состояний по образцу AIState из проекта.
- *  Хранится внутри OGLRenderer как член класса.
- *  Все переходы делаются через changeState().
- * ============================================================ */
-
 enum class GameState {
-    MAIN_MENU,   /* главное меню, персонаж NJ танцует                  */
-    LOADING,     /* переход/загрузка (пока просто пропуск через кадр)  */
-    GAMEPLAY,    /* основной геймплей, всё как раньше                  */
-    DEATH        /* экран смерти, можно расширить позже                 */
+    MAIN_MENU,   
+    LOADING,     
+    GAMEPLAY,    
+    DEATH        
 };
 
-/* Вспомогательная структура — передаётся в OGLRenderer::draw()
- * чтобы сигнализировать о нужном переходе из MenuController. */
+
 enum class MenuAction {
     NONE,
     START_GAME,
     SETTINGS,
-    CREDITS, // <--- Добавляем action
-    QUIT
+    CREDITS,     QUIT
 };

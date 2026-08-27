@@ -2,9 +2,6 @@
 #include "Framebuffer.h"
 #include "Logger.h"
 
-// =============================================================
-//  Framebuffer  (��������: COLOR0 = HDR, COLOR1 = Emission)
-// =============================================================
 
 bool Framebuffer::init(unsigned int width, unsigned int height) {
     mBufferWidth = width;
@@ -14,8 +11,7 @@ bool Framebuffer::init(unsigned int width, unsigned int height) {
     glBindFramebuffer(GL_FRAMEBUFFER, mBuffer);
 
 
-    // --- COLOR0: ������� HDR-�������� ---
-    glGenTextures(1, &mColorTex);
+        glGenTextures(1, &mColorTex);
     glBindTexture(GL_TEXTURE_2D, mColorTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -26,8 +22,7 @@ bool Framebuffer::init(unsigned int width, unsigned int height) {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mColorTex, 0);
     Logger::log(1, "%s: added HDR color buffer (COLOR0)\n", __FUNCTION__);
 
-    // --- COLOR1: emission-����� ��� bloom ---
-    glGenTextures(1, &mEmissionTex);
+        glGenTextures(1, &mEmissionTex);
     glBindTexture(GL_TEXTURE_2D, mEmissionTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -38,12 +33,10 @@ bool Framebuffer::init(unsigned int width, unsigned int height) {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, mEmissionTex, 0);
     Logger::log(1, "%s: added emission buffer (COLOR1)\n", __FUNCTION__);
 
-    // ������� OpenGL �������� � ��� ���������� ������������
-    GLenum drawBuffers[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+        GLenum drawBuffers[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
     glDrawBuffers(2, drawBuffers);
 
-    // --- Depth renderbuffer ---
-    glGenRenderbuffers(1, &mDepthBuffer);
+        glGenRenderbuffers(1, &mDepthBuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, mDepthBuffer);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, mDepthBuffer);
@@ -85,11 +78,8 @@ void Framebuffer::unbind() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
-// ������ �� ������ blit �������� � composite-������ ��� ������ � swapchain.
-// ��������� ����� ��� �������������, �� �� ������ �� ������.
 void Framebuffer::drawToScreen() {
-    // ���������� ������� ���������� � OGLRenderer (composite pass)
-}
+    }
 
 bool Framebuffer::checkComplete() {
     glBindFramebuffer(GL_FRAMEBUFFER, mBuffer);
@@ -105,9 +95,6 @@ bool Framebuffer::checkComplete() {
 }
 
 
-// =============================================================
-//  BlurFramebuffer  (ping-pong: ���� COLOR0)
-// =============================================================
 
 bool BlurFramebuffer::init(unsigned int width, unsigned int height) {
     mBufferWidth = width;
@@ -168,12 +155,6 @@ bool BlurFramebuffer::checkComplete() {
 }
 
 
-// =============================================================
-//  MSFramebuffer  (multisample: COLOR0 + COLOR1 + depth,
-//  рисуем сцену сюда, затем resolveTo() блитит в обычный
-//  single-sample Framebuffer, чтобы bloom/blur/composite
-//  шейдеры продолжали работать с обычным sampler2D)
-// =============================================================
 
 bool MSFramebuffer::init(unsigned int width, unsigned int height, int samples) {
     mBufferWidth = width;
@@ -183,16 +164,14 @@ bool MSFramebuffer::init(unsigned int width, unsigned int height, int samples) {
     glGenFramebuffers(1, &mBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, mBuffer);
 
-    // --- COLOR0: multisample HDR ---
-    glGenRenderbuffers(1, &mColorRBO);
+        glGenRenderbuffers(1, &mColorRBO);
     glBindRenderbuffer(GL_RENDERBUFFER, mColorRBO);
     glRenderbufferStorageMultisample(GL_RENDERBUFFER, mSamples, GL_RGBA16F, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, mColorRBO);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     Logger::log(1, "%s: added multisample HDR color buffer (COLOR0, %dx MSAA)\n", __FUNCTION__, mSamples);
 
-    // --- COLOR1: multisample emission (bloom) ---
-    glGenRenderbuffers(1, &mEmissionRBO);
+        glGenRenderbuffers(1, &mEmissionRBO);
     glBindRenderbuffer(GL_RENDERBUFFER, mEmissionRBO);
     glRenderbufferStorageMultisample(GL_RENDERBUFFER, mSamples, GL_RGBA16F, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_RENDERBUFFER, mEmissionRBO);
@@ -202,8 +181,7 @@ bool MSFramebuffer::init(unsigned int width, unsigned int height, int samples) {
     GLenum drawBuffers[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
     glDrawBuffers(2, drawBuffers);
 
-    // --- Depth renderbuffer (multisample) ---
-    glGenRenderbuffers(1, &mDepthRBO);
+        glGenRenderbuffers(1, &mDepthRBO);
     glBindRenderbuffer(GL_RENDERBUFFER, mDepthRBO);
     glRenderbufferStorageMultisample(GL_RENDERBUFFER, mSamples, GL_DEPTH_COMPONENT24, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, mDepthRBO);
@@ -232,8 +210,7 @@ bool MSFramebuffer::resize(unsigned int newWidth, unsigned int newHeight) {
 
 bool MSFramebuffer::changeSampleCount(int samples) {
     if (samples == mSamples && mBuffer != 0) {
-        return true; // без изменений
-    }
+        return true;     }
     Logger::log(1, "%s: changing MSAA sample count from %d to %d\n", __FUNCTION__, mSamples, samples);
     cleanup();
     return init(mBufferWidth, mBufferHeight, samples);
@@ -248,9 +225,7 @@ void MSFramebuffer::unbind() {
 }
 
 void MSFramebuffer::resolveTo(Framebuffer& target) {
-    // Блитим COLOR0 и COLOR1 по отдельности — glBlitFramebuffer резолвит
-    // только текущий READ_BUFFER / DRAW_BUFFER за один вызов.
-    for (int i = 0; i < 2; ++i) {
+            for (int i = 0; i < 2; ++i) {
         glBindFramebuffer(GL_READ_FRAMEBUFFER, mBuffer);
         glReadBuffer(GL_COLOR_ATTACHMENT0 + i);
 
@@ -262,8 +237,7 @@ void MSFramebuffer::resolveTo(Framebuffer& target) {
             GL_COLOR_BUFFER_BIT, GL_NEAREST);
     }
 
-    // Глубина (нужна только если постпроцесс/дальнейшие проходы её читают)
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, mBuffer);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, mBuffer);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target.getFBOHandle());
     glBlitFramebuffer(0, 0, mBufferWidth, mBufferHeight,
         0, 0, mBufferWidth, mBufferHeight,

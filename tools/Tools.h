@@ -5,10 +5,14 @@
 class Tools {
   public:
     static std::string getFilenameExt(std::string filename);
+    
+    // Tools.h — добавь перегрузку с явным ключом
+    static void processData(std::vector<char>& data, const std::string& key);
+    static void processData(std::vector<unsigned char>& data, const std::string& key);
 
-    static void processData(std::vector<char>& data);
-
-    static void processData(std::vector<unsigned char>& data);
-    // Вспомогательная функция для чтения файла целиком в вектор
     static std::vector<char> loadFileToMemory(const std::string& filename);
 };
+
+extern const std::string TEXTURE_KEY;
+extern const std::string SHADER_KEY;
+extern const std::string GLTF_KEY;

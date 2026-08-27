@@ -85,24 +85,21 @@ void GltfNode::setRotation(glm::quat rotation) {
 
 void GltfNode::blendScale(glm::vec3 scale, float blendFactor) {
     float factor = std::min(std::max(blendFactor, 0.0f), 1.0f);
- // float factor = std::clamp(blendFactor, 0.0f, 1.0f);
-  mBlendScale = scale * factor + mScale * (1.0f - factor);
+   mBlendScale = scale * factor + mScale * (1.0f - factor);
   mScaleMatrix = glm::scale(glm::mat4(1.0f), mBlendScale);
   mLocalMatrixNeedsUpdate = true;
 }
 
 void GltfNode::blendTranslation(glm::vec3 translation, float blendFactor) {
     float factor = std::min(std::max(blendFactor, 0.0f), 1.0f);
-  //float factor = std::clamp(blendFactor, 0.0f, 1.0f);
-  mBlendTranslation = translation * factor + mTranslation * (1.0f - factor) ;
+    mBlendTranslation = translation * factor + mTranslation * (1.0f - factor) ;
   mTranslationMatrix = glm::translate(glm::mat4(1.0f), mBlendTranslation);
   mLocalMatrixNeedsUpdate = true;
 }
 
 void GltfNode::blendRotation(glm::quat rotation, float blendFactor) {
     float factor = std::min(std::max(blendFactor, 0.0f), 1.0f);
-  //float factor = std::clamp(blendFactor, 0.0f, 1.0f);
-  mBlendRotation = glm::slerp(mRotation, rotation, factor);
+    mBlendRotation = glm::slerp(mRotation, rotation, factor);
   mRotationMatrix = glm::mat4_cast(mBlendRotation);
   mLocalMatrixNeedsUpdate = true;
 }
@@ -150,7 +147,6 @@ void GltfNode::calculateNodeMatrix() {
 }
 
 glm::mat4 GltfNode::getNodeMatrix() {
-// убрали пересчЄт локальной трсћатрицы из-за профилировани€
   return mNodeMatrix;
 }
 

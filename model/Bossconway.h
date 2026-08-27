@@ -1,14 +1,6 @@
 #pragma once
 #include "Enemy.h"
 #include "audio.h"
-// ============================================================
-//
-//
-//  - Нет клипа реакции на урон -> canBeStaggered() == false: босс "проглатывает"
-//    удары без прерывания (эффект poise, характерный для тяжёлых боссов).
-//  - Фракции окон урона (getHitWindows) — начальные оценки "на глаз", подбирайте
-//    точнее по факту просмотра реальных клипов в движке.
-// ============================================================
 class BossConway : public Enemy {
 public:
     BossConway(std::shared_ptr<GltfInstance> model, btRigidBody* body);
@@ -23,5 +15,4 @@ public:
     void onAttackPhysicsUpdate(float attackTimeAccumulator, float deltaTime, EnemyAnimSlot currentAttackAnim) override;
     bool isBoss() const override { return true; }
     void  playmusic() override { gAudio.playMusic("assets/audio/conmusic.mp3"); }
-    std::string getBossName() const override { return "CONWAY"; } // подставь реальное имя
-};
+    std::string getBossName() const override { return "CONWAY"; } };

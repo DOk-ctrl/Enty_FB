@@ -1,8 +1,7 @@
 #pragma once
 struct ModelSettings {
   glm::vec3 msWorldPosition = glm::vec3(0.0f);
-  //поворот
-  glm::vec3 msWorldRotation = glm::vec3(0.0f);
+    glm::vec3 msWorldRotation = glm::vec3(0.0f);
 
   bool msDrawModel = true;
   bool msDrawSkeleton = false;

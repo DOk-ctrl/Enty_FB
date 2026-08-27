@@ -10,16 +10,12 @@
 
 #include "EnemyConcept.hpp"
 
-// Forward declarations для всех состояний
 template<EnemyConcept T> class AIStateIdle;
 template<EnemyConcept T> class AIStateChase;
 template<EnemyConcept T> class AIStateAttack;
 template<EnemyConcept T> class AIStateHitReaction;
 template<EnemyConcept T> class AIStateDeath;
 
-// ==========================================
-// БАЗОВЫЙ ШАБЛОННЫЙ ИНТЕРФЕЙС
-// ==========================================
 template<typename T>
 class AIState {
 public:
@@ -28,9 +24,6 @@ public:
     virtual void update(T* enemy, float deltaTime) = 0;
 };
 
-// ==========================================
-// 1. ЛОГИКА ОЖИДАНИЯ (IDLE)
-// ==========================================
 template<EnemyConcept T>
 class AIStateIdle : public AIState<T> {
 private:
@@ -59,9 +52,6 @@ public:
     }
 };
 
-// ==========================================
-// 2. ЛОГИКА ПОГОНИ (CHASE)
-// ==========================================
 template<EnemyConcept T>
 class AIStateChase : public AIState<T> {
 public:
@@ -103,8 +93,7 @@ public:
 
         float distance = glm::length(dir);
 
-        // Если добежали вплотную (1.5 метра) - бьем!
-        if (distance < 1.5f) {
+                if (distance < 1.5f) {
             enemy->changeState(std::make_unique<AIStateAttack<T>>());
             return;
         }
@@ -116,8 +105,7 @@ public:
             btVector3 targetVel(dir.x * enemy->getSpeed(), currentVel.y(), dir.z * enemy->getSpeed());
             body->setLinearVelocity(currentVel.lerp(targetVel, accel));
 
-            // Поворот физического тела
-            float targetAngle = std::atan2(dir.x, dir.z);
+                        float targetAngle = std::atan2(dir.x, dir.z);
             btVector3 currentForward = quatRotate(trans.getRotation(), btVector3(0, 0, 1));
             float currentAngle = std::atan2(currentForward.x(), currentForward.z());
             float angleDiff = targetAngle - currentAngle;
@@ -130,9 +118,6 @@ public:
     }
 };
 
-// ==========================================
-// 3. ЛОГИКА АТАКИ (ATTACK)
-// ==========================================
 template<EnemyConcept T>
 class AIStateAttack : public AIState<T> {
 private:
@@ -148,14 +133,12 @@ public:
         settings.msBlendingMode = blendMode::crossfade;
         settings.msAnimCrossBlendFactor = 1.0f;
         settings.msAnimTimePosition = 0.0f;
-        settings.msPlayAnimation = false; // Ручное управление кадрами
-        settings.msAnimSpeed = 1.0f;
+        settings.msPlayAnimation = false;         settings.msAnimSpeed = 1.0f;
 
         enemy->getModel()->setInstanceSettings(settings);
         enemy->getModel()->checkForUpdates();
 
-        // Тормозим тело при ударе
-        btRigidBody* body = enemy->getBody();
+                btRigidBody* body = enemy->getBody();
         if (body) {
             body->setLinearVelocity(btVector3(0, body->getLinearVelocity().y(), 0));
             body->setAngularVelocity(btVector3(0, 0, 0));
@@ -182,8 +165,7 @@ public:
         enemy->getModel()->setInstanceSettings(settings);
         enemy->getModel()->checkForUpdates();
 
-        // Проверка окна урона
-        if (settings.msAnimTimePosition >= hitWindowStart &&
+                if (settings.msAnimTimePosition >= hitWindowStart &&
             settings.msAnimTimePosition <= hitWindowEnd &&
             !mHasDealtDamage) {
 
@@ -210,9 +192,6 @@ public:
     }
 };
 
-// ==========================================
-// 4. ЛОГИКА ПОЛУЧЕНИЯ ХИТА (HIT REACTION)
-// ==========================================
 template<EnemyConcept T>
 class AIStateHitReaction : public AIState<T> {
 private:
@@ -266,9 +245,6 @@ public:
     }
 };
 
-// ==========================================
-// 5. ЛОГИКА СМЕРТИ (DEATH)
-// ==========================================
 template<EnemyConcept T>
 class AIStateDeath : public AIState<T> {
 private:

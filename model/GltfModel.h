@@ -47,14 +47,8 @@ class GltfModel {
 
     void resetNodeData(std::shared_ptr<GltfNode> treeNode);
 
-    Texture mTex;          // Base Color
-    Texture mNormalTex;    // Normal Map
-    Texture mMetalTex;     // Metallic Map
-    Texture mRoughTex;     // Roughness Map
-    Texture mEmitTex;
-    Texture mPackedTex;      // Channel Packed Map
-    Texture mCoatRoughTex;   // Coat Roughness Map
-
+    Texture mTex;              Texture mNormalTex;        Texture mMetalTex;         Texture mRoughTex;         Texture mEmitTex;
+    Texture mPackedTex;          Texture mCoatRoughTex;   
     bool mHasNormalMap = false;
     bool mHasMetalMap = false;
     bool mHasRoughMap = false;
@@ -95,8 +89,7 @@ class GltfModel {
     GLuint mVAO = 0;
     std::vector<GLuint> mVertexVBO{};
     GLuint mIndexVBO = 0;
-    // 17.01
-    size_t indexCount = 0;
+        size_t indexCount = 0;
     GLenum indexComponentType = 0;
     size_t indexByteOffset = 0;
 

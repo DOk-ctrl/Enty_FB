@@ -4,8 +4,7 @@
 #include <glm/gtx/dual_quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
-#include <cstdlib> // rand
-
+#include <cstdlib> 
 #include "GltfInstance.h"
 #include "Logger.h"
 
@@ -41,8 +40,7 @@ GltfInstance::GltfInstance(std::shared_ptr<GltfModel> model, glm::vec3 worldPos,
       mJointDualQuats.assign(256, glm::mat2x4(1.0f));
   }
   else {
-      // Это статика (пол)! Очищаем массивы, чтобы размер был строго 0.
-      mJointMatrices.clear();
+            mJointMatrices.clear();
       mJointDualQuats.clear();
   }
 
@@ -74,8 +72,7 @@ GltfInstance::GltfInstance(std::shared_ptr<GltfModel> model, glm::vec3 worldPos,
 
   updateNodeMatrices(mRootNode);
 
-  // mRootNode->printTree();
-
+  
   mAnimClips = mGltfModel->getAnimClips();
   for (const auto &clip : mAnimClips) {
     mModelSettings.msClipNames.push_back(clip->getClipName());
@@ -154,22 +151,15 @@ void GltfInstance::getSkeletonPerNode(std::shared_ptr<GltfNode> treeNode) {
 void GltfInstance::updateNodeMatrices(std::shared_ptr<GltfNode> treeNode) {
     if (!treeNode) return;
 
-    // 1. Считаем матрицу трансформации (нужно для всех объектов)
-    treeNode->calculateNodeMatrix();
+        treeNode->calculateNodeMatrix();
 
-    // 2. Получаем ID текущего узла
-    int currentNodeIdx = treeNode->getNodeNum();
+        int currentNodeIdx = treeNode->getNodeNum();
 
-    // 3. БЕЗОПАСНАЯ ПРОВЕРКА
-    // Проверяем: 
-    // - есть ли у нас вообще данные о костях (mNodeToJoint не пустой)
-    // - входит ли этот узел в диапазон вектора
-    if (!mNodeToJoint.empty() && currentNodeIdx >= 0 && currentNodeIdx < (int)mNodeToJoint.size()) {
+                    if (!mNodeToJoint.empty() && currentNodeIdx >= 0 && currentNodeIdx < (int)mNodeToJoint.size()) {
 
         int jointIdx = mNodeToJoint[currentNodeIdx];
 
-        // Только если этот узел реально является костью (индекс не -1)
-        if (jointIdx != -1) {
+                if (jointIdx != -1) {
             if (mModelSettings.msVertexSkinningMode == skinningMode::linear) {
                 updateJointMatrices(treeNode);
             }
@@ -255,11 +245,9 @@ void GltfInstance::checkForUpdates() {
   }
 
   if (worldPos != mModelSettings.msWorldPosition) {
-    // Теперь передаем полноценный vec3
-    mRootNode->setWorldPosition(mModelSettings.msWorldPosition);
+        mRootNode->setWorldPosition(mModelSettings.msWorldPosition);
     worldPos = mModelSettings.msWorldPosition;
-    // Здесь тоже используем worldPos целиком
-    mModelSettings.msIkTargetWorldPos = getWorldRotation() *
+        mModelSettings.msIkTargetWorldPos = getWorldRotation() *
       mModelSettings.msIkTargetPos + worldPos;
   }
 
@@ -342,35 +330,27 @@ void GltfInstance::solveIK() {
   }
 }
 void GltfInstance::syncPhysics() {
-    // Если у инстанса нет физики или оно статичное (масса = 0) - ничего не делаем
-    if (!mRigidBody || !mRigidBody->getMotionState() || mRigidBody->isStaticObject()) {
+        if (!mRigidBody || !mRigidBody->getMotionState() || mRigidBody->isStaticObject()) {
         return;
     }
 
-    // Забираем матрицу трансформации из Bullet
-    btTransform trans;
+        btTransform trans;
     mRigidBody->getMotionState()->getWorldTransform(trans);
 
-    // 1. Обновляем позицию (Bullet возвращает центр капсулы)
-    btVector3 pos = trans.getOrigin();
+        btVector3 pos = trans.getOrigin();
 
-    // Смещаем визуальную модель ВНИЗ на половину её роста (0.9 метра)
-    // чтобы ноги визуальной модели стояли ровно на полу, а не проваливались.
-    mModelSettings.msWorldPosition = glm::vec3(pos.x(), pos.y() - 0.9f, pos.z());
+            mModelSettings.msWorldPosition = glm::vec3(pos.x(), pos.y() - 0.9f, pos.z());
 
-    // 2. Обновляем поворот
-    btQuaternion rot = trans.getRotation();
+        btQuaternion rot = trans.getRotation();
     glm::quat q(rot.w(), rot.x(), rot.y(), rot.z());
     mModelSettings.msWorldRotation = glm::degrees(glm::eulerAngles(q));
 
-    // 3. САМОЕ ВАЖНОЕ: Передаем новые координаты в графе сцены!
-    mRootNode->setWorldPosition(mModelSettings.msWorldPosition);
+        mRootNode->setWorldPosition(mModelSettings.msWorldPosition);
     mRootNode->setWorldRotation(mModelSettings.msWorldRotation);
 }
 void GltfInstance::playAnimation(int animNum, float speedDivider, float blendFactor,
     replayDirection direction) {
-    // Если индекс вне диапазона — ничего не делаем
-    if (animNum < 0 || animNum >= mAnimClips.size()) {
+        if (animNum < 0 || animNum >= mAnimClips.size()) {
         return;
     }
 
@@ -451,15 +431,11 @@ void GltfInstance::setSkeletonSplitNode(int nodeNum) {
 
 void GltfInstance::setInstanceSettings(ModelSettings settings) {
   mModelSettings = settings;
-  // 2. Если дерево узлов уже создано, применяем трансформации
-    if (mRootNode) {
-        // Применяем позицию и поворот к корневому узлу
-        mRootNode->setWorldPosition(mModelSettings.msWorldPosition);
+      if (mRootNode) {
+                mRootNode->setWorldPosition(mModelSettings.msWorldPosition);
         mRootNode->setWorldRotation(mModelSettings.msWorldRotation);
         
-        // 3. САМОЕ ВАЖНОЕ: Пересчитываем локальные и глобальные матрицы!
-        // Без этой строчки объект не повернется в кадре
-        updateNodeMatrices(mRootNode); 
+                        updateNodeMatrices(mRootNode); 
     }
 }
 

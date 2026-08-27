@@ -21,8 +21,7 @@ class GltfAnimationClip {
       std::vector<bool> additiveMask, float time, float blendFactor);
 
     void reserveChannels(size_t count) {
-        mAnimationChannels.reserve(count); // Замени mChannels на реальное имя твоей переменной-вектора каналов
-    }
+        mAnimationChannels.reserve(count);     }
 
     float getClipEndTime();
     std::string getClipName();

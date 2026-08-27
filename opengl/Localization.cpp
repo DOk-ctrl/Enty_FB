@@ -1,6 +1,6 @@
 ﻿#include "Localization.h"
 
-Lang Localization::currentLang = Lang::RU;
+Lang Localization::currentLang = Lang::EN;
 
 std::map<std::string, std::map<Lang, std::string>> Localization::dict = {
 	{"settings",			{{Lang::EN, "Settings/Настройки"},		 {Lang::RU, "Settings/Настройки"}}},
@@ -44,7 +44,7 @@ std::map<std::string, std::map<Lang, std::string>> Localization::dict = {
 	{"13.1",				{{Lang::EN, "Good luck. I'm counting on you. "},			 {Lang::RU, "Удачи. Я рассчитываю на тебя.  "}}},
 	{"14.1",				{{Lang::EN, "Defeat Bismarck to free Agnes at Stonehenge. "},			 {Lang::RU, "Победите Бисмарк, чтобы освободить Агнесс "}}},
 	{"15.1",				{{Lang::EN, "Esc for control assistance  "},			 {Lang::RU, "Esc для помощи в управлении  "}}},
-	{"feedback",				{{Lang::EN, "ANY FEEDBACK"},			 {Lang::RU, "ОСТАВЬТЕ ОТЗЫВ"}}},
+	{"feedback",				{{Lang::EN, "BB-62 open for shelling"},			 {Lang::RU, "BB-62 открыта для обстрела"}}},
 	{"letter",				{{Lang::EN, " Letter from the commander\n "},			 {Lang::RU, " Письмо от командира\n  "}}},
 	{"emit",				{{Lang::EN, "Emit(Bismark will change)"},			 {Lang::RU, "Подсветка(Бисмарк поменяется)"}}},
 	{"1",				{{Lang::EN, "Yes, I used AI, I confess, I'm guilty, oh so guilty, of using Cloud once every two days because its context is clogged. Where the AI​​really helped:"},			 {Lang::RU, "Да я использовал ИИ, каюсь, я грешен, ох как же грешен что использовал клауд раз в 2 дня, потому что у него контекст забит. Где реально помог ии: "}}},
@@ -71,13 +71,13 @@ std::map<std::string, std::map<Lang, std::string>> Localization::dict = {
 	{"22",				{{Lang::EN, "I wrote some crap code, I didn't even understand what the hell it was, I sent Gemini and he told me, well, Claude wrote some crap, here's the normal version, do you think I need Gemini?"},			 {Lang::RU, "написал дерьмо код, я сам не понял че это за хрень, скидываю гемини он мне говорит ну клод какую то шляпу написал, вот нормальная версия, вы думаете мне гемини "}}},
 	{"23",				{{Lang::EN, "Well written, well, I just insert this code and run it, well, the computer system crashes, great code is written by AI, I agree 300%. Of course, very"},			 {Lang::RU, "нормально написал, ну просто я вставляю этот код запускаю, ну система компьютера крашится, классный код пишутт ИИ, согласен на все 300%. Конечно. Очень "}}},
 	{"24",				{{Lang::EN, "It's nice to work with tools when they're blocked in your region, and even nicer when the bypass doesn't work."},			 {Lang::RU, "приятно работать с интрументами, когда для они заблокированы в твоем регионе, и еще приятнее когда средство обхода не работает."}}},
-	{"25",				{{Lang::EN, "5 months, $0, 0 support, lost all my friends, ruined relationships. The only help I got was someone recommending SAI 2 instead."},			 {Lang::RU, "5 месяцев, 0$, 0 поддержки, минус все друзья, испорченные отношения. Единственную помощь я получил это мне порекомендовали использовать SAI 2 а не "}}},
+	{"25",				{{Lang::EN, "5 months(pre-development 1 year: some assets, learning some basic skills y'know baking took 2 weeks, now like 2 minutes it takes and creating from zero 3D models Temple, ENty others), C++ learn 3 year by books), $0. The only help I got was someone recommending SAI 2 instead."},			 {Lang::RU, "5 месяцев, 0$. Единственную помощь я получил это мне порекомендовали использовать SAI 2 а не "}}},
 	{"26",				{{Lang::EN, "Paint, and they offered me some help writing notes. You might say, What kind of notes ?  Well, it's for the game's lore. You don't get it, don't laugh. So do I."},			 {Lang::RU, "paint, и мне предложили типа ну помощь в плане писать записки. Вы скажете что за записки, ну это для лора, для лора игры, не поняли , не смеетесь, я вот тоже "}}},
 	{"27",				{{Lang::EN, "I was shocked by such help. If we go into detail, well, five months. Well, the first month was pure enthusiasm, the second month was worse, June was a complete nightmare."},			 {Lang::RU, "охренел от такой помощи. Если уж говорить подробно ну 5 месяцев, ну первый месяц чистый на энтузиазме прошёл, второй месяц хуже, июнь это вообще ужас был, "}}},
 	{"28",				{{Lang::EN, "In July I allowed myself 2 days off a week, and in August without any days off, but now a maximum of 1.5-3 hours of work, that's the limit, by the fifth month it's really hard"},			 {Lang::RU, "июль я позволял себе по 2 выходных в неделю, ну и август без выходных, по уже ну максимум 1.5-3 часа работы, это предел, на пятый месяц ну очень тяжело "}}},
-	{"29",				{{Lang::EN, "No days off. Yes, the first month, day and night, but they'll still distract you, no one will ever offer commensurate help, I'd really like that."},			 {Lang::RU, "без выходных. Да первый месяц днями и ночами, но всё равно будут отвлекать, никто вообще никогда не предложит соизмеримую помощь, я бы очень хотел чтобы "}}},
+	{"29",				{{Lang::EN, "No days off. Yes, the first month, day and night, I'd really like that."},			 {Lang::RU, "без выходных. Да первый месяц днями и ночами,  я бы очень хотел чтобы "}}},
 	{"30",				{{Lang::EN, "They laid out the images for me, or searched for deep sounds, but this takes time and effort. You'll say, well, just take a rest, what's the problem? Really, what's the problem when"},			 {Lang::RU, "за меня верстали картинки, или искали звуки глубокие, но это нужно время и силы. Вы скажете ну так отдохни в чем проблема, правда в чем же проблема, когда "}}},
-	{"31",				{{Lang::EN, "Once school starts there won't be time for it, and any day of delay is a waste of time, you can't make up for it with anything, it's better not to work at all than not to work at all."},			 {Lang::RU, "начнётся учеба будет не до этого , а любой день промедления это ну потеря, ну время не восполнить ничем, лучше никак не работать, чем вообще не работать. "}}},
+	{"31",				{{Lang::EN, "Once new study year starts there won't be time for it, and any day of delay is a waste of time, you can't make up for it with anything, it's better to do little work everyday than not to work at all."},			 {Lang::RU, "начнётся учеба будет не до этого , а любой день промедления это ну потеря, ну время не восполнить ничем, лучше никак не работать, чем вообще не работать. "}}},
 };
 
 

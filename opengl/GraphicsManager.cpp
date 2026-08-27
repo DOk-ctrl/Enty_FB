@@ -1,10 +1,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <algorithm>
 
-// --- ЗАЩИТА ОТ КОНФЛИКТА OPENGL ---
-#define GLFW_INCLUDE_NONE  // Говорим GLFW: "Даже не думай подключать gl.h!"
-#include <GLFW/glfw3.h>
-// ----------------------------------
+#define GLFW_INCLUDE_NONE  #include <GLFW/glfw3.h>
 
 #include "GraphicsManager.h"
 #include "OGLRenderData.h"
@@ -50,8 +47,7 @@ void GraphicsManager::update(OGLRenderData& rd, std::vector<std::shared_ptr<Gltf
 }
 
 void GraphicsManager::applyVSync(OGLRenderData& rd) {
-    // 0 - выкл, 1 - вкл (можно расширить до 2 = "half rate" при желании)
-    glfwSwapInterval(rd.rdVSyncIndex);
+        glfwSwapInterval(rd.rdVSyncIndex);
     Logger::log(1, "%s: VSync set to %d\n", __FUNCTION__, rd.rdVSyncIndex);
 }
 
@@ -60,10 +56,7 @@ void GraphicsManager::applyWindowMode(OGLRenderData& rd) {
     resolutionFromIndex(rd.rdResolutionIndex, width, height);
 
     if (rd.rdFullscreenIndex == 1) {
-        // Запоминаем оконную геометрию только если сейчас реально в оконном режиме -
-        // иначе при повторном выборе разрешения в fullscreen мы бы затёрли
-        // сохранённые координаты текущими (полноэкранными).
-        if (glfwGetWindowMonitor(rd.rdWindow) == nullptr) {
+                                if (glfwGetWindowMonitor(rd.rdWindow) == nullptr) {
             glfwGetWindowPos(rd.rdWindow, &mWindowedPosX, &mWindowedPosY);
             glfwGetWindowSize(rd.rdWindow, &mWindowedWidth, &mWindowedHeight);
         }
@@ -81,19 +74,9 @@ void GraphicsManager::applyWindowMode(OGLRenderData& rd) {
         Logger::log(1, "%s: switched to windowed %dx%d\n", __FUNCTION__, width, height);
     }
 
-    // Некоторые драйверы/платформы сбрасывают своп-интервал при смене
-    // монитора/режима - применяем его повторно на всякий случай.
-    glfwSwapInterval(rd.rdVSyncIndex);
+            glfwSwapInterval(rd.rdVSyncIndex);
 
-    // glfwSetWindowMonitor должен вызвать framebuffer-size callback, который
-    // у вас уже дёргает OGLRenderer::setSize() (ресайзит mFramebuffer,
-    // mMSFramebuffer и mBlurFBO[0]/[1] + делает glViewport). Если у вас
-    // такого callback-а пока нет - раскомментируйте и вызовите вручную:
-    //
-    // int fbWidth, fbHeight;
-    // glfwGetFramebufferSize(rd.rdWindow, &fbWidth, &fbHeight);
-    // renderer->setSize(fbWidth, fbHeight);
-}
+                                }
 
 void GraphicsManager::applyAnisotropy(OGLRenderData& rd, std::vector<std::shared_ptr<GltfModel>>& models) {
     float amount = anisotropyFromIndex(rd.rdAnisotropyIndex);

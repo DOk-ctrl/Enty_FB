@@ -4,7 +4,17 @@
 #include "Window.h"
 #include "Logger.h"
 
-int main(int argc, char *argv[]) {
+/*
+std::string getExeDir() {
+    char path[MAX_PATH];
+    GetModuleFileNameA(NULL, path, MAX_PATH);
+    std::string fullPath(path);
+    size_t pos = fullPath.find_last_of("\\/");
+    return fullPath.substr(0, pos);
+}
+*/
+int main(int argc, char* argv[]) {
+
 
     if (!glfwInit()) {
         Logger::log(1, "Could not init GLFW\n");

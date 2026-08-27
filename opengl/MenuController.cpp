@@ -1,5 +1,4 @@
-// MenuController.cpp
-#define IMGUI_DEFINE_MATH_OPERATORS // <--- ДОБАВИТЬ СТРОГО ПЕРЕД imgui.h
+#define IMGUI_DEFINE_MATH_OPERATORS 
 #define GLM_ENABLE_EXPERIMENTAL
 
 #include <imgui.h>
@@ -14,25 +13,17 @@
 #include <UserInterface.h>
 #include <JigglePhysics.h>
 #include "audio.h"
-/* ============================================================
- *  init()
- * ============================================================ */
+
 bool MenuController::init(std::shared_ptr<GltfModel> model) {
     if (!model) {
         Logger::log(1, "%s error: null GltfModel passed\n", __FUNCTION__);
         return false;
     }
     mNJModel = model;
-    gAudio.playMusic("assets/audio/mainMenu.MP3", true); // true = зациклить
-    /* Создаём инстанс — сразу ставим в комнату меню */
+    gAudio.playMusic("assets/audio/mainMenu.MP3", true);    
     mNJInstance = std::make_shared<GltfInstance>(mNJModel, NJ_WORLD_POS, NJ_WORLD_ROT);
     {
         auto root = mNJInstance->getRootNode();
-
-        // Разово проверить реальные имена костей в логе — Mixamo иногда
-        // переименовывает кости при экспорте (см. "mixamorig:Hips" в клипах).
-        // Если "Breast.L"/"Breast.R" внизу не найдутся — раскомментируй и глянь лог:
-        // root->printTree();
 
         auto leftNode = findNodeByName(root, "Breast.L");
         auto rightNode = findNodeByName(root, "Breast.R");
@@ -55,7 +46,6 @@ bool MenuController::init(std::shared_ptr<GltfModel> model) {
         mSaluteDuration = 1.5f; /* fallback */
     }
 
-    /* Сразу запускаем HipHop */
     {
         auto s = mNJInstance->getInstanceSettings();
         s.msWorldPosition = NJ_WORLD_POS;
@@ -64,7 +54,7 @@ bool MenuController::init(std::shared_ptr<GltfModel> model) {
         s.msAnimClip = ANIM_HIPHOP;
         s.msCrossBlendDestAnimClip = ANIM_HIPHOP;
         s.msBlendingMode = blendMode::crossfade;
-        s.msAnimCrossBlendFactor = 1.0f;   /* мгновенно на HipHop */
+        s.msAnimCrossBlendFactor = 1.0f;   
         s.msAnimTimePosition = 0.0f;
         s.msPlayAnimation = true;
         s.msAnimSpeed = 1.0f;
@@ -167,21 +157,11 @@ MenuAction MenuController::update(float deltaTime, bool anyButtonHovered) {
 }
 
 
-/* ============================================================
- *  drawUI()  — ImGui кнопки меню
- * ============================================================ */
- /* ============================================================
-  *  Хелпер кастомного Toggle в стиле MiSide (Капсула + Плавная анимация)
-  * ============================================================ */
-  /* ============================================================
-   *  Хелпер кастомного Toggle (100% Public ImGui API)
-   * ============================================================ */
 bool CustomToggle(const char* label, bool* v, float width = 52.0f, float height = 26.0f) {
     ImVec2 p = ImGui::GetCursorScreenPos();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
-    // Создаем невидимую кнопку под размер капсулы
-    ImGui::InvisibleButton(label, ImVec2(width, height));
+        ImGui::InvisibleButton(label, ImVec2(width, height));
     bool clicked = ImGui::IsItemClicked();
     bool hovered = ImGui::IsItemHovered();
 
@@ -189,49 +169,36 @@ bool CustomToggle(const char* label, bool* v, float width = 52.0f, float height 
         *v = !(*v);
     }
 
-    // Анимация смещения (плавный переход 0.0f -> 1.0f)
-    float t = *v ? 1.0f : 0.0f;
+        float t = *v ? 1.0f : 0.0f;
     float anim_speed = 12.0f;
 
-    // Используем уникальный ID кнопки для сохранения состояния анимации
-    ImGuiID id = ImGui::GetID(label);
+        ImGuiID id = ImGui::GetID(label);
     float t_anim = ImGui::GetStateStorage()->GetFloat(id, t);
 
-    // Плавная интерполяция
-    float dt = ImGui::GetIO().DeltaTime;
+        float dt = ImGui::GetIO().DeltaTime;
     if (t_anim < t) t_anim = (t_anim + dt * anim_speed < t) ? t_anim + dt * anim_speed : t;
     else if (t_anim > t) t_anim = (t_anim - dt * anim_speed > t) ? t_anim - dt * anim_speed : t;
 
     ImGui::GetStateStorage()->SetFloat(id, t_anim);
 
-    // Цвета стиля
-    ImU32 bg_color = hovered
-        ? ImColor(0.82f, 0.16f, 0.55f, 0.90f)   // Hover
-        : (*v ? ImColor(0.65f, 0.15f, 0.50f, 0.85f)  // ON
-            : ImColor(0.28f, 0.08f, 0.22f, 0.70f)); // OFF
-
+        ImU32 bg_color = hovered
+        ? ImColor(0.82f, 0.16f, 0.55f, 0.90f)           : (*v ? ImColor(0.65f, 0.15f, 0.50f, 0.85f)              : ImColor(0.28f, 0.08f, 0.22f, 0.70f)); 
     ImU32 knob_color = ImColor(0.98f, 0.94f, 0.98f, 1.00f);
 
     float radius = height * 0.5f;
 
-    // Отрисовка фона капсулы
-    draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), bg_color, radius);
+        draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), bg_color, radius);
 
-    // Отрисовка ползунка
-    float knob_pos_x = p.x + radius + t_anim * (width - radius * 2.0f);
+        float knob_pos_x = p.x + radius + t_anim * (width - radius * 2.0f);
     draw_list->AddCircleFilled(ImVec2(knob_pos_x, p.y + radius), radius - 3.0f, knob_color);
 
-    // Текст рядом с тогглом (с тенью для читаемости на синем фоне)
-    ImVec2 text_pos = ImVec2(p.x + width + 8.0f, p.y + (height - ImGui::GetTextLineHeight()) * 0.5f);
+        ImVec2 text_pos = ImVec2(p.x + width + 8.0f, p.y + (height - ImGui::GetTextLineHeight()) * 0.5f);
     
-    // 1. Четкая тень
-    draw_list->AddText(ImVec2(text_pos.x + 1.0f, text_pos.y + 1.0f), IM_COL32(0, 0, 0, 220), label);
+        draw_list->AddText(ImVec2(text_pos.x + 1.0f, text_pos.y + 1.0f), IM_COL32(0, 0, 0, 220), label);
     
-    // 2. Сам текст (можно поменять цвет: сейчас стоит нежно-розовый/белый под тему)
-    draw_list->AddText(text_pos, IM_COL32(255, 220, 245, 255), label);
+        draw_list->AddText(text_pos, IM_COL32(255, 220, 245, 255), label);
 
-    // Смещаем курсор ImGui дальше вправо, чтобы он понимал, где кончился элемент
-    ImGui::Dummy(ImVec2(width + 8.0f + ImGui::CalcTextSize(label).x, height));
+        ImGui::Dummy(ImVec2(width + 8.0f + ImGui::CalcTextSize(label).x, height));
 
     return clicked;
 }
@@ -243,8 +210,7 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
     MenuAction action = MenuAction::NONE;
 
     float panelW = 500.0f;
-    float panelH = 700.0f; // Увеличили высоту панели, чтобы влез тоггл
-    float screenW = (float)renderData.rdWidth;
+    float panelH = 700.0f;     float screenW = (float)renderData.rdWidth;
     float screenH = (float)renderData.rdHeight;
 
     ImGui::SetNextWindowPos(ImVec2(screenW * 0.08f, screenH * 0.25f), ImGuiCond_Always);
@@ -269,9 +235,7 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
 
     ImGui::Begin("##MainMenu", nullptr, flags);
 
-    // --- БЛОК ЗАГОЛОВКА ---
-    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[2]); // Включаем Monomaniac One
-    const char* titleMain = "TENTACLE SHIPPUDEN";
+        ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[2]);     const char* titleMain = "TENTACLE SHIPPUDEN";
 
     ImGui::SetWindowFontScale(1.5f);
     float titleMainW = ImGui::CalcTextSize(titleMain).x;
@@ -285,8 +249,7 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
     ImGui::SetCursorPos(curPos);
     ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "%s", titleMain);
 
-    // 2. Подзаголовок: ENTY FURRY BEAST
-    ImGui::SetWindowFontScale(2.0f);
+        ImGui::SetWindowFontScale(2.0f);
 
     const char* wordEnty = "ENTY ";
     const char* wordFurry = "FURRY ";
@@ -321,22 +284,20 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
 
     ImGui::TextColored(colorBeast, "%s", wordBeast);
 
-    ImGui::PopFont(); // Возвращаемся на Arial для кнопок
+    ImGui::PopFont();
     ImGui::SetWindowFontScale(1.0f);
     ImGui::Spacing();
     ImGui::Spacing();
 
-    /* --- КНОПКИ --- */
-    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[3]); // Переключаемся на ExtraBold для кнопок!
-    float btnW = 320.0f; // Фиксированная аккуратная ширина кнопок
+
+    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[3]); 
+    float btnW = 320.0f; 
     float btnH = 44.0f;
-    float btnX = (panelW - btnW) * 0.5f; // Позиция для центрирования
+    float btnX = (panelW - btnW) * 0.5f; 
 
     bool anyHovered = false;
 
-    // Функция-помощник для перевода строки в ВЕРХНИЙ РЕГИСТР (CAPS)
-    
-    // Кнопка 1
+
     ImGui::SetCursorPosX(btnX);
     if (ImGui::Button(Localization::get("start").c_str(), ImVec2(btnW, btnH))) {
         gAudio.playSound("assets/audio/Ting Coins.wav");
@@ -347,7 +308,7 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
     }
     anyHovered |= ImGui::IsItemHovered();
 
-    // Кнопка 2
+
     ImGui::SetCursorPosX(btnX);
     if (ImGui::Button(Localization::get("settings").c_str(), ImVec2(btnW, btnH))) {
         gAudio.playSound("assets/audio/Ting Coins.wav");
@@ -356,38 +317,30 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
     }
     anyHovered |= ImGui::IsItemHovered();
 
-    // Кнопка CREDITS (Внутриигровые титры)
-    ImGui::SetCursorPosX(btnX);
+        ImGui::SetCursorPosX(btnX);
     if (ImGui::Button("CREDITS", ImVec2(btnW, btnH))) {
         gAudio.playSound("assets/audio/Ting Coins.wav");
-        renderData.showCreditsWindow = true; // Открываем внутриигровое окно титров
-    }
+        renderData.showCreditsWindow = true;     }
    
     anyHovered |= ImGui::IsItemHovered();
-    // Кнопка 3
-    ImGui::SetCursorPosX(btnX);
+        ImGui::SetCursorPosX(btnX);
     if (ImGui::Button(Localization::get("exit").c_str(), ImVec2(btnW, btnH))) {
         action = MenuAction::QUIT;
     }
     anyHovered |= ImGui::IsItemHovered();
 
-    /* --- КАСТОМНЫЕ TOGGLES ПОД ВЫХОДОМ --- */
+
     ImGui::Spacing();
 
-    // Тогглы тоже центрируем или выравниваем по левому краю кнопок:
-    ImGui::SetCursorPosX(btnX);
-    const char* tentacle = "TENTACLE!";
+        ImGui::SetCursorPosX(btnX);
+    const char* tentacle = "BEAST!";
     if (CustomToggle(tentacle, &UserInterface::showTentacle, 52.0f, 26.0f)) {
-        // Логика
-    }
+            }
     anyHovered |= ImGui::IsItemHovered();
-
-    ImGui::Spacing();
 
     ImGui::SetCursorPosX(btnX);
     if (CustomToggle(Localization::get("emit").c_str(), &UserInterface::showEmit, 52.0f, 26.0f)) {
-        // Логика
-    }
+            }
     ImGui::PopFont();
     anyHovered |= ImGui::IsItemHovered();
 
@@ -403,8 +356,7 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
         float screenW = (float)renderData.rdWidth;
         float screenH = (float)renderData.rdHeight;
 
-        // Центрируем окно титров на экране
-        ImGui::SetNextWindowPos(ImVec2((screenW - panelW) * 0.5f, (screenH - panelH) * 0.5f), ImGuiCond_Always);
+                ImGui::SetNextWindowPos(ImVec2((screenW - panelW) * 0.5f, (screenH - panelH) * 0.5f), ImGuiCond_Always);
         ImGui::SetNextWindowSize(ImVec2(panelW, panelH), ImGuiCond_Always);
 
         ImGuiWindowFlags flags =
@@ -415,14 +367,11 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 12.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f);
-        // Темно-фиолетовый фон с прозрачностью, под стиль твоего меню
-        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.10f, 0.05f, 0.12f, 0.92f));
+                ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.10f, 0.05f, 0.12f, 0.92f));
 
         ImGui::Begin("##CreditsMenu", nullptr, flags);
 
-        // --- ЗАГОЛОВК ---
-        ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[2]); // Monomaniac One
-        ImGui::SetWindowFontScale(1.3f);
+                ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[2]);         ImGui::SetWindowFontScale(1.3f);
 
         const char* title = "CREDITS & LICENSES";
         float titleW = ImGui::CalcTextSize(title).x;
@@ -434,21 +383,23 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
         ImGui::Separator();
         ImGui::Spacing();
 
-        // --- СКРОЛЛИРУЕМАЯ ОБЛАСТЬ С ТИТРАМИ ---
-        // Оставляем снизу место под кнопку "Назад" (около 50px)
-        ImGui::BeginChild("CreditsScrollArea", ImVec2(0, panelH - 120.0f), true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
+                        ImGui::BeginChild("CreditsScrollArea", ImVec2(0, panelH - 120.0f), true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
-        ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[3]); // ExtraBold / основной шрифт
-
-        // Раздел 1: Разработчики
-        ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "   DEVELOPMENT");
+        ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[3]); 
+                ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "   DEVELOPMENT");
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Project Lead & Engine Architecture: Volkov Dinar");
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "3D Art & Assets: Volkov Dinar");
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Main menu guitar performer: Volkov Dinar");
         ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
-        // Раздел 2: Источники вдохновения
-        ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "   INSPIRATIONS");
+                ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "   SPECIAL THANKS");
+        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "AI Co-Pilots: Gemini, Grok & Claude");
+        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "To everyone who didn't believe, betrayed, humiliated, or insulted me:");
+        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Thank you for the motivation. STAY HARD.");
+        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Of course the legend: Woolly Buggers 3D Animation Station for guiding me in youtube tutorial");
+        ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+
+                ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "   INSPIRATIONS");
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Azur lane - 3D Shipgirls");
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Nier automata - UI Aesthetics");
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Stellar Blade - Death Screen UI ");
@@ -459,15 +410,7 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Agness - Umamusume");
         ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
-        // Раздел 3: Особые благодарности
-        ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "   SPECIAL THANKS");
-        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "AI Co-Pilots: Gemini, Grok & Claude");
-        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "To everyone who didn't believe, betrayed, humiliated, or insulted me:");
-        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Thank you for the motivation. STAY HARD.");
-        ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-
-        // Раздел 2: Сторонние библиотеки (C++)
-        ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "    THIRD-PARTY LIBRARIES");
+                ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "    THIRD-PARTY LIBRARIES");
 
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Bullet Physics SDK");
         ImGui::TextDisabled("Zlib License | Erwin Coumans");
@@ -482,8 +425,7 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
         ImGui::TextDisabled("MIT / Public Domain");
         ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
-        // Раздел 3: Графика и Ассеты
-        ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "    ASSETS, ANIMATIONS & GRAPHICS  ");
+                ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "    ASSETS, ANIMATIONS & GRAPHICS  ");
 
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "3D Character Rigging & Character Animations ");
         ImGui::TextDisabled("Provided by Adobe Mixamo (mixamo.com) | Royalty-Free Commercial License");
@@ -495,65 +437,51 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
         ImGui::TextDisabled("Screaming Brain Studios | CC0 1.0 Public Domain");
 
 
-        // Раздел 4: Ацдио
-        ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "   Audio & Sound Effects  ");
+                ImGui::TextColored(ImVec4(0.75f, 0.25f, 1.0f, 1.0f), "   Audio & Sound Effects  ");
 
         ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), "Sound Effects ");
         ImGui::TextDisabled("Sound Effects provided by Sonnis (sonnis.com) | Royalty-Free Commercial License (GDC Archives)");
         ImGui::TextDisabled("Sound Effects provided by various creators on Freesound.org | Creative Commons / Public Domain Licenses");
-
+        ImGui::TextDisabled("Some music AI downloaded and created by suno.com | non-commercial license");
         ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-        // 1. Красивый центрированный заголовок (без ручных пробелов)
-        float windowWidth = ImGui::GetWindowSize().x;
+                float windowWidth = ImGui::GetWindowSize().x;
         float textWidth = ImGui::CalcTextSize("About AI").x;
         ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
 
-        // Выделяем заголовок более ярким цветом или золотым (акцент)
-        ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.98f, 1.0f), "About AI");
+                ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.98f, 1.0f), "About AI");
         ImGui::Separator();
         ImGui::Spacing();
 
-        // 2. Выводим основной блок текста (строки 1-8) в цикле
-        ImGui::SetCursorPosX(40.0f);
-        ImGui::BeginGroup(); // Группируем, чтобы отступ работал для всего блока
-        for (int i = 1; i <= 8; ++i) {
-            // Используем основной цвет текста из стиля ImGui (чтобы не писать ImVec4 в каждой строке)
-            ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), Localization::get(std::to_string(i).c_str()).c_str());
+                ImGui::SetCursorPosX(40.0f);
+        ImGui::BeginGroup();         for (int i = 1; i <= 8; ++i) {
+                        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), Localization::get(std::to_string(i).c_str()).c_str());
         }
         ImGui::EndGroup();
 
-        // 3. Заметный визуальный разрыв между абзацами
-        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+                ImGui::Dummy(ImVec2(0.0f, 10.0f));
 
-        // 4. Выводим второй блок текста (строки 9-10)
-        ImGui::SetCursorPosX(40.0f);
+                ImGui::SetCursorPosX(40.0f);
         ImGui::BeginGroup();
         for (int i = 9; i <= 10; ++i) {
             ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), Localization::get(std::to_string(i).c_str()).c_str());
         }
-        // 3. Заметный визуальный разрыв между абзацами
-        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+                ImGui::Dummy(ImVec2(0.0f, 10.0f));
 
-        // 4. Выводим второй блок текста (строки 9-10)
-        ImGui::SetCursorPosX(40.0f);
+                ImGui::SetCursorPosX(40.0f);
         ImGui::BeginGroup();
         for (int i = 11; i <= 15; ++i) {
             ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), Localization::get(std::to_string(i).c_str()).c_str());
         }
-        // 3. Заметный визуальный разрыв между абзацами
-        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+                ImGui::Dummy(ImVec2(0.0f, 10.0f));
 
-        // 4. Выводим второй блок текста (строки 9-10)
-        ImGui::SetCursorPosX(40.0f);
+                ImGui::SetCursorPosX(40.0f);
         ImGui::BeginGroup();
         for (int i = 16; i <= 19; ++i) {
             ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), Localization::get(std::to_string(i).c_str()).c_str());
         }
-        // 3. Заметный визуальный разрыв между абзацами
-        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+                ImGui::Dummy(ImVec2(0.0f, 10.0f));
 
-        // 4. Выводим второй блок текста (строки 9-10)
-        ImGui::SetCursorPosX(40.0f);
+                ImGui::SetCursorPosX(40.0f);
         ImGui::BeginGroup();
         for (int i = 20; i <= 24; ++i) {
             ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), Localization::get(std::to_string(i).c_str()).c_str());
@@ -561,36 +489,28 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
 
         ImGui::EndGroup();
         ImGui::Spacing(); ImGui::Spacing(); ImGui::Spacing(); ImGui::Spacing();
-        // 1. Красивый центрированный заголовок (без ручных пробелов)
-        float windowWidth2 = ImGui::GetWindowSize().x;
+                float windowWidth2 = ImGui::GetWindowSize().x;
         float textWidth2 = ImGui::CalcTextSize("Cost of this pet-proect").x;
         ImGui::SetCursorPosX((windowWidth2 - textWidth2) * 0.5f);
 
-        // Выделяем заголовок более ярким цветом или золотым (акцент)
-        ImGui::TextColored(ImVec4(0.0f, 0.94f, 0.7f, 1.0f), "Cost of this pet-proect");
+                ImGui::TextColored(ImVec4(0.0f, 0.94f, 0.7f, 1.0f), "Cost of this pet-proect");
         ImGui::Separator();
         ImGui::Spacing();
 
-        // 2. Выводим основной блок текста (строки 1-8) в цикле
-        ImGui::SetCursorPosX(40.0f);
-        ImGui::BeginGroup(); // Группируем, чтобы отступ работал для всего блока
-        for (int i = 25; i <= 31; ++i) {
-            // Используем основной цвет текста из стиля ImGui (чтобы не писать ImVec4 в каждой строке)
-            ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), Localization::get(std::to_string(i).c_str()).c_str());
+                ImGui::SetCursorPosX(40.0f);
+        ImGui::BeginGroup();         for (int i = 25; i <= 31; ++i) {
+                        ImGui::TextColored(ImVec4(0.98f, 0.94f, 0.98f, 1.0f), Localization::get(std::to_string(i).c_str()).c_str());
         }
         ImGui::EndGroup();
 
-        // 3. Заметный визуальный разрыв между абзацами
-        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+                ImGui::Dummy(ImVec2(0.0f, 10.0f));
 
 
         ImGui::PopFont();
-        ImGui::EndChild(); // Конец скролл-области
-
+        ImGui::EndChild(); 
         ImGui::Spacing();
 
-        // --- КНОПКА "НАЗАД" ---
-        ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[3]);
+                ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[3]);
         float btnW = 200.0f;
         float btnH = 40.0f;
         ImGui::SetCursorPosX((panelW - btnW) * 0.5f);
@@ -599,8 +519,7 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.82f, 0.16f, 0.55f, 0.90f));
 
         if (ImGui::Button("BACK", ImVec2(btnW, btnH))) {
-            // Переключаем обратно на главное меню
-            gAudio.playSound("assets/audio/Ting Coins.wav");
+                        gAudio.playSound("assets/audio/Ting Coins.wav");
             renderData.showCreditsWindow = false;
 
         }
@@ -612,10 +531,7 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
         ImGui::PopStyleColor();
         ImGui::PopStyleVar(2);
     }
-    // -------------------------------------------------------------------
-// Feedback (аккуратный вариант)
-// -------------------------------------------------------------------
-    float questWidth = 280.0f;
+        float questWidth = 280.0f;
     float rightPadding = 30.0f;
     float topPadding = 25.0f;
 
@@ -631,8 +547,7 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
         ImGuiWindowFlags_NoBackground |
         ImGuiWindowFlags_AlwaysAutoResize))
     {
-        // Полупрозрачный приглушённый цвет
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.75f, 0.80f, 0.90f, 0.55f));
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.85f, 0.90f, 0.98f, 0.70f));
 
         ImGui::SetWindowFontScale(1.15f);
         ImGui::Text("%s", Localization::get("feedback").c_str());
@@ -650,9 +565,7 @@ MenuAction MenuController::drawUI(OGLRenderData& renderData) {
     return action;
 }
 
-/* ============================================================
- *  getCameraViewMatrix()
- * ============================================================ */
+
 glm::mat4 MenuController::getCameraViewMatrix() const {
     glm::vec3 njPos = NJ_WORLD_POS;
     glm::vec3 camPos = njPos + CAM_OFFSET;
@@ -661,19 +574,13 @@ glm::mat4 MenuController::getCameraViewMatrix() const {
     return glm::lookAt(camPos, lookAt, worldUp);
 }
 
-/* ============================================================
- *  cleanup()
- * ============================================================ */
+
 void MenuController::cleanup() {
     mNJInstance.reset();
     mNJModel.reset();
 }
 
-/* ============================================================
- *  Приватные хелперы
- * ============================================================ */
 
- /* Начать кроссфейд из fromClip в toClip */
 void MenuController::startCrossfade(int fromClip, int toClip) {
     mBlendSrcClip = fromClip;
     mBlendDstClip = toClip;
@@ -681,7 +588,7 @@ void MenuController::startCrossfade(int fromClip, int toClip) {
     mBlendTimer = 0.0f;
 
     auto s = mNJInstance->getInstanceSettings();
-    /* source clip продолжает играть, dest начнёт появляться по мере роста factor */
+
     s.msAnimClip = fromClip;
     s.msCrossBlendDestAnimClip = toClip;
     s.msBlendingMode = blendMode::crossfade;
@@ -692,7 +599,6 @@ void MenuController::startCrossfade(int fromClip, int toClip) {
     mNJInstance->checkForUpdates();
 }
 
-/* Тикать кроссфейд каждый кадр — передавать deltaTime */
 void MenuController::tickCrossfade(float dt) {
     mBlendTimer += dt;
     mBlendFactor = mBlendTimer / mBlendDuration;
@@ -704,7 +610,6 @@ void MenuController::tickCrossfade(float dt) {
     mNJInstance->checkForUpdates();
 }
 
-/* Запустить Salute (one-shot, ручной тайминг — как AIStateAttack) */
 void MenuController::startSalute() {
     mSaluteTimer = 0.0f;
     mSaluteFinished = false;
@@ -716,7 +621,7 @@ void MenuController::startSalute() {
     s.msBlendingMode = blendMode::crossfade;
     s.msAnimCrossBlendFactor = 1.0f;
     s.msAnimTimePosition = 0.0f;
-    s.msPlayAnimation = false;  /* ручной контроль времени */
+    s.msPlayAnimation = false;  
     s.msAnimSpeed = 1.0f;
     mNJInstance->setInstanceSettings(s);
     mNJInstance->checkForUpdates();
@@ -724,7 +629,7 @@ void MenuController::startSalute() {
     Logger::log(1, "%s: Salute started, duration=%.2fs\n", __FUNCTION__, mSaluteDuration);
 }
 
-/* Обновлять таймер Salute (паттерн из AIStateAttack::update) */
+
 void MenuController::tickSalute(float dt) {
     mSaluteTimer += dt;
 

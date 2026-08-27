@@ -2,14 +2,14 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include <cerrno>  // errno
-#include <cstring> // strerror()
+#include <cerrno> 
+#include <cstring> 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Shader.h"
 #include "Logger.h"
-
+#include "Tools.h"
 bool Shader::loadShaders(std::string vertexShaderFileName, std::string fragmentShaderFileName) {
     Logger::log(1, "%s: loading vertex shader '%s' and fragment shader '%s'\n", __FUNCTION__, vertexShaderFileName.c_str(), fragmentShaderFileName.c_str());
 
@@ -78,6 +78,7 @@ void Shader::cleanup() {
 GLuint Shader::loadShader(std::string shaderFileName, GLuint shaderType) {
     std::string shaderAsText;
     shaderAsText = loadFileToString(shaderFileName);
+    
     Logger::log(4, "%s: loaded shader file '%s', size %i\n", __FUNCTION__, shaderFileName.c_str(), shaderAsText.size());
 
     const char* shaderSource = shaderAsText.c_str();
@@ -174,34 +175,31 @@ bool Shader::checkLinkStats(std::string vertexShaderFileName, std::string fragme
 }
 
 std::string Shader::loadFileToString(std::string fileName) {
-    std::ifstream inFile(fileName);
-    std::string str;
-
-    if (inFile.is_open()) {
-        str.clear();
-        // allocate string data (no slower realloc)
-        inFile.seekg(0, std::ios::end);
-        str.reserve(inFile.tellg());
-        inFile.seekg(0, std::ios::beg);
-
-        str.assign((std::istreambuf_iterator<char>(inFile)),
-            std::istreambuf_iterator<char>());
-        inFile.close();
-    }
-    else {
-        Logger::log(1, "%s error: could not open file %s\n", __FUNCTION__, fileName.c_str());
-        Logger::log(1, "%s error: system says '%s'\n", __FUNCTION__, strerror(errno));
+    // 1. Читаем файл в бинарном виде
+    std::vector<char> data = Tools::loadFileToMemory(fileName);
+    if (data.empty()) {
+        Logger::log(1, "%s error: could not open or read file %s\n", __FUNCTION__, fileName.c_str());
         return std::string();
     }
 
-    if (inFile.bad() || inFile.fail()) {
-        Logger::log(1, "%s error: error while reading file %s\n", __FUNCTION__, fileName.c_str());
-        inFile.close();
-        return std::string();
-    }
+    // 2. Расшифровываем
+    Tools::processData(data, SHADER_KEY);   // <-- ключ из Tools.h / Tools.cpp
 
-    inFile.close();
-    Logger::log(1, "%s: file %s successfully read to string\n", __FUNCTION__, fileName.c_str());
+    // 3. Превращаем в строку
+    std::string str(data.begin(), data.end());
+
+    // Убираем UTF-8 BOM, если он есть
+    if (str.size() >= 3 &&
+        static_cast<unsigned char>(str[0]) == 0xEF &&
+        static_cast<unsigned char>(str[1]) == 0xBB &&
+        static_cast<unsigned char>(str[2]) == 0xBF)
+    {
+        str.erase(0, 3);
+        Logger::log(1, "%s: removed UTF-8 BOM from %s\n", __FUNCTION__, fileName.c_str());
+    }
+    Logger::log(1, "%s: file %s successfully read and decrypted (size %zu)\n",
+        __FUNCTION__, fileName.c_str(), str.size());
+
     return str;
 }
 

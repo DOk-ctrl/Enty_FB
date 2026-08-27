@@ -1,15 +1,11 @@
-// audio.cpp
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
 #include "audio.h"
-#include <iostream>
 
-AudioEngine gAudio; // единственный экземпл€р на весь проект
-
+AudioEngine gAudio; 
 bool AudioEngine::init() {
     ma_result result = ma_engine_init(NULL, &engine);
     if (result != MA_SUCCESS) {
-        std::cout << "Failed to initialize audio engine!" << std::endl;
         return false;
     }
     return true;
@@ -20,17 +16,14 @@ void AudioEngine::playSound(const char* filePath) {
 }
 
 void AudioEngine::playMusic(const char* filePath, bool loop) {
-    // если уже что-то играло Ч сначала аккуратно остановим и освободим
-    stopMusic();
+        stopMusic();
 
     ma_result result = ma_sound_init_from_file(
         &engine, filePath,
-        MA_SOUND_FLAG_STREAM, // стримим с диска, не грузим весь файл в пам€ть
-        NULL, NULL,
+        MA_SOUND_FLAG_STREAM,         NULL, NULL,
         &musicSound
     );
     if (result != MA_SUCCESS) {
-        std::cout << "Failed to load music: " << filePath << std::endl;
         return;
     }
 

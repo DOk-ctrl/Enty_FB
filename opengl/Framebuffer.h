@@ -3,11 +3,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-// -------------------------------------------------------
-// Основной FBO: два цветовых аттачмента
-//   COLOR0 — обычная HDR-картинка
-//   COLOR1 — только emission (идёт в bloom)
-// -------------------------------------------------------
 class Framebuffer {
 public:
     bool init(unsigned int width, unsigned int height);
@@ -18,26 +13,18 @@ public:
     void cleanup();
 
     unsigned int getFBOHandle() const { return mBuffer; }
-    // Возвращает текстуру основной картинки (COLOR0)
-    GLuint getColorTex()    const { return mColorTex; }
-    // Возвращает текстуру emission-маски (COLOR1)
-    GLuint getEmissionTex() const { return mEmissionTex; }
+        GLuint getColorTex()    const { return mColorTex; }
+        GLuint getEmissionTex() const { return mEmissionTex; }
 
 private:
     unsigned int mBufferWidth = 640;
     unsigned int mBufferHeight = 480;
     GLuint mBuffer = 0;
-    GLuint mColorTex = 0;   // COLOR_ATTACHMENT0
-    GLuint mEmissionTex = 0;   // COLOR_ATTACHMENT1
-    GLuint mDepthBuffer = 0;
+    GLuint mColorTex = 0;       GLuint mEmissionTex = 0;       GLuint mDepthBuffer = 0;
 
     bool checkComplete();
 };
 
-// -------------------------------------------------------
-// Ping-pong FBO: один цветовой аттачмент, используется
-// для горизонтального и вертикального blur-прохода.
-// -------------------------------------------------------
 class BlurFramebuffer {
 public:
     bool init(unsigned int width, unsigned int height);

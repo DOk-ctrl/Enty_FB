@@ -18,6 +18,9 @@
 #include <iostream>
 #include <imgui_internal.h>
 #include <random> // добавь в начало файла, если ещё нет
+#include <imgui_impl_opengl3.h>
+#include <tbb/parallel_for.h>
+#include <tbb/blocked_range.h>
 
 static std::mt19937 rngMeleeCrit(std::random_device{}());
 static std::uniform_real_distribution<float> critDist(0.0f, 1.0f);
@@ -278,199 +281,71 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
       Logger::log(1, "%s warning: could not load clouds layer\n", __FUNCTION__);
   }
   Logger::log(1, "%s: IBL maps successfully generated\n", __FUNCTION__);
-  mGltfModels.resize(30);
-  /* ---- Главное меню: загрузка модели New Jersey ---- */
-  mNJMenuModel = std::make_shared<GltfModel>();
  
-  std::string modelFilenameNJ = "assets/AngeBr.gltf";
-  std::string modelTexFilenameNJ = "textures/Ange5.png";
-  std::string modelTexFilenameNJnormal = "textures/AngeNormal2.png";
-  std::string modelTexFilenameNJJ = "textures/angeCh2.png";
-  std::string modelTexFilenameNJJJ = "textures/AngeCoat2.png";
-  std::string modelTexFilenameNJJJJ = "textures/AngeEmit2.png";
+  struct ModelLoadInfo {
+      std::string modelFile, texFile, normalFile, metalFile, roughFile, emitFile, packedFile, coatRoughFile;
+  };
+
+  std::vector<ModelLoadInfo> modelList = {
+      {"assets/StonehengeAug.gltf", "textures/StoneBase.png", "textures/StoneNormal.png", "textures/StoneMetal.png", "textures/StoneRough.png"},
+      {"assets/EntyBrMix.gltf", "textures/EntyAug.png", "textures/EntyNormal.png", "textures/EntyMetal.png"},
+      {"assets/Temple of Artemis.gltf", "textures/Temple.png"},
+      {"assets/vorota ishtar3.gltf", "textures/VrataBase2.png", "textures/VrataNormal2.png", "textures/VrataMetal2.png", "textures/VrataRough2.png"},
+      {"assets/floor vorot ishtar2.gltf", "textures/floorVrat16k.png", "textures/floorVratNormal.png", "textures/floorM.png", "textures/floorR.png"},
+      {"assets/kanalMay.gltf", "textures/StockBase.png"},
+      {"assets/gates 2.3.gltf", "textures/GatesBase.png", "textures/GatesNormal.png", "textures/GatesMetal.png", "textures/GatesRough.png"},
+      {"assets/Arena.gltf", "textures/Arena.png", "textures/ArenaNormal.png", "textures/ArenaMetal.png", "textures/ArenaRough.png", "textures/ArenaEmit.png"},
+      {"assets/Symbiote.gltf", "textures/Symbiote.png"},
+      {"assets/MainMenuBox.gltf", "textures/MainMenuBox.png"},
+      {"assets/bismark.gltf", "textures/Bismark.png", "textures/BismarkNormal.png", "", "", "textures/BismarkEmit.png", "textures/BismarkCh.png", "textures/BismarkNormal.png"},
+      {"assets/conway.gltf", "textures/Conway.png"},
+      {"assets/StoneAugPlants.gltf", "textures/StonePlatns.png"},
+      {"assets/Agness.gltf", "textures/Agness.png", "textures/AgnessNormal.png", "textures/AgnessMetal.png", "textures/AgnessRough.png"},
+      {"assets/boxG.gltf", "textures/Agness.png"},
+      // добавляй сюда сколько угодно новых моделей — resize() больше руками не трогаешь
+  };
   
-  if (!mNJMenuModel->loadModel(mRenderData, modelFilenameNJ, modelTexFilenameNJ, modelTexFilenameNJnormal,"","", modelTexFilenameNJJJJ,modelTexFilenameNJJ
-  , modelTexFilenameNJJJ)) {
+  /* ---- Главное меню: New Jersey — грузим синхронно, он нужен сразу ---- */
+  mNJMenuModel = std::make_shared<GltfModel>();
+  if (!mNJMenuModel->loadModel(mRenderData, "assets/AngeBr.gltf", "textures/Ange5.png",
+      "textures/AngeNormal2.png", "", "", "textures/AngeEmit2.png",
+      "textures/angeCh2.png", "textures/AngeCoat2.png")) {
       Logger::log(1, "%s error: could not load NJ menu model\n", __FUNCTION__);
       return false;
-  } 
+  }
   mMenuController = std::make_unique<MenuController>();
   if (!mMenuController->init(mNJMenuModel)) {
       Logger::log(1, "%s error: MenuController init failed\n", __FUNCTION__);
       return false;
   }
-
   Logger::log(1, "%s: Main menu initialized\n", __FUNCTION__);
-  /* load 2x the woman and the sq model */
- // test 12.01.26 - 1 model only 1 instance
-  //mGltfModels.resize(3);
-  
-  
-  mGltfModels.at(0) = std::make_shared<GltfModel>();
-  std::string modelFilename = "assets/StonehengeAug.gltf";
-  std::string modelTexFilename = "textures/StoneBase.png";
-  std::string modelTexFilenameM = "textures/StoneMetal.png";
-  std::string modelTexFilenameR = "textures/StoneRough.png";
-  std::string modelTexFilenameN = "textures/StoneNormal.png";
 
-  /* 11.04.26 нужно добавить сшиватель для roughness and metallic а то там только одно перемнная на двоих ну и шейдер доделать
-  if (!mGltfModels.at(0)->loadModel(mRenderData, modelFilename, modelTexFilename, normalTex, roughTex)) {
-      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
-      return false;
-  }
-  */
-  if (!mGltfModels.at(0)->loadModel(mRenderData, modelFilename, modelTexFilename, modelTexFilenameN, modelTexFilenameM, modelTexFilenameR, "", "", "" )) {
-      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
-      return false;
-  }
- 
-  /*
-  mGltfModels.at(1) = std::make_shared<GltfModel>();
-  std::string modelFilename2 = "assets/enty6Clear.gltf";
-  std::string modelTexFilename2 = "textures/enty4kClear.png";
-  if (!mGltfModels.at(1)->loadModel(mRenderData, modelFilename2, modelTexFilename2)) {
-    Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename2.c_str());
-    return false;
-  }
-  */
+  /* ---- modelList БЕЗ New Jersey — только обычные модели уровня ---- */
+  mGltfModels.resize(modelList.size());
+  for (auto& m : mGltfModels) m = std::make_shared<GltfModel>();
 
-  mGltfModels.at(1) = std::make_shared<GltfModel>();
-  std::string modelFilename2 = "assets/EntyBrMix.gltf";
-  //std::string modelFilename2 = "assets/EntyMay.gltf";
-  std::string modelTexFilename2 = "textures/EntyAug.png";
-  std::string modelTexFilename2N = "textures/EntyNormal.png";
-  std::string modelTexFilename2M = "textures/EntyMetal.png";
-  std::string modelTexFilename2R = "textures/EntyRough.png";
-  if (!mGltfModels.at(1)->loadModel(mRenderData, modelFilename2, modelTexFilename2, modelTexFilename2N, modelTexFilename2M)) {
-      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename2.c_str());
-      return false;
+  std::vector<std::future<bool>> loaders;
+  for (size_t i = 0; i < modelList.size(); ++i) {
+      const auto& info = modelList[i];
+      loaders.push_back(std::async(std::launch::async, [&mGltfModels = mGltfModels, &info, i] {
+          return mGltfModels[i]->loadModelData(info.modelFile, info.texFile, info.normalFile,
+              info.metalFile, info.roughFile, info.emitFile, info.packedFile, info.coatRoughFile);
+          }));
   }
 
-  mGltfModels.at(2) = std::make_shared<GltfModel>();
-  std::string modelFilename3 = "assets/Temple of Artemis.gltf";
-  std::string modelTexFilename3 = "textures/Temple.png";
- 
-  if (!mGltfModels.at(2)->loadModel(mRenderData, modelFilename3, modelTexFilename3)) {
-      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename3.c_str());
-      return false;
+  for (size_t i = 0; i < loaders.size(); ++i) {
+      if (!loaders[i].get()) {
+          Logger::log(1, "%s: background load of model %zu ('%s') failed\n",
+              __FUNCTION__, i, modelList[i].modelFile.c_str());
+          return false;
+      }
   }
 
-  mGltfModels.at(3) = std::make_shared<GltfModel>();
-  std::string modelFilename4 = "assets/vorota ishtar3.gltf";
-  std::string modelTexFilename4 = "textures/VrataBase2.png";
-  std::string modelTexFilename4N = "textures/VrataNormal2.png";
-  std::string modelTexFilename4M = "textures/VrataMetal2.png";
-  std::string modelTexFilename4R = "textures/VrataRough2.png";
-
-  if (!mGltfModels.at(3)->loadModel(mRenderData, modelFilename4, modelTexFilename4, modelTexFilename4N, modelTexFilename4M, modelTexFilename4R)) {
-      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename4.c_str());
-      return false;
-  }
-
-  mGltfModels.at(4) = std::make_shared<GltfModel>();
-  std::string modelFilename5 = "assets/floor vorot ishtar2.gltf";
-  std::string modelTexFilename5 = "textures/floorVrat16k.png";
-  std::string modelTexFilename5N = "textures/floorVratNormal.png";
-  std::string modelTexFilename5M = "textures/floorM.png";
-  std::string modelTexFilename5R = "textures/floorR.png";
-
-  if (!mGltfModels.at(4)->loadModel(mRenderData, modelFilename5, modelTexFilename5, modelTexFilename5N, modelTexFilename5M, modelTexFilename5R)) {
-      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename5.c_str());
-      return false;
-  }
- 
-  mGltfModels.at(5) = std::make_shared<GltfModel>();
-  std::string modelFilename6 = "assets/kanalMay.gltf";
-  std::string modelTexFilename6 = "textures/StockBase.png";
-  if (!mGltfModels.at(5)->loadModel(mRenderData, modelFilename6, modelTexFilename6)) {
-      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename6.c_str());
-      return false;
-  }
-
-  mGltfModels.at(6) = std::make_shared<GltfModel>();
-  std::string modelFilename7 = "assets/gates 2.3.gltf";
-  std::string modelTexFilename7 = "textures/GatesBase.png";
-  std::string modelTexFilename7N = "textures/GatesNormal.png";
-  std::string modelTexFilename7M = "textures/GatesMetal.png";
-  std::string modelTexFilename7R = "textures/GatesRough.png";
-  if (!mGltfModels.at(6)->loadModel(mRenderData, modelFilename7, modelTexFilename7, modelTexFilename7N, modelTexFilename7M, modelTexFilename7R)) {
-      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename7.c_str());
-      return false;
-  }
-
-  mGltfModels.at(7) = std::make_shared<GltfModel>();
-  std::string modelFilename8 = "assets/Arena.gltf";
-  std::string modelTexFilename8 = "textures/Arena.png";
-  if (!mGltfModels.at(7)->loadModel(mRenderData, modelFilename8, modelTexFilename8, "textures/ArenaNormal.png",
-      "textures/ArenaMetal.png",
-      "textures/ArenaRough.png",
-      "textures/ArenaEmit.png")) {
-      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename8.c_str());
-      return false;
-  }
-  mGltfModels.at(8) = std::make_shared<GltfModel>();
-  std::string modelFilename9 = "assets/Symbiote.gltf";
-  std::string modelTexFilename9 = "textures/Symbiote.png";
-  if (!mGltfModels.at(8)->loadModel(mRenderData, modelFilename9, modelTexFilename9)) {
-      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename9.c_str());
-      return false;
-  }
-  mGltfModels.at(9) = std::make_shared<GltfModel>();
-  std::string modelFilename10 = "assets/MainMenuBox.gltf";
-  std::string modelTexFilename10 = "textures/MainMenuBox.png";
-  if (!mGltfModels.at(9)->loadModel(mRenderData, modelFilename10, modelTexFilename10)) {
-      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename10.c_str());
-      return false;
-  }
-  mGltfModels.at(10) = std::make_shared<GltfModel>();
-  std::string modelFilename11 = "assets/bismark.gltf";
-  std::string modelTexFilename11 = "textures/Bismark.png";
-  std::string modelTexFilename11N = "textures/BismarkNormal.png";
-  std::string modelTexFilename11E = "textures/BismarkEmit.png";
-  std::string modelTexFilename11Ch = "textures/BismarkCh.png";
-  std::string modelTexFilename11Coat = "textures/BismarkNormal.png";
-  if (!mGltfModels.at(10)->loadModel(mRenderData, modelFilename11, modelTexFilename11, 
-      modelTexFilename11N,
-      "",
-      "",
-      modelTexFilename11E,
-      modelTexFilename11Ch,
-      modelTexFilename11Coat)) {
-      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename11.c_str());
-      return false;
-  }
-  mGltfModels.at(11) = std::make_shared<GltfModel>();
-  std::string modelFilename12 = "assets/conway.gltf";
-  std::string modelTexFilename12 = "textures/Conway.png";
-  if (!mGltfModels.at(11)->loadModel(mRenderData, modelFilename12, modelTexFilename12)) {
-      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename11.c_str());
-      return false;
-  }
-
-  mGltfModels.at(12) = std::make_shared<GltfModel>();
-  std::string modelFilename13 = "assets/StoneAugPlants.gltf";
-  std::string modelTexFilename13 = "textures/StonePlatns.png";
-  if (!mGltfModels.at(12)->loadModel(mRenderData, modelFilename13, modelTexFilename13)) {
-      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename13.c_str());
-      return false;
-  }
-
-  mGltfModels.at(13) = std::make_shared<GltfModel>();
-  std::string modelFilename14 = "assets/Agness.gltf";
-  std::string modelTexFilename14 = "textures/Agness.png";
-  std::string modelTexFilename14N = "textures/AgnessNormal.png";
-  std::string modelTexFilename14M = "textures/AgnessMetal.png";
-  std::string modelTexFilename14R = "textures/AgnessRough.png";
-  if (!mGltfModels.at(13)->loadModel(mRenderData, modelFilename14, modelTexFilename14, modelTexFilename14N, modelTexFilename14M, modelTexFilename14R)) {
-      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename14.c_str());
-      return false;
-  }
-
-  mGltfModels.at(14) = std::make_shared<GltfModel>();
-  std::string modelFilename15 = "assets/boxG.gltf";
-  if (!mGltfModels.at(14)->loadModel(mRenderData, modelFilename15, modelTexFilename14)) {
-      Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename15.c_str());
-      return false;
+  for (size_t i = 0; i < mGltfModels.size(); ++i) {
+      if (!mGltfModels[i]->uploadToGPU()) {
+          Logger::log(1, "%s: failed to upload model %zu to GPU\n", __FUNCTION__, i);
+          return false;
+      }
   }
   //mGltfModels.at(0)->uploadVertexBuffers();
   //mGltfModels.at(0)->uploadIndexBuffer();
@@ -494,7 +369,6 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   mGltfModels.at(2)->uploadVertexBuffers();
   mGltfModels.at(2)->uploadIndexBuffer();
   */
-  Logger::log(1, "%s: glTF model '%s' succesfully loaded\n", __FUNCTION__, modelFilename.c_str());
 
   int numTriangles = 0;
 
@@ -882,6 +756,328 @@ void OGLRenderer::handleMousePositionEvents(double xPos, double yPos) {
   /* save old values*/
   mMouseXPos = static_cast<int>(xPos);
   mMouseYPos = static_cast<int>(yPos);
+}
+
+bool OGLRenderer::initEarly(unsigned int width, unsigned int height)
+{
+    /* randomize rand() */
+    std::srand(static_cast<int>(time(NULL)));
+
+    /* required for perspective */
+    mRenderData.rdWidth = width;
+    mRenderData.rdHeight = height;
+
+    /* initalize GLAD */
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        Logger::log(1, "%s error: failed to initialize GLAD\n", __FUNCTION__);
+        return false;
+    }
+
+    mCollisionConfiguration = new btDefaultCollisionConfiguration();
+    mDispatcher = new btCollisionDispatcher(mCollisionConfiguration);
+    mOverlappingPairCache = new btDbvtBroadphase(); // Для быстрого отсечения столкновений
+    mSolver = new btSequentialImpulseConstraintSolver();
+    mDynamicsWorld = new btDiscreteDynamicsWorld(mDispatcher, mOverlappingPairCache, mSolver, mCollisionConfiguration);
+
+    mDynamicsWorld->setGravity(btVector3(0, -9.81f, 0));
+    Logger::log(1, "Bullet Physics успешно инициализирован!\n");
+
+    if (!GLAD_GL_VERSION_4_6) {
+        Logger::log(1, "%s error: failed to get at least OpenGL 4.6\n", __FUNCTION__);
+        return false;
+    }
+    /*
+    if (glDebugMessageCallback) {
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // Ошибки будут прилетать сразу в момент вызова
+        glDebugMessageCallback([](GLenum source, GLenum type, GLuint id, GLenum severity,
+            GLsizei length, const GLchar* message, const void* userParam) {
+                fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+                    (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+                    type, severity, message);
+            }, nullptr);
+    }
+    */
+    GLint majorVersion, minorVersion;
+    glGetIntegerv(GL_MAJOR_VERSION, &majorVersion);
+    glGetIntegerv(GL_MINOR_VERSION, &minorVersion);
+    Logger::log(1, "%s: OpenGL %d.%d initializeed\n", __FUNCTION__, majorVersion, minorVersion);
+
+    if (!mFramebuffer.init(width, height)) {
+        Logger::log(1, "%s error: could not init Framebuffer\n", __FUNCTION__);
+        return false;
+    }
+
+    // MSAA-таргет создаём сразу с 4 samples по умолчанию;
+    // реальное число samples подстроится в draw() по mRenderData.rdMSAAIndex
+    if (!mMSFramebuffer.init(width, height, 4)) {
+        Logger::log(1, "%s error: could not init MSFramebuffer\n", __FUNCTION__);
+        return false;
+    }
+    Logger::log(1, "%s: framebuffer succesfully initialized\n", __FUNCTION__);
+
+    if (!mBlurFBO[0].init(width, height) || !mBlurFBO[1].init(width, height)) {
+        Logger::log(1, "%s error: could not init Bloom blur FBOs\n", __FUNCTION__);
+        return false;
+    }
+
+    // VAO для fullscreen triangle (gl_VertexID trick — VBO не нужен)
+    glGenVertexArrays(1, &mBloomVAO);
+
+    Logger::log(1, "%s: bloom FBOs initialized\n", __FUNCTION__);
+    mVertexBuffer.init();
+    Logger::log(1, "%s: vertex buffer successfully created\n", __FUNCTION__);
+
+    size_t uniformMatrixBufferSize = 2 * sizeof(glm::mat4);
+    mUniformBuffer.init(uniformMatrixBufferSize);
+    Logger::log(1, "%s: matrix uniform buffer (size %i bytes) successfully created\n", __FUNCTION__, uniformMatrixBufferSize);
+
+    if (!mLineShader.loadShaders("shader/line.vert", "shader/line.frag")) {
+        Logger::log(1, "%s: line shader loading failed\n", __FUNCTION__);
+        return false;
+    }
+    if (!gAudio.init()) {
+        Logger::log(1, "%s: line shader loading failed\n", __FUNCTION__);
+    }
+
+    if (!mBloomBlurShader.loadShaders("shader/Bloom_Blur.vert", "shader/Bloom_Blur.frag")) {
+        Logger::log(1, "%s: mBlurShader loading failed\n", __FUNCTION__);
+        return false;
+    }
+    if (!mBloomCompositeShader.loadShaders("shader/Bloom_Blur.vert", "shader/Bloom_Composite.frag")) {
+        Logger::log(1, "%s: mCompositeShader loading failed\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!mDeathCaptureFBO.init(width, height)) {
+        Logger::log(1, "%s error: could not init Death Screen capture FBO\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!mDeathGlowShader.loadShaders("shader/Bloom_Blur.vert", "shader/DeathScreen_Glow.frag")) {
+        Logger::log(1, "%s: mDeathGlowShader loading failed\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!mDeathGlowCompositeShader.loadShaders("shader/Bloom_Blur.vert", "shader/DeathScreen_GlowComposite.frag")) {
+        Logger::log(1, "%s: mDeathGlowCompositeShader loading failed\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!mGltfGPUShaderToy.loadShaders("shader/gltf_gpuToy.vert", "shader/gltf_gpuToy.frag")) {
+        Logger::log(1, "%s: line shader loading failed\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!mGltfGPUShaderToyChannelPack.loadShaders("shader/gltf_gpuToyChannel.vert", "shader/gltf_gpuToyChannel.frag")) {
+        Logger::log(1, "%s: line shader loading failed\n", __FUNCTION__);
+        return false;
+    }
+    if (!mGltfGPUDualQuatChannelShader.loadShaders("shader/gltf_gpu_dquat.vert", "shader/gltf_gpuToyChannel.frag")) {
+        Logger::log(1, "%s: advanced DQ shader loading failed\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!mStaticShader.loadShaders("shader/gltf.vert", "shader/gltf.frag")) {
+        Logger::log(1, "%s: static shader loading failed\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!mGltfGPUShader.loadShaders("shader/gltf_gpu.vert", "shader/gltf_gpu.frag")) {
+        Logger::log(1, "%s: gltTF GPU shader loading failed\n", __FUNCTION__);
+        return false;
+    }
+    if (!mGltfGPUShader.getUniformLocation("aModelStride")) {
+        Logger::log(1, "%s: failed to get model stride uniform for gltTF GPU shader\n",
+            __FUNCTION__);
+        return false;
+    }
+
+    if (!mGltfGPUDualQuatShader.loadShaders("shader/gltf_gpu_dquat.vert",
+        "shader/gltf_gpu_dquat.frag")) {
+        Logger::log(1, "%s: glTF GPU dual quat shader loading failed\n", __FUNCTION__);
+        return false;
+    }
+    if (!mGltfGPUDualQuatShader.getUniformLocation("aModelStride")) {
+        Logger::log(1, "%s: failed to get model stride uniform for gltTF GPU dual quat shader\n",
+            __FUNCTION__);
+        return false;
+    }
+    Logger::log(1, "%s: shaders succesfully loaded\n", __FUNCTION__);
+
+    mUserInterface.init(mRenderData);
+    Logger::log(1, "%s: user interface initialized\n", __FUNCTION__);
+
+    /* add backface culling and depth test already here */
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glLineWidth(3.0);
+    /* load and init the skybox (cross-layout cubemap) */
+    if (!mSkyBox.init()) {
+        Logger::log(1, "%s error: could not init skybox\n", __FUNCTION__);
+        return false;
+    }
+    if (!mSkyBox.loadCrossCubemap("textures/SkyBox.png")) {
+        Logger::log(1, "%s error: could not load skybox cubemap\n", __FUNCTION__);
+        return false;
+    }
+    Logger::log(1, "%s: skybox successfully loaded\n", __FUNCTION__);
+
+    if (!mSkyBox.generateIBLMaps()) {
+        Logger::log(1, "%s error: could not generate IBL maps\n", __FUNCTION__);
+        return false;
+    }
+    mSkyBox.addParallaxLayer(1, "textures/sky_mountainss.png",
+        0.12f, 0.0f, { 0,1 }, 0.9f,
+        0.1f);  // windSpeed: горы не движутся от ветра
+    {
+        Logger::log(1, "%s warning: could not load mountains layer\n", __FUNCTION__);
+        // не fatal — продолжаем без этого слоя
+    }
+
+    if (!mSkyBox.addParallaxLayer(2, "textures/sky_cloudss.png",
+        0.35f,    // parallaxFactor: облака ближе гор
+        0.0004f, glm::vec2(1.0f, 0.5f)))  // windSpeed: ~0.004 рад/с = очень медленный дрейф
+    {
+        Logger::log(1, "%s warning: could not load clouds layer\n", __FUNCTION__);
+    }
+    Logger::log(1, "%s: IBL maps successfully generated\n", __FUNCTION__);
+
+    /* ---- Главное меню: New Jersey — грузим синхронно, он нужен сразу ---- */
+    mNJMenuModel = std::make_shared<GltfModel>();
+    if (!mNJMenuModel->loadModel(mRenderData, "assets/AngeBr.gltf", "textures/Ange5.png",
+        "textures/AngeNormal2.png", "", "", "textures/AngeEmit2.png",
+        "textures/angeCh2.png", "textures/AngeCoat2.png")) {
+        Logger::log(1, "%s error: could not load NJ menu model\n", __FUNCTION__);
+        return false;
+    }
+    mMenuController = std::make_unique<MenuController>();
+    if (!mMenuController->init(mNJMenuModel)) {
+        Logger::log(1, "%s error: MenuController init failed\n", __FUNCTION__);
+        return false;
+    }
+    Logger::log(1, "%s: Main menu initialized\n", __FUNCTION__);
+
+
+    mModelList = {
+        {"assets/StonehengeAug.gltf", "textures/StoneBase.png", "textures/StoneNormal.png", "textures/StoneMetal.png", "textures/StoneRough.png"},
+        {"assets/EntyBrMix.gltf", "textures/EntyAug.png", "textures/EntyNormal.png", "textures/EntyMetal.png"},
+        {"assets/Temple of Artemis.gltf", "textures/Temple.png"},
+        {"assets/vorota ishtar3.gltf", "textures/VrataBase2.png", "textures/VrataNormal2.png", "textures/VrataMetal2.png", "textures/VrataRough2.png"},
+        {"assets/floor vorot ishtar2.gltf", "textures/floorVrat16k.png", "textures/floorVratNormal.png", "textures/floorM.png", "textures/floorR.png"},
+        {"assets/kanalMay.gltf", "textures/StockBase.png"},
+        {"assets/gates 2.3.gltf", "textures/GatesBase.png", "textures/GatesNormal.png", "textures/GatesMetal.png", "textures/GatesRough.png"},
+        {"assets/Arena.gltf", "textures/Arena.png", "textures/ArenaNormal.png", "textures/ArenaMetal.png", "textures/ArenaRough.png", "textures/ArenaEmit.png"},
+        {"assets/Symbiote.gltf", "textures/Symbiote.png"},
+        {"assets/MainMenuBox.gltf", "textures/MainMenuBox.png"},
+        {"assets/bismark.gltf", "textures/Bismark.png", "textures/BismarkNormal.png", "", "", "textures/BismarkEmit.png", "textures/BismarkCh.png", "textures/BismarkNormal.png"},
+        {"assets/conway.gltf", "textures/Conway.png"},
+        {"assets/StoneAugPlants.gltf", "textures/StonePlatns.png"},
+        {"assets/Agness.gltf", "textures/Agness.png", "textures/AgnessNormal.png", "textures/AgnessMetal.png", "textures/AgnessRough.png"},
+        {"assets/boxG.gltf", "textures/Agness.png"},
+        // добавляй сюда сколько угодно новых моделей — resize() больше руками не трогаешь
+    };
+
+   
+    startBackgroundLoading();
+
+    mFrameTimer.start();
+    return true;
+}
+
+void OGLRenderer::updateLoading()
+{
+    switch (mLoadState) {
+
+    case LoadState::LoadingData: {
+        bool allDone = true;
+        for (size_t i = 0; i < mModelLoaders.size(); ++i) {
+            if (mModelLoadDone[i]) continue;
+            if (mModelLoaders[i].wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+                mModelLoadSuccess[i] = mModelLoaders[i].get(); // future использован один раз — ок
+                mModelLoadDone[i] = true;
+                Logger::log(1, "%s: model %zu ('%s') data ready: %s\n", __FUNCTION__, i,
+                    mModelList[i].modelFile.c_str(), mModelLoadSuccess[i] ? "OK" : "FAILED");
+            }
+            if (!mModelLoadDone[i]) allDone = false;
+        }
+
+        if (allDone) {
+            for (bool ok : mModelLoadSuccess) {
+                if (!ok) {
+                    Logger::log(1, "%s error: one or more models failed to load\n", __FUNCTION__);
+                    mLoadState = LoadState::Failed;
+                    return;
+                }
+            }
+            mUploadIndex = 0;
+            mLoadState = LoadState::UploadingToGPU;
+            Logger::log(1, "%s: all model data loaded, starting GPU upload\n", __FUNCTION__);
+        }
+        break;
+    }
+
+    case LoadState::UploadingToGPU: {
+        // по одной модели за кадр — не даём GPU-заливке скакнуть в один огромный фрейм
+        if (!mGltfModels[mUploadIndex]->uploadToGPU()) {
+            Logger::log(1, "%s error: failed to upload model %zu to GPU\n", __FUNCTION__, mUploadIndex);
+            mLoadState = LoadState::Failed;
+            return;
+        }
+        ++mUploadIndex;
+        if (mUploadIndex >= mGltfModels.size()) {
+            mLoadState = LoadState::BuildingWorld;
+            Logger::log(1, "%s: all models uploaded to GPU\n", __FUNCTION__);
+        }
+        break;
+    }
+
+    case LoadState::BuildingWorld: {
+        buildWorld();  // весь старый "хвост" — см. ниже
+        mLoadState = LoadState::Ready;
+        Logger::log(1, "%s: world built, game ready\n", __FUNCTION__);
+        break;
+    }
+
+    case LoadState::Ready:
+    case LoadState::Failed:
+    case LoadState::NotStarted:
+    default:
+        break;
+    }
+}
+
+void OGLRenderer::drawLoadingScreen()
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    float progress = 0.0f;
+    if (mLoadState == LoadState::LoadingData) {
+        size_t done = 0;
+        for (bool d : mModelLoadDone) if (d) ++done;
+        progress = mModelList.empty() ? 0.0f : (0.5f * done / mModelList.size());
+    }
+    else if (mLoadState == LoadState::UploadingToGPU) {
+        progress = 0.5f + (mModelList.empty() ? 0.0f : (0.5f * mUploadIndex / mModelList.size()));
+    }
+    else if (mLoadState == LoadState::BuildingWorld) {
+        progress = 1.0f;
+    }
+
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSize(ImVec2(400, 0));
+    ImGui::Begin("Loading", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove);
+    ImGui::Text(mLoadState == LoadState::Failed ? "Loading failed - check log" : "Loading...");
+    ImGui::ProgressBar(progress, ImVec2(-1, 0));
+    ImGui::End();
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void OGLRenderer::addPhysicsToEnty(std::shared_ptr<GltfInstance> entyInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 spawnPos) {
@@ -1428,20 +1624,27 @@ void OGLRenderer::draw() {
         playerPos.y += 0.8f;
         mViewMatrix = mCamera.getThirdPersonViewMatrix(mRenderData, playerPos);
 
-        mRenderData.rdIKTime = 0.0f;
-        for (auto& instance : mGltfInstances) {
-            if (instance->getJointMatrixSize() > 0) {
-                instance->updateAnimation();
-                mIKTimer.start();
-                instance->solveIK();
-                mRenderData.rdIKTime += static_cast<float>(mIKTimer.stop());
-                // Джигл-физика груди — только для Энти (instance #1)
-                if (instance == mGltfInstances.at(1)) {
-                    updateBreastJiggle(mLeftBreastJiggle, deltaTime);
-                    updateBreastJiggle(mRightBreastJiggle, deltaTime);
-                    instance->refreshJointMatrices();                      // <-- НОВОЕ: пересобрать кэш для GPU
+        mIKTimer.start();
+
+        tbb::parallel_for(tbb::blocked_range<size_t>(0, mGltfInstances.size()),
+            [&](const tbb::blocked_range<size_t>& range) {
+                for (size_t i = range.begin(); i != range.end(); ++i) {
+                    auto& instance = mGltfInstances[i];
+                    if (instance->getJointMatrixSize() > 0) {
+                        instance->updateAnimation();
+                        instance->solveIK();
+                    }
                 }
             }
+        );
+
+        mRenderData.rdIKTime = static_cast<float>(mIKTimer.stop());
+
+        // Джигл-физика груди — только для Энти (instance #1), последовательно, вне параллельного блока
+        if (mGltfInstances.at(1)->getJointMatrixSize() > 0) {
+            updateBreastJiggle(mLeftBreastJiggle, deltaTime);
+            updateBreastJiggle(mRightBreastJiggle, deltaTime);
+            mGltfInstances.at(1)->refreshJointMatrices();
         }
 
         glm::vec3 modelWorldPos = mGltfInstances.at(selectedInstance)->getWorldPosition();
@@ -1458,35 +1661,6 @@ void OGLRenderer::draw() {
                     mesh->vertices.begin(), mesh->vertices.end());
             }
         }
-
-        mCoordArrowsLineIndexCount = 0;
-        {
-            if (mGltfInstances.at(selectedInstance)->getJointMatrixSize() > 0) {
-                ModelSettings ikSettings = mGltfInstances.at(selectedInstance)->getInstanceSettings();
-                if (ikSettings.msIkMode == ikMode::ccd || ikSettings.msIkMode == ikMode::fabrik) {
-                    mCoordArrowsMesh = mCoordArrowsModel.getVertexData();
-                    mCoordArrowsLineIndexCount += mCoordArrowsMesh.vertices.size();
-                    std::for_each(mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end(),
-                        [=](auto& n) {
-                            n.color /= 2.0f;
-                            n.position = modelWorldRot * n.position;
-                            n.position += ikSettings.msIkTargetWorldPos;
-                        });
-                    mLineMesh->vertices.insert(mLineMesh->vertices.end(),
-                        mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end());
-                }
-            }
-        }
-        mCoordArrowsMesh = mCoordArrowsModel.getVertexData();
-        mCoordArrowsLineIndexCount += mCoordArrowsMesh.vertices.size();
-        std::for_each(mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end(),
-            [=](auto& n) {
-                n.color /= 2.0f;
-                n.position = modelWorldRot * n.position;
-                n.position += modelWorldPos;
-            });
-        mLineMesh->vertices.insert(mLineMesh->vertices.end(),
-            mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end());
 
         mRenderData.rdMatrixGenerateTime = mMatrixGenerateTimer.stop();
 
@@ -1654,11 +1828,7 @@ void OGLRenderer::draw() {
     // ============================================================
     // 9. ЛИНИИ / СКЕЛЕТ (только в геймплее)
     // ============================================================
-    if (mGameState == GameState::GAMEPLAY && mBossBarVisibleAlpha > 0.01f && mActiveBossEnemy) {
-        if (mCoordArrowsLineIndexCount > 0) {
-            mLineShader.use();
-            mVertexBuffer.bindAndDraw(GL_LINES, mSkeletonLineIndexCount, mCoordArrowsLineIndexCount);
-        }
+    if (mGameState == GameState::GAMEPLAY && mBossBarVisibleAlpha > 0.01f && mActiveBossEnemy) {    
         if (mSkeletonLineIndexCount > 0) {
             glDisable(GL_DEPTH_TEST);
             mLineShader.use();
@@ -2386,6 +2556,239 @@ void OGLRenderer::ResetPlayerAfterDeath() {
 
     Logger::log(1, "OGLRenderer: Player respawned\n");
 }
+void OGLRenderer::startBackgroundLoading()
+{
+    mGltfModels.resize(mModelList.size());
+    for (auto& m : mGltfModels) m = std::make_shared<GltfModel>();
+
+    mModelLoadDone.assign(mModelList.size(), false);
+    mModelLoadSuccess.assign(mModelList.size(), false);
+
+    for (size_t i = 0; i < mModelList.size(); ++i) {
+        const auto& info = mModelList[i];
+        mModelLoaders.push_back(std::async(std::launch::async, [this, &info, i] {
+            return mGltfModels[i]->loadModelData(info.modelFile, info.texFile, info.normalFile,
+                info.metalFile, info.roughFile, info.emitFile, info.packedFile, info.coatRoughFile);
+            }));
+    }
+
+    mLoadState = LoadState::LoadingData;
+    Logger::log(1, "%s: background loading of %zu models started\n", __FUNCTION__, mModelList.size());
+}
+void OGLRenderer::buildWorld()
+{
+    int numTriangles = 0;
+
+    glm::vec3 defaultRot = glm::vec3(0.0);
+
+    int xPos = 77;
+    int yPos = 0;
+    int zPos = 580;
+    mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(0), glm::vec3(static_cast<float>(xPos), static_cast<float>(yPos),
+        static_cast<float>(zPos)), defaultRot));
+    numTriangles += static_cast<unsigned int>(mGltfModels.at(0)->getTriangleCount());
+
+    int xPos2 = 0;
+    int yPos2 = 3;
+    int zPos2 = 0;
+    mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(1), glm::vec3(static_cast<float>(xPos2), static_cast<float>(yPos2),
+        static_cast<float>(zPos2)), defaultRot));
+    numTriangles += static_cast<unsigned int>(mGltfModels.at(1)->getTriangleCount());
+
+    int xPos3 = 50;
+    double yPos3 = 0.1;
+    int zPos3 = 419;
+    glm::vec3 CustomRot = glm::vec3(0.0f, 90.0f, 0.0f);
+    mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(2), glm::vec3(static_cast<float>(xPos3), static_cast<float>(yPos3),
+        static_cast<float>(zPos3)), CustomRot));
+    numTriangles += static_cast<unsigned int>(mGltfModels.at(2)->getTriangleCount());
+
+    int xPos4 = 0;
+    int yPos4 = 0;
+    int zPos4 = 160;
+
+    mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(3), glm::vec3(static_cast<float>(xPos4), static_cast<float>(yPos4),
+        static_cast<float>(zPos4)), defaultRot));
+    numTriangles += static_cast<unsigned int>(mGltfModels.at(3)->getTriangleCount());
+
+    int xPos5 = 0;
+    int yPos5 = 0;
+    int zPos5 = 180;
+    mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(4), glm::vec3(static_cast<float>(xPos5), static_cast<float>(yPos5),
+        static_cast<float>(zPos5)), defaultRot));
+    numTriangles += static_cast<unsigned int>(mGltfModels.at(4)->getTriangleCount());
+
+    int xPos6 = -166;
+    int yPos6 = 1;
+    int zPos6 = 261;
+    glm::vec3 CustomRot2 = glm::vec3(0.0f, -88.0f, 0.0f);
+    mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(5), glm::vec3(static_cast<float>(xPos6), static_cast<float>(yPos6),
+        static_cast<float>(zPos6)), CustomRot2));
+    numTriangles += static_cast<unsigned int>(mGltfModels.at(5)->getTriangleCount());
+
+    int xPos7 = 53;
+    int yPos7 = 0;
+    int zPos7 = 522;
+    mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(6), glm::vec3(static_cast<float>(xPos7), static_cast<float>(yPos7),
+        static_cast<float>(zPos7)), defaultRot));
+    numTriangles += static_cast<unsigned int>(mGltfModels.at(6)->getTriangleCount());
+
+    int xPos8 = 394;
+    int yPos8 = 0;
+    int zPos8 = 322;
+    glm::vec3 CustomRot3 = glm::vec3(0.0f, 90.0f, 0.0f);
+    mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(7), glm::vec3(static_cast<float>(xPos8), static_cast<float>(yPos8),
+        static_cast<float>(zPos8)), CustomRot3));
+    numTriangles += static_cast<unsigned int>(mGltfModels.at(7)->getTriangleCount());
+
+    mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(12), glm::vec3(static_cast<float>(xPos), static_cast<float>(yPos),
+        static_cast<float>(zPos)), defaultRot));
+    numTriangles += static_cast<unsigned int>(mGltfModels.at(12)->getTriangleCount());
+
+    int xPos9 = 81;
+    int yPos9 = 2;
+    int zPos9 = 615;
+    mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(13), glm::vec3(static_cast<float>(xPos9), static_cast<float>(yPos9),
+        static_cast<float>(zPos9)), defaultRot));
+    numTriangles += static_cast<unsigned int>(mGltfModels.at(13)->getTriangleCount());
+
+    int xPos10 = 53;
+    int yPos10 = -100;
+    int zPos10 = 70;
+    mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModels.at(14), glm::vec3(static_cast<float>(xPos10), static_cast<float>(yPos10),
+        static_cast<float>(zPos10)), defaultRot));
+    numTriangles += static_cast<unsigned int>(mGltfModels.at(14)->getTriangleCount());
+
+    addEnemy(mGltfModels.at(8), -17, 1, 147);
+    addEnemy(mGltfModels.at(8), 15, 1, 148);
+    addEnemy(mGltfModels.at(8), 13, 1, 166);
+
+    addEnemy(mGltfModels.at(8), -10, 1, 165);
+    addEnemy(mGltfModels.at(8), -3, 1, 65);
+    addEnemy(mGltfModels.at(8), -158, 2, 259);
+
+    addEnemy(mGltfModels.at(8), -206, 2, 268);
+    addEnemy(mGltfModels.at(8), -207, 2, 256);
+    addEnemy(mGltfModels.at(8), -205, 2, 229);
+
+    addEnemy(mGltfModels.at(8), -250, 10, 224);
+    addEnemy(mGltfModels.at(8), -311, 10, 252);
+    addEnemy(mGltfModels.at(8), -220, 10, 313);
+
+    addBossBismark(mGltfModels.at(10), 49, 8, 408);
+    mBismarkBossPtr = mEnemies.back().get(); // только что запушенный враг — это и есть Bismark
+    addBossConway(mGltfModels.at(11), 389, 1, 323);
+    addPhysicsToStonehenge(mGltfInstances.at(0), mDynamicsWorld, glm::vec3(77, 0, 580), defaultRot);
+    addPhysicsToEnty(mGltfInstances.at(1), mDynamicsWorld, glm::vec3(0, 0, 0)); // Она заспавнится на высоте 10м и упадет на пол
+    {
+        ModelSettings entySettings = mGltfInstances.at(1)->getInstanceSettings();
+        entySettings.msAnimClip = EntyAnim::Idle;
+        entySettings.msPlayAnimation = true;
+        mGltfInstances.at(1)->setInstanceSettings(entySettings);
+        Logger::log(1, "Agness anim count: %d\n", mGltfModels.at(13)->getAnimClips());
+    }
+    addPhysicsToEnty(mGltfInstances.at(9), mDynamicsWorld, glm::vec3(81, 2, 615));
+    {
+        ModelSettings AgnessSettings = mGltfInstances.at(9)->getInstanceSettings();
+        AgnessSettings.msAnimClip = 3;
+        AgnessSettings.msCrossBlendDestAnimClip = 3;
+        AgnessSettings.msBlendingMode = blendMode::crossfade;
+        AgnessSettings.msAnimCrossBlendFactor = 1.0f;
+        AgnessSettings.msAnimTimePosition = 0.0f;
+        AgnessSettings.msPlayAnimation = true;
+        mGltfInstances.at(9)->setInstanceSettings(AgnessSettings);
+        mGltfInstances.at(9)->checkForUpdates();
+
+        // Раз уж проверяем — сразу узнаём, сколько клипов реально есть у Агнесс,
+        // чтобы убедиться, что индекс 2 в принципе существует (лог у тебя раньше
+        // стоял в блоке Enty и проверял model(13), а не факт того, что клип 2 валиден)
+        Logger::log(1, "Agness anim count: %d (запрошенный клип: %d)\n",
+            mGltfModels.at(13)->getAnimClips(), AgnessSettings.msAnimClip);
+    }
+    {
+        auto root = mGltfInstances.at(1)->getRootNode();
+
+        // Разово проверить реальные имена костей в логе — Mixamo иногда
+        // переименовывает кости при экспорте (см. "mixamorig:Hips" в клипах).
+        // Если "Breast.L"/"Breast.R" внизу не найдутся — раскомментируй и глянь лог:
+        // root->printTree();
+
+        auto leftNode = findNodeByName(root, "Breast.L");
+        auto rightNode = findNodeByName(root, "Breast.R");
+
+        if (leftNode || rightNode) {
+            Logger::log(1, "%s  Breast.L/Breast.R found on Enty skeleton\n", __FUNCTION__);
+        }
+        if (!leftNode || !rightNode) {
+            Logger::log(1, "%s warning: Breast.L/Breast.R not found on Enty skeleton\n", __FUNCTION__);
+        }
+
+        initBreastJiggle(mLeftBreastJiggle, leftNode, 40.0f, 4.0f, 18.0f, 1.5f);
+        initBreastJiggle(mRightBreastJiggle, rightNode, 40.0f, 4.0f, 18.0f, 1.5f);
+    }
+    addPhysicsToStonehenge(mGltfInstances.at(3), mDynamicsWorld, glm::vec3(0, 0, 160), defaultRot);
+    addPhysicsToStonehenge(mGltfInstances.at(4), mDynamicsWorld, glm::vec3(0, 0, 180), defaultRot);
+    addPhysicsToStonehenge(mGltfInstances.at(2), mDynamicsWorld, glm::vec3(50, 0.1, 419), CustomRot);
+    addPhysicsToStonehenge(mGltfInstances.at(5), mDynamicsWorld, glm::vec3(-166, 1, 261), CustomRot2);
+    addPhysicsToStonehenge(mGltfInstances.at(6), mDynamicsWorld, glm::vec3(53, 0, 522), defaultRot);
+    addPhysicsToStonehenge(mGltfInstances.at(7), mDynamicsWorld, glm::vec3(394, 0, 322), CustomRot3);
+    //
+    addPhysicsToStonehenge(mGltfInstances.at(10), mDynamicsWorld, glm::vec3(53, 1, 513), defaultRot);
+
+    mRenderData.rdTriangleCount = numTriangles;
+
+    mRenderData.rdNumberOfInstances = mGltfInstances.size();
+
+    size_t modelJointMatrixBufferSize = 0;
+    size_t modelJointDualQuatBufferSize = 0;
+    int jointMatrixSize = 0;
+    int jointQuatSize = 0;
+
+    for (const auto& instance : mGltfInstances) {
+        printf("[DEBUG] Instance Joints: %d\n", instance->getJointMatrixSize());
+        jointMatrixSize += instance->getJointMatrixSize();
+        modelJointMatrixBufferSize += instance->getJointMatrixSize() * sizeof(glm::mat4);
+
+        jointQuatSize += instance->getJointDualQuatsSize();
+        modelJointDualQuatBufferSize += instance->getJointDualQuatsSize() *
+            sizeof(glm::mat2x4);
+    }
+    // проверка от 10.01.26
+    printf("\n--- [SSBO DEBUG] ---\n");
+    printf("Total Joint Matrices: %d\n", jointMatrixSize);
+    printf("Required Matrix Buffer Size: %llu bytes\n", (unsigned long long)modelJointMatrixBufferSize);
+    printf("Required DualQuat Buffer Size: %llu bytes\n", (unsigned long long)modelJointDualQuatBufferSize);
+
+    // Проверим лимит видеокарты
+    GLint maxSize;
+    glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &maxSize);
+    printf("Your GPU Max SSBO Size: %d bytes\n", maxSize);
+
+    if (modelJointMatrixBufferSize == 0) {
+        printf("!!! WARNING: Matrix Buffer Size is 0! This will cause Error 502.\n");
+    }
+
+    if (modelJointMatrixBufferSize > (size_t)maxSize) {
+        printf("!!! ERROR: Buffer size exceeds GPU limits!\n");
+    }
+
+    if (modelJointMatrixBufferSize == 0) modelJointMatrixBufferSize = sizeof(glm::mat4);
+    if (modelJointDualQuatBufferSize == 0) modelJointDualQuatBufferSize = sizeof(glm::mat2x4);
+
+    // конец проверки
+    mGltfShaderStorageBuffer.init(modelJointMatrixBufferSize);
+    Logger::log(1, "%s: glTF joint matrix shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointMatrixBufferSize);
+
+    mGltfDualQuatSSBuffer.init(modelJointDualQuatBufferSize);
+    Logger::log(1, "%s: glTF joint dual quaternions shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointDualQuatBufferSize);
+
+    /* valid, but emtpy */
+    mLineMesh = std::make_shared<OGLMesh>();
+    Logger::log(1, "%s: line mesh storage initialized\n", __FUNCTION__);
+
+    mFrameTimer.start();
+    Logger::log(1, "%s: Starting to load instances...\n", __FUNCTION__);
+}
 void OGLRenderer::updatePlayerCharacter(float deltaTime) {
     // --- HIT STOP LOCK ---
     // Если идет стоп-кадр от попадания, мы НЕ продвигаем физику и таймеры
@@ -2892,13 +3295,32 @@ void OGLRenderer::cleanup() {
         delete mDispatcher;
         delete mCollisionConfiguration;
     }
-
-    for (int i = 0; i < mGltfModels.size(); ++i) {
-        mGltfModels.at(i)->cleanup();
-        mGltfModels.at(i).reset();
+   
+    for (auto model: mGltfModels) {
+        if (model) {
+            model->cleanup();
+            model.reset();
+        }
     }
+
+    mGltfModels.clear();
+
+    for (auto inst : mGltfInstances) {
+        if (inst) {
+            inst.reset();
+        }
+    }
+
+    mGltfInstances.clear();
+
     if (mMenuController) {
         mMenuController->cleanup();
+        mMenuController.reset();
+    }
+
+    if (mNJMenuModel) {
+        mNJMenuModel->cleanup();
+        mNJMenuModel.reset();
     }
     mGltfGPUDualQuatShader.cleanup();
     mGltfGPUShader.cleanup();
@@ -2914,11 +3336,13 @@ void OGLRenderer::cleanup() {
     mBlurFBO[1].cleanup();
     mBloomBlurShader.cleanup();
     mBloomCompositeShader.cleanup();
-    glDeleteVertexArrays(1, &mBloomVAO);
+
+    if (mBloomVAO != 0) {
+        glDeleteVertexArrays(1, &mBloomVAO);
+        mBloomVAO = 0;
+    }
+
     mSkyBox.cleanup();
-    mDeathCaptureFBO.cleanup();
-    mDeathGlowShader.cleanup();
-    mDeathGlowCompositeShader.cleanup();
     gAudio.shutdown();
 }
 

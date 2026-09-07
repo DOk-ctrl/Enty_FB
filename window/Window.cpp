@@ -60,11 +60,17 @@ bool Window::init(unsigned int width, unsigned int height, std::string title) {
       renderer->handleMousePositionEvents(xpos, ypos);
     }
   );
-
+  /*
   if (!mRenderer->init(width, height)) {
     glfwTerminate();
     Logger::log(1, "%s error: Could not init OpenGL\n", __FUNCTION__);
     return false;
+  }
+  */
+  if (!mRenderer->initEarly(width, height)) {
+      glfwTerminate();
+      Logger::log(1, "%s error: Could not init OpenGL\n", __FUNCTION__);
+      return false;
   }
 
   Logger::log(1, "%s: Window with OpenGL 4.6 successfully initialized\n", __FUNCTION__);
@@ -75,16 +81,30 @@ bool Window::init(unsigned int width, unsigned int height, std::string title) {
 void Window::mainLoop() {
   /* force VSYNC */
   glfwSwapInterval(1);
-
-  while (!glfwWindowShouldClose(mWindow)) {
-    mRenderer->draw();
+  
+ // while (!glfwWindowShouldClose(mWindow)) {
+  //  mRenderer->draw();
 
     /* swap buffers */
-    glfwSwapBuffers(mWindow);
+ //   glfwSwapBuffers(mWindow);
 
     /* poll events in a loop */
-    glfwPollEvents();
+ //   glfwPollEvents();
 
+ // }
+  while (!glfwWindowShouldClose(mWindow)) {
+      if (!mRenderer->isReady()) {
+          if (!mRenderer->loadFailed()) {
+              mRenderer->updateLoading(); // делает ОДИН шаг state machine за кадр
+          }
+          mRenderer->drawLoadingScreen();
+      }
+      else {
+          mRenderer->draw(); // твой обычный рендер, без изменений
+      }
+
+      glfwSwapBuffers(mWindow);
+      glfwPollEvents();
   }
 }
 

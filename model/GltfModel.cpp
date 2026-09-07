@@ -1,4 +1,4 @@
-#define GLM_ENABLE_EXPERIMENTAL
+п»ї#define GLM_ENABLE_EXPERIMENTAL
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -10,24 +10,93 @@
 #include "GltfModel.h"
 #include "Logger.h"
 #include "Tools.h"
+bool GltfModel::loadModelData(std::string modelFilename, std::string textureFilename, std::string normalFilename, std::string metalFilename, std::string roughFilename, std::string emitFilename, std::string packedFilename, std::string coatRoughFilename)
+{
+    // рџџ§ РІСЃРµ 7 С‚РµРєСЃС‚СѓСЂ вЂ” С‡РёСЃС‚Рѕ CPU/РґРёСЃРє, safe РІ С„РѕРЅРѕРІРѕРј РїРѕС‚РѕРєРµ
+    mTexData = Texture::loadTextureData(textureFilename, false);
+    if (!mTexData.success) {
+        Logger::log(1, "%s: texture loading failed\n", __FUNCTION__);
+        return false;
+    }
+    if (!normalFilename.empty())    mNormalTexData = Texture::loadTextureData(normalFilename, false);
+    if (!metalFilename.empty())     mMetalTexData = Texture::loadTextureData(metalFilename, false);
+    if (!roughFilename.empty())     mRoughTexData = Texture::loadTextureData(roughFilename, false);
+    if (!emitFilename.empty())      mEmitTexData = Texture::loadTextureData(emitFilename, false);
+    if (!packedFilename.empty())    mPackedTexData = Texture::loadTextureData(packedFilename, false);
+    if (!coatRoughFilename.empty()) mCoatRoughTexData = Texture::loadTextureData(coatRoughFilename, false);
+
+    mModel = std::make_shared<tinygltf::Model>();
+    tinygltf::TinyGLTF gltfLoader;
+    std::string loaderErrors, loaderWarnings;
+
+    bool result = gltfLoader.LoadASCIIFromFile(mModel.get(), &loaderErrors, &loaderWarnings, modelFilename);
+    if (!loaderWarnings.empty()) Logger::log(1, "%s: warnings:\n%s\n", __FUNCTION__, loaderWarnings.c_str());
+    if (!loaderErrors.empty())   Logger::log(1, "%s: errors:\n%s\n", __FUNCTION__, loaderErrors.c_str());
+    if (!result) {
+        Logger::log(1, "%s error: could not load file '%s'\n", __FUNCTION__, modelFilename.c_str());
+        return false;
+    }
+    mModelFilename = modelFilename;
+    mNodeCount = mModel->nodes.size();
+
+    // рџџ§ С‡РёС‚Р°СЋС‚ С‚РѕР»СЊРєРѕ Р±СѓС„РµСЂР° tinygltf-РјРѕРґРµР»Рё вЂ” С‡РёСЃС‚Рѕ CPU, safe РІ С„РѕРЅРµ
+    if (!mModel->skins.empty()) {
+        getJointData();
+        getWeightData();
+        getInvBindMatrices();
+    }
+    else {
+        Logger::log(1, "%s: model has no skins (static mesh)\n", __FUNCTION__);
+    }
+    getAnimations();
+
+    return true;
+}
+
+bool GltfModel::uploadToGPU() {
+    if (!mModel) return false;
+
+    // рџ›‘ С‚РµРєСЃС‚СѓСЂС‹ РІ GPU
+    if (!mTex.uploadToGPU(mTexData)) return false;
+    if (mNormalTexData.success) { mNormalTex.uploadToGPU(mNormalTexData);       mHasNormalMap = true; }
+    if (mMetalTexData.success) { mMetalTex.uploadToGPU(mMetalTexData);         mHasMetalMap = true; }
+    if (mRoughTexData.success) { mRoughTex.uploadToGPU(mRoughTexData);         mHasRoughMap = true; }
+    if (mEmitTexData.success) { mEmitTex.uploadToGPU(mEmitTexData);           mHasEmitMap = true; }
+    if (mPackedTexData.success) { mPackedTex.uploadToGPU(mPackedTexData);       mHasPackedMap = true; }
+    if (mCoatRoughTexData.success) { mCoatRoughTex.uploadToGPU(mCoatRoughTexData); mHasCoatRoughMap = true; }
+
+    // рџ›‘ VAO/VBO/EBO вЂ” РєР°Рє РІ СЃС‚Р°СЂРѕРј loadModel()
+    glGenVertexArrays(1, &mVAO);
+    glBindVertexArray(mVAO);
+
+    createVertexBuffers();
+    createIndexBuffer();
+    uploadVertexBuffers();
+    uploadIndexBuffer();
+
+    glBindVertexArray(0);
+
+    Logger::log(1, "%s: glTF model '%s' uploaded to GPU\n", __FUNCTION__, mModelFilename.c_str());
+    return true;
+}
 bool GltfModel::loadModel(OGLRenderData& renderData,
     std::string modelFilename, std::string textureFilename,
     std::string normalFilename, std::string metalFilename, std::string roughFilename, std::string emitFilename,
     std::string packedFilename, std::string coatRoughFilename) {
-    // Загрузка Base Color
+    // Р—Р°РіСЂСѓР·РєР° Base Color
     if (!mTex.loadTexture(textureFilename, false)) {
         Logger::log(1, "%s: texture loading failed\n", __FUNCTION__);
         return false;
     }
 
-    // Загрузка Normal map(если передана)
+    // Р—Р°РіСЂСѓР·РєР° Normal map(РµСЃР»Рё РїРµСЂРµРґР°РЅР°)
     if (!normalFilename.empty()) {
         if (mNormalTex.loadTexture(normalFilename, false)) {
             mHasNormalMap = true;
             Logger::log(1, "%s: Normal map successfully loaded\n", __FUNCTION__, normalFilename.c_str());
         }
     }
-    // Загрузка Metallic map
+    // Р—Р°РіСЂСѓР·РєР° Metallic map
     if (!metalFilename.empty()) {
         if (mMetalTex.loadTexture(metalFilename, false)) {
             mHasMetalMap = true;
@@ -35,7 +104,7 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
         }
     }
 
-    // Загрузка Roughness map
+    // Р—Р°РіСЂСѓР·РєР° Roughness map
     if (!roughFilename.empty()) {
         if (mRoughTex.loadTexture(roughFilename, false)) {
             mHasRoughMap = true;
@@ -49,7 +118,7 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
             Logger::log(1, "%s: Emission map successfully loaded: %s\n", __FUNCTION__, emitFilename.c_str());
         }
     }
-    // Загрузка Channel Packed Map
+    // Р—Р°РіСЂСѓР·РєР° Channel Packed Map
     if (!packedFilename.empty()) {
         if (mPackedTex.loadTexture(packedFilename, false)) {
             mHasPackedMap = true;
@@ -57,7 +126,7 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
         }
     }
 
-    // Загрузка Coat Roughness Map
+    // Р—Р°РіСЂСѓР·РєР° Coat Roughness Map
     if (!coatRoughFilename.empty()) {
         if (mCoatRoughTex.loadTexture(coatRoughFilename, false)) {
             mHasCoatRoughMap = true;
@@ -122,6 +191,7 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
     getAnimations();
 
     return true;
+    
 }
 
 
@@ -135,13 +205,13 @@ int GltfModel::getNodeCount() {
 
 GltfNodeData GltfModel::getGltfNodes() {
   GltfNodeData nodeData{};
-  // 1. Проверка: загружена ли модель вообще?
+  // 1. РџСЂРѕРІРµСЂРєР°: Р·Р°РіСЂСѓР¶РµРЅР° Р»Рё РјРѕРґРµР»СЊ РІРѕРѕР±С‰Рµ?
   if (!mModel) {
       Logger::log(1, "%s ERROR: mModel is nullptr! Model was not loaded correctly.\n", __FUNCTION__);
       return nodeData;
   }
 
-  // 2. Проверка: есть ли сцены в модели?
+  // 2. РџСЂРѕРІРµСЂРєР°: РµСЃС‚СЊ Р»Рё СЃС†РµРЅС‹ РІ РјРѕРґРµР»Рё?
   if (mModel->scenes.empty()) {
       Logger::log(1, "%s ERROR: Model has no scenes!\n", __FUNCTION__);
       return nodeData;
@@ -149,7 +219,7 @@ GltfNodeData GltfModel::getGltfNodes() {
 
   const auto& defaultScene = mModel->scenes.at(0);
 
-  // 3. Проверка: есть ли ноды в первой сцене?
+  // 3. РџСЂРѕРІРµСЂРєР°: РµСЃС‚СЊ Р»Рё РЅРѕРґС‹ РІ РїРµСЂРІРѕР№ СЃС†РµРЅРµ?
   if (defaultScene.nodes.empty()) {
       Logger::log(1, "%s ERROR: Scene 0 has no root nodes!\n", __FUNCTION__);
       return nodeData;
@@ -233,24 +303,24 @@ void GltfModel::getInvBindMatrices() {
 }
 
 void GltfModel::getAnimations() {
-    // 1. Выделяем память под массив клипов
+    // 1. Р’С‹РґРµР»СЏРµРј РїР°РјСЏС‚СЊ РїРѕРґ РјР°СЃСЃРёРІ РєР»РёРїРѕРІ
     mAnimClips.reserve(mModel->animations.size());
 
     for (const auto& anim : mModel->animations) {
-        // Оставляем ТОЛЬКО один лог на целую анимацию (ни в коем случае не внутри цикла по каналам!)
+        // РћСЃС‚Р°РІР»СЏРµРј РўРћР›Р¬РљРћ РѕРґРёРЅ Р»РѕРі РЅР° С†РµР»СѓСЋ Р°РЅРёРјР°С†РёСЋ (РЅРё РІ РєРѕРµРј СЃР»СѓС‡Р°Рµ РЅРµ РІРЅСѓС‚СЂРё С†РёРєР»Р° РїРѕ РєР°РЅР°Р»Р°Рј!)
         Logger::log(1, "%s: loading animation '%s' with %i channels\n",
             __FUNCTION__, anim.name.c_str(), static_cast<int>(anim.channels.size()));
 
         auto clip = std::make_shared<GltfAnimationClip>(anim.name);
 
-        // 2. Резервируем память под 504 канала РАЗОМ
+        // 2. Р РµР·РµСЂРІРёСЂСѓРµРј РїР°РјСЏС‚СЊ РїРѕРґ 504 РєР°РЅР°Р»Р° Р РђР—РћРњ
         clip->reserveChannels(anim.channels.size());
 
         for (const auto& channel : anim.channels) {
             clip->addChannel(mModel, anim, channel);
         }
 
-        mAnimClips.push_back(std::move(clip)); // std::move чтобы не инкрементировать счетчик shared_ptr лишний раз
+        mAnimClips.push_back(std::move(clip)); // std::move С‡С‚РѕР±С‹ РЅРµ РёРЅРєСЂРµРјРµРЅС‚РёСЂРѕРІР°С‚СЊ СЃС‡РµС‚С‡РёРє shared_ptr Р»РёС€РЅРёР№ СЂР°Р·
     }
 }
 
@@ -328,21 +398,21 @@ void GltfModel::resetNodeData(std::shared_ptr<GltfNode> treeNode) {
     resetNodeData(childNode);
   }
 }
-// Вспомогательная функция для рекурсивного обхода узлов
+// Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅР°СЏ С„СѓРЅРєС†РёСЏ РґР»СЏ СЂРµРєСѓСЂСЃРёРІРЅРѕРіРѕ РѕР±С…РѕРґР° СѓР·Р»РѕРІ
 void GltfModel::processNodePhysics(const tinygltf::Model* model, int nodeIdx, const glm::mat4& parentMatrix, btTriangleMesh* meshInterface) {
     const auto& node = model->nodes[nodeIdx];
 
-    // 1. ВЫЧИСЛЯЕМ ЛОКАЛЬНУЮ МАТРИЦУ УЗЛА (с приведением типов)
+    // 1. Р’Р«Р§РРЎР›РЇР•Рњ Р›РћРљРђР›Р¬РќРЈР® РњРђРўР РР¦РЈ РЈР—Р›Рђ (СЃ РїСЂРёРІРµРґРµРЅРёРµРј С‚РёРїРѕРІ)
     glm::mat4 localMatrix(1.0f);
 
     if (node.matrix.size() == 16) {
-        // Переносим double в массив float
+        // РџРµСЂРµРЅРѕСЃРёРј double РІ РјР°СЃСЃРёРІ float
         float matData[16];
         for (int i = 0; i < 16; ++i) matData[i] = static_cast<float>(node.matrix[i]);
         localMatrix = glm::make_mat4(matData);
     }
     else {
-        // Обработка Translation
+        // РћР±СЂР°Р±РѕС‚РєР° Translation
         if (node.translation.size() == 3) {
             localMatrix = glm::translate(localMatrix, glm::vec3(
                 static_cast<float>(node.translation[0]),
@@ -350,7 +420,7 @@ void GltfModel::processNodePhysics(const tinygltf::Model* model, int nodeIdx, co
                 static_cast<float>(node.translation[2])
             ));
         }
-        // Обработка Rotation (Quaternion)
+        // РћР±СЂР°Р±РѕС‚РєР° Rotation (Quaternion)
         if (node.rotation.size() == 4) {
             glm::quat q(
                 static_cast<float>(node.rotation[3]), // w
@@ -360,7 +430,7 @@ void GltfModel::processNodePhysics(const tinygltf::Model* model, int nodeIdx, co
             );
             localMatrix *= glm::mat4_cast(q);
         }
-        // Обработка Scale
+        // РћР±СЂР°Р±РѕС‚РєР° Scale
         if (node.scale.size() == 3) {
             localMatrix = glm::scale(localMatrix, glm::vec3(
                 static_cast<float>(node.scale[0]),
@@ -370,17 +440,17 @@ void GltfModel::processNodePhysics(const tinygltf::Model* model, int nodeIdx, co
         }
     }
 
-    // Комбинируем с родительской матрицей
+    // РљРѕРјР±РёРЅРёСЂСѓРµРј СЃ СЂРѕРґРёС‚РµР»СЊСЃРєРѕР№ РјР°С‚СЂРёС†РµР№
     glm::mat4 nodeMatrix = parentMatrix * localMatrix;
 
-    // 2. ОБРАБОТКА МЕША (если он есть в узле)
+    // 2. РћР‘Р РђР‘РћРўРљРђ РњР•РЁРђ (РµСЃР»Рё РѕРЅ РµСЃС‚СЊ РІ СѓР·Р»Рµ)
     if (node.mesh >= 0) {
         const auto& gltfMesh = model->meshes[node.mesh];
         for (const auto& primitive : gltfMesh.primitives) {
             if (primitive.attributes.find("POSITION") == primitive.attributes.end()) continue;
             if (primitive.indices < 0) continue;
 
-            // Доступ к позициям
+            // Р”РѕСЃС‚СѓРї Рє РїРѕР·РёС†РёСЏРј
             const tinygltf::Accessor& posAccessor = model->accessors[primitive.attributes.at("POSITION")];
             const tinygltf::BufferView& posView = model->bufferViews[posAccessor.bufferView];
             const tinygltf::Buffer& posBuffer = model->buffers[posView.buffer];
@@ -388,14 +458,14 @@ void GltfModel::processNodePhysics(const tinygltf::Model* model, int nodeIdx, co
             int posByteStride = posAccessor.ByteStride(posView);
             if (posByteStride == 0) posByteStride = sizeof(float) * 3;
 
-            // Доступ к индексам
+            // Р”РѕСЃС‚СѓРї Рє РёРЅРґРµРєСЃР°Рј
             const tinygltf::Accessor& indexAccessor = model->accessors[primitive.indices];
             const tinygltf::BufferView& indexView = model->bufferViews[indexAccessor.bufferView];
             const tinygltf::Buffer& indexBuffer = model->buffers[indexView.buffer];
             const uint8_t* indexData = &indexBuffer.data[indexView.byteOffset + indexAccessor.byteOffset];
             int indexCount = indexAccessor.count;
 
-            // Цикл по треугольникам
+            // Р¦РёРєР» РїРѕ С‚СЂРµСѓРіРѕР»СЊРЅРёРєР°Рј
             for (int i = 0; i < indexCount; i += 3) {
                 int i0 = 0, i1 = 0, i2 = 0;
 
@@ -416,7 +486,7 @@ void GltfModel::processNodePhysics(const tinygltf::Model* model, int nodeIdx, co
                 const float* p1 = reinterpret_cast<const float*>(posData + i1 * posByteStride);
                 const float* p2 = reinterpret_cast<const float*>(posData + i2 * posByteStride);
 
-                // Трансформируем вершины в мировые координаты меша
+                // РўСЂР°РЅСЃС„РѕСЂРјРёСЂСѓРµРј РІРµСЂС€РёРЅС‹ РІ РјРёСЂРѕРІС‹Рµ РєРѕРѕСЂРґРёРЅР°С‚С‹ РјРµС€Р°
                 glm::vec4 v0 = nodeMatrix * glm::vec4(p0[0], p0[1], p0[2], 1.0f);
                 glm::vec4 v1 = nodeMatrix * glm::vec4(p1[0], p1[1], p1[2], 1.0f);
                 glm::vec4 v2 = nodeMatrix * glm::vec4(p2[0], p2[1], p2[2], 1.0f);
@@ -430,7 +500,7 @@ void GltfModel::processNodePhysics(const tinygltf::Model* model, int nodeIdx, co
         }
     }
 
-    // 3. РЕКУРСИЯ
+    // 3. Р Р•РљРЈР РЎРРЇ
     for (int childIdx : node.children) {
         processNodePhysics(model, childIdx, nodeMatrix, meshInterface);
     }
@@ -439,7 +509,7 @@ void GltfModel::processNodePhysics(const tinygltf::Model* model, int nodeIdx, co
 btBvhTriangleMeshShape* GltfModel::getPhysicsShape() {
     btTriangleMesh* mesh = new btTriangleMesh();
 
-    // Находим корневые узлы сцены (обычно scene 0)
+    // РќР°С…РѕРґРёРј РєРѕСЂРЅРµРІС‹Рµ СѓР·Р»С‹ СЃС†РµРЅС‹ (РѕР±С‹С‡РЅРѕ scene 0)
     const tinygltf::Scene& scene = mModel->scenes[mModel->defaultScene > -1 ? mModel->defaultScene : 0];
 
     for (int nodeIdx : scene.nodes) {
@@ -450,21 +520,21 @@ btBvhTriangleMeshShape* GltfModel::getPhysicsShape() {
 }
 
 void GltfModel::createVertexBuffers() {
-    // 1. Создаем и привязываем VAO
+    // 1. РЎРѕР·РґР°РµРј Рё РїСЂРёРІСЏР·С‹РІР°РµРј VAO
     if (mVAO == 0) glGenVertexArrays(1, &mVAO);
     glBindVertexArray(mVAO);
 
-    // 2. Создаем один главный VBO для всех вершинных данных модели
-    // Мы будем использовать mVertexVBO[0] как хранилище всего .bin файла
+    // 2. РЎРѕР·РґР°РµРј РѕРґРёРЅ РіР»Р°РІРЅС‹Р№ VBO РґР»СЏ РІСЃРµС… РІРµСЂС€РёРЅРЅС‹С… РґР°РЅРЅС‹С… РјРѕРґРµР»Рё
+    // РњС‹ Р±СѓРґРµРј РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ mVertexVBO[0] РєР°Рє С…СЂР°РЅРёР»РёС‰Рµ РІСЃРµРіРѕ .bin С„Р°Р№Р»Р°
     if (mVertexVBO.empty()) mVertexVBO.resize(16, 0);
     if (mVertexVBO[0] == 0) glGenBuffers(1, &mVertexVBO[0]);
 
-    // Привязываем его сразу
+    // РџСЂРёРІСЏР·С‹РІР°РµРј РµРіРѕ СЃСЂР°Р·Сѓ
     glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO[0]);
 
-    // 3. Берем ПЕРВЫЙ примитив ПЕРВОГО меша просто чтобы инициализировать слоты VAO
-    // Это "шаблон" для видеокарты, чтобы она знала, какие атрибуты вообще существуют.
-    // Реальные смещения мы будем переназначать в draw() для каждого куска 2B.
+    // 3. Р‘РµСЂРµРј РџР•Р Р’Р«Р™ РїСЂРёРјРёС‚РёРІ РџР•Р Р’РћР“Рћ РјРµС€Р° РїСЂРѕСЃС‚Рѕ С‡С‚РѕР±С‹ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°С‚СЊ СЃР»РѕС‚С‹ VAO
+    // Р­С‚Рѕ "С€Р°Р±Р»РѕРЅ" РґР»СЏ РІРёРґРµРѕРєР°СЂС‚С‹, С‡С‚РѕР±С‹ РѕРЅР° Р·РЅР°Р»Р°, РєР°РєРёРµ Р°С‚СЂРёР±СѓС‚С‹ РІРѕРѕР±С‰Рµ СЃСѓС‰РµСЃС‚РІСѓСЋС‚.
+    // Р РµР°Р»СЊРЅС‹Рµ СЃРјРµС‰РµРЅРёСЏ РјС‹ Р±СѓРґРµРј РїРµСЂРµРЅР°Р·РЅР°С‡Р°С‚СЊ РІ draw() РґР»СЏ РєР°Р¶РґРѕРіРѕ РєСѓСЃРєР° 2B.
     if (mModel->meshes.empty() || mModel->meshes.at(0).primitives.empty()) {
         return;
     }
@@ -472,7 +542,7 @@ void GltfModel::createVertexBuffers() {
     const auto& attributesMap = mModel->meshes.at(0).primitives.at(0).attributes;
 
     for (const auto& [attribName, accessorIdx] : attributesMap) {
-        // Проверяем, нужен ли нам этот атрибут (твой стандартный фильтр)
+        // РџСЂРѕРІРµСЂСЏРµРј, РЅСѓР¶РµРЅ Р»Рё РЅР°Рј СЌС‚РѕС‚ Р°С‚СЂРёР±СѓС‚ (С‚РІРѕР№ СЃС‚Р°РЅРґР°СЂС‚РЅС‹Р№ С„РёР»СЊС‚СЂ)
         if (attributes.find(attribName) == attributes.end()) {
             continue;
         }
@@ -485,10 +555,10 @@ void GltfModel::createVertexBuffers() {
         int dataType = accessor.componentType;
         int stride = accessor.ByteStride(bufferView);
 
-        // Смещение: Начало BufferView + Смещение внутри Accessor
+        // РЎРјРµС‰РµРЅРёРµ: РќР°С‡Р°Р»Рѕ BufferView + РЎРјРµС‰РµРЅРёРµ РІРЅСѓС‚СЂРё Accessor
         size_t totalOffset = bufferView.byteOffset + accessor.byteOffset;
 
-        // Включаем слот и настраиваем указатель (пока для первой части тела)
+        // Р’РєР»СЋС‡Р°РµРј СЃР»РѕС‚ Рё РЅР°СЃС‚СЂР°РёРІР°РµРј СѓРєР°Р·Р°С‚РµР»СЊ (РїРѕРєР° РґР»СЏ РїРµСЂРІРѕР№ С‡Р°СЃС‚Рё С‚РµР»Р°)
         glEnableVertexAttribArray(loc);
 
         if (attribName == "JOINTS_0") {
@@ -503,7 +573,7 @@ void GltfModel::createVertexBuffers() {
             __FUNCTION__, attribName.c_str(), loc, totalOffset);
     }
 
-    // Отвязываем всё для безопасности
+    // РћС‚РІСЏР·С‹РІР°РµРј РІСЃС‘ РґР»СЏ Р±РµР·РѕРїР°СЃРЅРѕСЃС‚Рё
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -524,7 +594,7 @@ void GltfModel::uploadVertexBuffers() {
     // 15
     glBindVertexArray(mVAO);
 
-    // Убедимся, что VBO создан 17.01
+    // РЈР±РµРґРёРјСЃСЏ, С‡С‚Рѕ VBO СЃРѕР·РґР°РЅ 17.01
     if (mVertexVBO.empty()) mVertexVBO.resize(16);
     if (mVertexVBO[0] == 0) glGenBuffers(1, &mVertexVBO[0]);
 
@@ -535,7 +605,7 @@ void GltfModel::uploadVertexBuffers() {
         allData.data.data(), GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    // поменял фор 08.01.26 с 5 до сайз()
+    // РїРѕРјРµРЅСЏР» С„РѕСЂ 08.01.26 СЃ 5 РґРѕ СЃР°Р№Р·()
   /* or (int i = 0; i < mVertexVBO.size(); ++i) {
       if (mVertexVBO.at(i) == 0 || i >= mAttribAccessors.size() || mAttribAccessors.at(i) == -1) {
           continue;
@@ -555,7 +625,7 @@ void GltfModel::uploadVertexBuffers() {
 
 void GltfModel::uploadIndexBuffer() {
     // 15
-    if (mIndexVBO == 0) return; // Нет буфера — нет загрузки
+    if (mIndexVBO == 0) return; // РќРµС‚ Р±СѓС„РµСЂР° вЂ” РЅРµС‚ Р·Р°РіСЂСѓР·РєРё
     glBindVertexArray(mVAO);
   /* buffer for vertex indices 
   const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
@@ -579,7 +649,7 @@ int GltfModel::getTriangleCount() {
 
     const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
 
-    // ГЕПА-ФИКС: Если индексов нет (-1), возвращаем 0 или считаем вершины (если нужно)
+    // Р“Р•РџРђ-Р¤РРљРЎ: Р•СЃР»Рё РёРЅРґРµРєСЃРѕРІ РЅРµС‚ (-1), РІРѕР·РІСЂР°С‰Р°РµРј 0 РёР»Рё СЃС‡РёС‚Р°РµРј РІРµСЂС€РёРЅС‹ (РµСЃР»Рё РЅСѓР¶РЅРѕ)
     if (primitives.indices < 0) {
         return 0;
     }
@@ -589,11 +659,11 @@ int GltfModel::getTriangleCount() {
     unsigned int triangles = 0;
     switch (primitives.mode) {
     case TINYGLTF_MODE_TRIANGLES:
-        // Здесь тоже на всякий случай static_cast
+        // Р—РґРµСЃСЊ С‚РѕР¶Рµ РЅР° РІСЃСЏРєРёР№ СЃР»СѓС‡Р°Р№ static_cast
         triangles = static_cast<unsigned int>(indexAccessor.count) / 3;
         break;
     default:
-        // Для других режимов пока вернем 0, чтобы не падать
+        // Р”Р»СЏ РґСЂСѓРіРёС… СЂРµР¶РёРјРѕРІ РїРѕРєР° РІРµСЂРЅРµРј 0, С‡С‚РѕР±С‹ РЅРµ РїР°РґР°С‚СЊ
         break;
     }
     return static_cast<int>(triangles);
@@ -602,7 +672,7 @@ void GltfModel::setTextureQuality(int level)
 {
     mTex.setMipmapLevel(level);
 
-    // Обновляем все остальные PBR карты, если они загружены
+    // РћР±РЅРѕРІР»СЏРµРј РІСЃРµ РѕСЃС‚Р°Р»СЊРЅС‹Рµ PBR РєР°СЂС‚С‹, РµСЃР»Рё РѕРЅРё Р·Р°РіСЂСѓР¶РµРЅС‹
     if (mHasNormalMap) mNormalTex.setMipmapLevel(level);
     if (mHasMetalMap) mMetalTex.setMipmapLevel(level);
     if (mHasRoughMap) mRoughTex.setMipmapLevel(level);
@@ -620,19 +690,19 @@ void GltfModel::setAnisotropicFiltering(float amount)
     if (mHasPackedMap)    mPackedTex.setAnisotropy(amount);
     if (mHasCoatRoughMap) mCoatRoughTex.setAnisotropy(amount);
 }
-// 17 числа победная загрузка с костями
+// 17 С‡РёСЃР»Р° РїРѕР±РµРґРЅР°СЏ Р·Р°РіСЂСѓР·РєР° СЃ РєРѕСЃС‚СЏРјРё
 void GltfModel::draw() {
-    // слот 0: Base Color
+    // СЃР»РѕС‚ 0: Base Color
     glActiveTexture(GL_TEXTURE0);
     mTex.bind();
 
-    // слот 1: Normal Map
+    // СЃР»РѕС‚ 1: Normal Map
     if (mHasNormalMap) {
         glActiveTexture(GL_TEXTURE1);
         mNormalTex.bind();
     }
 
-    // слот 2: Metallic Map
+    // СЃР»РѕС‚ 2: Metallic Map
     if (mHasPackedMap) {
         glActiveTexture(GL_TEXTURE2);
         mPackedTex.bind();
@@ -642,7 +712,7 @@ void GltfModel::draw() {
         mMetalTex.bind();
     }
 
-    // слот 3: Roughness Map
+    // СЃР»РѕС‚ 3: Roughness Map
     if (mHasCoatRoughMap) {
         glActiveTexture(GL_TEXTURE3);
         mCoatRoughTex.bind();
@@ -657,24 +727,24 @@ void GltfModel::draw() {
         mEmitTex.bind();
     }
     glBindVertexArray(mVAO);
-    // Привязываем наш "Гига-VBO" (где лежит весь файл)
+    // РџСЂРёРІСЏР·С‹РІР°РµРј РЅР°С€ "Р“РёРіР°-VBO" (РіРґРµ Р»РµР¶РёС‚ РІРµСЃСЊ С„Р°Р№Р»)
     glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO[0]);
-    // Привязываем индексы (где тоже лежит весь файл)
+    // РџСЂРёРІСЏР·С‹РІР°РµРј РёРЅРґРµРєСЃС‹ (РіРґРµ С‚РѕР¶Рµ Р»РµР¶РёС‚ РІРµСЃСЊ С„Р°Р№Р»)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexVBO);
 
-    // Проходим по всем кускам 2B (голова, тело, руки...)
+    // РџСЂРѕС…РѕРґРёРј РїРѕ РІСЃРµРј РєСѓСЃРєР°Рј 2B (РіРѕР»РѕРІР°, С‚РµР»Рѕ, СЂСѓРєРё...)
     for (const auto& mesh : mModel->meshes) {
         for (const auto& primitive : mesh.primitives) {
 
-            // 1. НАСТРОЙКА УКАЗАТЕЛЕЙ ДЛЯ ЭТОГО КУСКА
+            // 1. РќРђРЎРўР РћР™РљРђ РЈРљРђР—РђРўР•Р›Р•Р™ Р”Р›РЇ Р­РўРћР“Рћ РљРЈРЎРљРђ
             for (const auto& [name, accessorIdx] : primitive.attributes) {
-                // Пропускаем неизвестные атрибуты
+                // РџСЂРѕРїСѓСЃРєР°РµРј РЅРµРёР·РІРµСЃС‚РЅС‹Рµ Р°С‚СЂРёР±СѓС‚С‹
                 if (attributes.find(name) == attributes.end()) continue;
 
                 const tinygltf::Accessor& accessor = mModel->accessors.at(accessorIdx);
                 const tinygltf::BufferView& view = mModel->bufferViews.at(accessor.bufferView);
 
-                // ВАЖНО: Смещение = смещение View + смещение Accessor
+                // Р’РђР–РќРћ: РЎРјРµС‰РµРЅРёРµ = СЃРјРµС‰РµРЅРёРµ View + СЃРјРµС‰РµРЅРёРµ Accessor
                 size_t totalOffset = view.byteOffset + accessor.byteOffset;
                 int stride = accessor.ByteStride(view);
                 int loc = attributes.at(name);
@@ -682,7 +752,7 @@ void GltfModel::draw() {
                 int size = tinygltf::GetNumComponentsInType(accessor.type);
                 int type = accessor.componentType;
 
-                // Перенастраиваем указатель именно для этой части тела
+                // РџРµСЂРµРЅР°СЃС‚СЂР°РёРІР°РµРј СѓРєР°Р·Р°С‚РµР»СЊ РёРјРµРЅРЅРѕ РґР»СЏ СЌС‚РѕР№ С‡Р°СЃС‚Рё С‚РµР»Р°
                 if (name == "JOINTS_0") {
                     glVertexAttribIPointer(loc, size, type, stride, (void*)totalOffset);
                 }
@@ -693,12 +763,12 @@ void GltfModel::draw() {
                 glEnableVertexAttribArray(loc);
             }
 
-            // 2. ОТРИСОВКА
+            // 2. РћРўР РРЎРћР’РљРђ
             if (primitive.indices >= 0) {
                 const tinygltf::Accessor& indexAccessor = mModel->accessors.at(primitive.indices);
                 const tinygltf::BufferView& indexView = mModel->bufferViews.at(indexAccessor.bufferView);
 
-                // Смещение индексов тоже уникально для каждого куска
+                // РЎРјРµС‰РµРЅРёРµ РёРЅРґРµРєСЃРѕРІ С‚РѕР¶Рµ СѓРЅРёРєР°Р»СЊРЅРѕ РґР»СЏ РєР°Р¶РґРѕРіРѕ РєСѓСЃРєР°
                 size_t indexOffset = indexView.byteOffset + indexAccessor.byteOffset;
 
                 glDrawElements(
@@ -713,7 +783,7 @@ void GltfModel::draw() {
 
     glBindVertexArray(0);
 
-    // Отвязка текстур (в обратном порядке для красоты)
+    // РћС‚РІСЏР·РєР° С‚РµРєСЃС‚СѓСЂ (РІ РѕР±СЂР°С‚РЅРѕРј РїРѕСЂСЏРґРєРµ РґР»СЏ РєСЂР°СЃРѕС‚С‹)
     if (mHasEmitMap) {
         glActiveTexture(GL_TEXTURE4);
         mEmitTex.unbind();
@@ -744,9 +814,18 @@ void GltfModel::draw() {
 }
 
 void GltfModel::cleanup() {
-  glDeleteBuffers(mVertexVBO.size(), mVertexVBO.data());
-  glDeleteBuffers(1, &mVAO);
-  glDeleteBuffers(1, &mIndexVBO);
+    if (!mVertexVBO.empty()) {
+        glDeleteBuffers(mVertexVBO.size(), mVertexVBO.data());
+        mVertexVBO.clear();
+    }
+  if (mVAO != 0) {
+      glDeleteBuffers(1, &mVAO);
+      mVAO = 0;
+  }
+  if (mIndexVBO != 0) {
+      glDeleteBuffers(1, &mIndexVBO);
+      mIndexVBO = 0;
+  }
   mTex.cleanup();
   mModel.reset();
 }

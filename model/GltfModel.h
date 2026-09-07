@@ -1,4 +1,4 @@
-/* glTF model, ready to draw */
+﻿/* glTF model, ready to draw */
 #pragma once
 #define GLM_ENABLE_EXPERIMENTAL
 #include <string>
@@ -22,6 +22,16 @@ struct GltfNodeData {
 
 class GltfModel {
   public:
+      // 🟧 Можно звать из std::async — не трогает OpenGL: грузит все 7 текстур
+        // (пиксели в RAM) + парсит tinygltf + вытаскивает joints/weights/anim.
+      bool loadModelData(std::string modelFilename, std::string textureFilename,
+          std::string normalFilename = "", std::string metalFilename = "",
+          std::string roughFilename = "", std::string emitFilename = "",
+          std::string packedFilename = "", std::string coatRoughFilename = "");
+
+      // 🛑 Только главный поток — заливает то, что собрал loadModelData(), в GPU
+      bool uploadToGPU();
+
       bool loadModel(OGLRenderData& renderData, std::string modelFilename,
           std::string textureFilename, std::string normalFilename = "",
           std::string metalFilename = "", std::string roughFilename = "", std::string emitFilename = "",
@@ -54,7 +64,9 @@ class GltfModel {
     Texture mEmitTex;
     Texture mPackedTex;      // Channel Packed Map
     Texture mCoatRoughTex;   // Coat Roughness Map
-
+    // временное хранилище пиксельных данных между loadModelData() и uploadToGPU()
+    TextureLoadResult mTexData, mNormalTexData, mMetalTexData, mRoughTexData,
+        mEmitTexData, mPackedTexData, mCoatRoughTexData;
     bool mHasNormalMap = false;
     bool mHasMetalMap = false;
     bool mHasRoughMap = false;

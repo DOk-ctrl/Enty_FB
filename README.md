@@ -1,8 +1,11 @@
 # C++ Custom Game Engine
 
+[![Reddit Post](https://img.shields.io/badge/Reddit-Discussion-FF4500?style=for-the-badge&logo=reddit&logoColor=white)](https://www.reddit.com/r/opengl/comments/1w0v7mj/what_i_learned_after_5_months_of_daily_work_on_my/)
+[![Play on itch.io](https://img.shields.io/badge/itch.io-Play_Demo-FA5C5C?style=for-the-badge&logo=itch.io&logoColor=white)](https://dokich-crcr.itch.io/tentacle-shippuden-enty-furry-beast)
+
 A 3D game engine built with **C++17**(20) and **OpenGL 4.6**, integrated with **Bullet Physics**, **miniaudio**, **tinygltf**, and **Dear ImGui**. 
 
-The core architecture follows object-oriented design principles (specifically the Bridge and State patterns) for modular code separation. Debugging and runtime telemetry are handled by a custom `Logger` class.
+The core architecture follows object-oriented design principles (specifically the Bridge and State patterns) for modular code separation. Debugging and runtime telemetry are handled by a custom `Logger` class. Reddit https://www.reddit.com/r/opengl/comments/1w0v7mj/what_i_learned_after_5_months_of_daily_work_on_my/  https://dokich-crcr.itch.io/tentacle-shippuden-enty-furry-beast
 
 ### Initial Release (April)
 The initial build featured full mesh collision detection for static environments and skeletal structure models, exported via CPack:

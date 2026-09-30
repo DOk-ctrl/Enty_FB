@@ -21,6 +21,23 @@ FetchContent_Declare(
     DOWNLOAD_NO_EXTRACT TRUE
 )
 
+FetchContent_Declare(
+  oneTBB
+  GIT_REPOSITORY https://github.com/uxlfoundation/oneTBB.git
+  GIT_TAG        v2022.0.0   # можно вз€ть более свежий тег с их релизов
+)
+
+set(TBB_TEST OFF CACHE BOOL "" FORCE)      # не собирать тесты TBB Ч сильно ускор€ет конфигурацию
+set(TBB_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(TBB_STRICT OFF CACHE BOOL "" FORCE)    # иначе warnings-as-errors может уронить сборку на некоторых компил€торах
+
+set(_prev_shared ${BUILD_SHARED_LIBS})
+set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+
+FetchContent_MakeAvailable(oneTBB)
+
+set(BUILD_SHARED_LIBS ${_prev_shared} CACHE BOOL "" FORCE)
+
 FetchContent_MakeAvailable(miniaudio)
 
 set(INSTALL_LIBS OFF CACHE BOOL "" FORCE)
@@ -103,7 +120,13 @@ add_custom_command(TARGET Textures POST_BUILD
   "$<TARGET_PROPERTY:Main,BINARY_DIR>/$<CONFIGURATION>/textures"
 )
 
+add_custom_command(TARGET Main POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    $<TARGET_FILE:TBB::tbb>
+    $<TARGET_FILE_DIR:Main>
+)
 
+# copy assets
 file(GLOB ASSET_FILES
   assets/*
 )
@@ -130,10 +153,10 @@ include_directories(${GLFW3_INCLUDE_DIR} ${GLM_INCLUDE_DIR} ${bulletphysics_SOUR
 if(MSVC)
 
   target_compile_options(Main PRIVATE /source-charset:windows-1251 /execution-charset:utf-8 /Zc:char8_t-)
-  target_link_libraries(Main ${GLFW3_LIBRARY} OpenGL::GL BulletDynamics BulletCollision LinearMath winmm) 
+  target_link_libraries(Main ${GLFW3_LIBRARY} OpenGL::GL BulletDynamics BulletCollision LinearMath winmm TBB::tbb) 
 else()
- 
-  target_link_libraries(Main ${GLFW3_LIBRARY} OpenGL::GL stdc++ m BulletDynamics  BulletCollision LinearMath winmm)
+  # Clang and GCC may need libstd++ and libmath
+  target_link_libraries(Main ${GLFW3_LIBRARY} OpenGL::GL stdc++ m BulletDynamics  BulletCollision LinearMath winmm TBB::tbb)
 endif()
 
 if(MSVC)

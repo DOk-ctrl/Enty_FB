@@ -2,6 +2,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <vector>
 #include <string>
+#include <future>
 #include <memory>
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -18,6 +19,7 @@
 #include "ShaderStorageBuffer.h"
 #include "UserInterface.h"
 #include "Camera.h"
+
 #include "GltfModel.h"
 #include "GltfInstance.h"
 
@@ -31,6 +33,9 @@
 #include <cmath>   
 #include "GameStateMachine.h"
 #include "MenuController.h"
+
+
+enum class LoadState { NotStarted, LoadingData, UploadingToGPU, BuildingWorld, Ready, Failed };
 
 enum class AgnessState {
     Sitting,   
@@ -72,6 +77,12 @@ public:
     void handleMouseButtonEvents(int button, int action, int mods);
     void handleMousePositionEvents(double xPos, double yPos);
     
+    bool initEarly(unsigned int width, unsigned int height);
+    void updateLoading();               // вызывать раз в кадр, пока !isReady()
+    void drawLoadingScreen();           // простой ImGui progress bar
+    bool isReady() const { return mLoadState == LoadState::Ready; }
+    bool loadFailed() const { return mLoadState == LoadState::Failed; }
+
     void addPhysicsToEnty(std::shared_ptr<GltfInstance> entyInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 spawnPos);
     void addPhysicsToEnemy(std::shared_ptr<GltfInstance> entyInstance, btDiscreteDynamicsWorld* dynamicsWorld, glm::vec3 spawnPos);
     void addEnemy(std::shared_ptr<GltfModel> model, int x, int y, int z);
@@ -86,7 +97,22 @@ public:
     OGLRenderData& getRenderData() { return mRenderData; }
 private:
 
-        btDefaultCollisionConfiguration* mCollisionConfiguration = nullptr;
+    struct ModelLoadInfo {
+        std::string modelFile, texFile, normalFile, metalFile, roughFile, emitFile, packedFile, coatRoughFile;
+    };
+
+    void startBackgroundLoading();      // запускает std::async на все модели
+    void buildWorld();                  // старый "хвост" — инстансы/физика/враги/боссы/SSBO
+
+    LoadState mLoadState = LoadState::NotStarted;
+    std::vector<ModelLoadInfo> mModelList;
+    std::vector<std::future<bool>> mModelLoaders;
+    std::vector<bool> mModelLoadDone;
+    std::vector<bool> mModelLoadSuccess;
+    size_t mUploadIndex = 0;
+
+    // --- ПЕРЕМЕННЫЕ BULLET PHYSICS ---
+    btDefaultCollisionConfiguration* mCollisionConfiguration = nullptr;
     btCollisionDispatcher* mDispatcher = nullptr;
     btBroadphaseInterface* mOverlappingPairCache = nullptr;
     btSequentialImpulseConstraintSolver* mSolver = nullptr;
@@ -137,8 +163,10 @@ private:
     std::vector<glm::mat4> mModelJointMatrices{};
     std::vector<glm::mat2x4> mModelJointDualQuats{};
 
+    std::vector<std::future<TextureLoadResult>> pendingTextures;
+
+    std::shared_ptr<OGLMesh> mLineMesh = nullptr;
     unsigned int mSkeletonLineIndexCount = 0;
-    unsigned int mCoordArrowsLineIndexCount = 0;
 
     bool mMouseLock = false;
     int mMouseXPos = 0;
